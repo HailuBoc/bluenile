@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 //import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -10,7 +11,7 @@ export default function SignupPage() {
     email: "",
     password: "",
   });
-
+  const router = useRouter();
   const [message, setMessage] = useState("");
 
   const handleChange = (e) =>
@@ -18,7 +19,7 @@ export default function SignupPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await fetch("http://localhost:3000/api/signup", {
+    const res = await fetch("http://localhost:5000/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
@@ -26,6 +27,7 @@ export default function SignupPage() {
 
     const data = await res.json();
     setMessage(data.message || "Signed up!");
+    router.push("/login");
   };
 
   return (
