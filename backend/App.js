@@ -5,7 +5,17 @@ import cors from "cors";
 
 const app = express();
 const PORT = 5000;
-app.use(cors());
+
+app.use(
+  cors({
+    origin: "https://huluschooltutorapp-3zy4.vercel.app/",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+    optionsSuccessStatus: 200,
+  })
+);
+
 app.use(express.json());
 app.post("/signup", (req, res) => {
   const { email } = req.body;
