@@ -17,7 +17,7 @@ app.use(
 );
 
 app.use(express.json());
-app.post("/signup", (req, res) => {
+app.post("/api/signup", (req, res) => {
   const { email } = req.body;
 
   UserModel.findOne({ email: email }).then((existingUser) => {
@@ -35,10 +35,8 @@ app.post("/signup", (req, res) => {
 // Connect to MongoDB
 
 // Routes
-app.get("/", (req, res) => {
-  res.send("API Running");
-});
-app.post("/login", (req, res) => {
+
+app.post("/api/login", (req, res) => {
   const { email, password } = req.body;
   UserModel.findOne({ email: email }).then((user) => {
     if (user) {
@@ -52,10 +50,8 @@ app.post("/login", (req, res) => {
     }
   });
 });
-app.get("/dashboard", (req, res) => {
-  res.send({ message: "get to home route" });
-});
-app.get("/signup", async (req, res) => {
+
+app.get("/api/signup", async (req, res) => {
   const newget = await UserModel.find({});
   try {
     return res.status(204).json(newget);
