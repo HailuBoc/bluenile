@@ -77,62 +77,48 @@ import { UserModel } from "./model/userModel.js";
 import cors from "cors";
 import dotenv from "dotenv";
 
-// Load environment variables
+// Load correct .env file
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-const HOST = "0.0.0.0";
+const PORT = process.env.PORT || 10000;
 
-// Middleware
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN || "*", // fallback for development
-    credentials: true,
-  })
-);
+app.use(cors());
 app.use(express.json());
 
-// === ROUTES ===
-
-// Signup Route
-app.post("/signup", async (req, res) => {
+// SIGNUP
+app.post("/signup", (req, res) => {
   const { email } = req.body;
 
-  try {
-    const existingUser = await UserModel.findOne({ email });
+  UserModel.findOne({ email }).then((existingUser) => {
     if (existingUser) {
-      return res.status(409).json({ message: "User already exists" });
+      return res.json({ message: "User Already Exists" });
     }
 
-    const newUser = await UserModel.create(req.body);
-    return res.status(201).json(newUser);
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
+    UserModel.create(req.body)
+      .then((newUser) => res.json(newUser))
+      .catch((err) => res.status(500).json({ error: err.message }));
+  });
 });
 
-// Login Route
-app.post("/login", async (req, res) => {
+// LOGIN
+app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
-  try {
-    const user = await UserModel.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "User not registered" });
+  UserModel.findOne({ email }).then((user) => {
+    if (user) {
+      if (user.password === password) {
+        res.status(200).json("Successfully logged in");
+      } else {
+        res.status(401).json("Incorrect password");
+      }
+    } else {
+      res.status(500).json("You haven't been registered");
     }
-
-    if (user.password !== password) {
-      return res.status(401).json({ message: "Incorrect password" });
-    }
-
-    return res.status(200).json({ message: "Successfully logged in" });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
+  });
 });
 
-// Get All Users
+// GET USERS
 app.get("/signup", async (req, res) => {
   try {
     const users = await UserModel.find({});
@@ -142,25 +128,14 @@ app.get("/signup", async (req, res) => {
   }
 });
 
-// === MONGOOSE CONNECTION + SERVER START ===
+// CONNECT TO MONGO
 mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    // Optional: set a timeout for initial connect
-    serverSelectionTimeoutMS: 10000,
-  })
+  .connect(process.env.MONGO_URI)
   .then(() => {
-    const server = app.listen(PORT, HOST, () => {
-      console.log(
-        `✅ MongoDB Connected. Server running at http://${HOST}:${PORT}`
-      );
+    app.listen(PORT, () => {
+      console.log(`MongoDB Connected. Server is running on port ${PORT}`);
     });
-
-    // Optional: Increase timeout settings
-    server.keepAliveTimeout = 120000; // 2 minutes
-    server.headersTimeout = 120000; // 2 minutes
   })
   .catch((error) => {
-    console.error("❌ MongoDB Connection Failed:", error);
+    console.error("DB connection failed:", error);
   });
