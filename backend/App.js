@@ -18,7 +18,7 @@ const PORT = process.env.PORT || 10000;
 
 app.use(
   cors({
-    origin: "https://huluschooltutorapp-5168.vercel.app/",
+    origin: process.env.CORS_ORIGIN,
     credentials: true,
   })
 );
