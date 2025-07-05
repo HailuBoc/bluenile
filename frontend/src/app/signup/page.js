@@ -27,8 +27,13 @@ export default function SignupPage() {
     });
 
     const data = await res.json();
-    setMessage(data.message || "Signed up!");
-    router.push("/login");
+
+    if (res.ok) {
+      setMessage("Signed up!");
+      router.push("/login");
+    } else {
+      setMessage(data.message || "Signup failed");
+    }
   };
 
   return (
