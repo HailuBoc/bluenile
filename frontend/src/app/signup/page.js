@@ -18,8 +18,9 @@ export default function SignupPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
+    const baseurl = process.env.NEXT_PUBLIC_API_URL;
     e.preventDefault();
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/signup`, {
+    const res = await fetch(`${baseurl}/signup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
