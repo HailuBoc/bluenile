@@ -21,7 +21,7 @@ export default function LoginPage() {
       });
 
       const data = await res.json();
-      setMessage(data.message || "Login successful");
+      setMessage(data.message || "Login Successfull.");
     } catch (error) {
       setMessage("Login failed.");
     }
@@ -70,7 +70,9 @@ export default function LoginPage() {
           <div className="border-t w-full border-gray-300" />
         </div>
         {message && (
-          <p className="mt-4 text-center text-red-500 font-medium">{message}</p>
+          <p className="mt-4 text-center text-green-500 font-medium">
+            {message}
+          </p>
         )}
 
         <div className="mt-4 text-center">
