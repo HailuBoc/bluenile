@@ -50,7 +50,9 @@ app.post("/login", (req, res) => {
     }
   });
 });
-
+app.get("/", (req, res) => {
+  res.send("welcome to the backend server");
+});
 // GET USERS
 app.get("/signup", async (req, res) => {
   try {
