@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  const route = useRouter();
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -22,6 +24,7 @@ export default function LoginPage() {
 
       const data = await res.json();
       setMessage(data.message || "Login Successfull.");
+      route.push("/HeaderCombined");
     } catch (error) {
       setMessage("Login failed.");
     }

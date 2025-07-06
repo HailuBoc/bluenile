@@ -18,7 +18,6 @@ const HeaderMain = () => {
           </p>
         </div>
 
-        {/* Horizontal Buttons */}
         <div className="flex flex-row items-center gap-4">
           <Link
             href="/signup"
