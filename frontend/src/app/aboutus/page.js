@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 
 const team = [
   {
@@ -167,12 +168,33 @@ export default function AboutPage() {
           >
             Join Now
           </Link>
-          <Link
-            href="/contact"
+          <button
+            onClick={() => {
+              const el = document.getElementById("phone-number");
+              if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+                el.classList.add(
+                  "bg-yellow-200",
+                  "text-black",
+                  "px-2",
+                  "py-1",
+                  "rounded"
+                );
+                setTimeout(() => {
+                  el.classList.remove(
+                    "bg-yellow-200",
+                    "text-black",
+                    "px-2",
+                    "py-1",
+                    "rounded"
+                  );
+                }, 2000);
+              }
+            }}
             className="bg-blue-900 text-white font-semibold py-2 px-4 rounded shadow"
           >
             Contact Us
-          </Link>
+          </button>
         </div>
       </section>
 
@@ -180,7 +202,9 @@ export default function AboutPage() {
       <footer className="bg-gray-900 text-white py-8 px-6">
         <div className="max-w-5xl mx-auto text-center space-y-2">
           <p>📍 Addis Ababa, Ethiopia</p>
-          <p>📞 +251 93 924 9299</p>
+          <p id="phone-number" className="transition-all duration-500">
+            📞 +251 93 924 9299
+          </p>
           <p>
             📧{" "}
             <a href="mailto:info@huluschool.com" className="underline">
