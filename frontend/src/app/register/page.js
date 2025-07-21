@@ -48,7 +48,7 @@ export default function SubjectRegisterForm() {
     });
     setErrors((prev) => ({ ...prev, daysAvailable: "" }));
   };
-
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const handleSubjectChange = (subject) => {
     setFormData((prev) => {
       const updated = prev.subjectNames.includes(subject)
@@ -64,7 +64,7 @@ export default function SubjectRegisterForm() {
     if (!validateForm()) return;
 
     try {
-      const res = await fetch("http://localhost:10000/register", {
+      const res = await fetch(`${baseUrl}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -124,7 +124,6 @@ export default function SubjectRegisterForm() {
           Register For Tutor
         </h2>
 
-        {/* Full Name */}
         <input
           type="text"
           name="fullName"
@@ -137,7 +136,6 @@ export default function SubjectRegisterForm() {
           <p className="text-red-400 text-sm">{errors.fullName}</p>
         )}
 
-        {/* Subject Selection */}
         <div>
           <p className="font-medium text-lg mb-2">Select Subjects:</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -161,7 +159,6 @@ export default function SubjectRegisterForm() {
           )}
         </div>
 
-        {/* Days Available */}
         <div>
           <p className="font-medium text-lg mb-2">Days Available:</p>
           <div className="flex flex-wrap gap-3">
@@ -185,7 +182,6 @@ export default function SubjectRegisterForm() {
           )}
         </div>
 
-        {/* Time Slot */}
         <select
           name="timeSlot"
           value={formData.timeSlot}
@@ -205,7 +201,6 @@ export default function SubjectRegisterForm() {
           <p className="text-red-400 text-sm">{errors.timeSlot}</p>
         )}
 
-        {/* Phone Number */}
         <input
           type="text"
           name="phoneNumber"
@@ -218,7 +213,6 @@ export default function SubjectRegisterForm() {
           <p className="text-red-400 text-sm">{errors.phoneNumber}</p>
         )}
 
-        {/* Mode */}
         <div>
           <p className="font-medium text-lg mb-2">Preferred Mode:</p>
           <div className="flex gap-6">
@@ -239,7 +233,6 @@ export default function SubjectRegisterForm() {
           {errors.mode && <p className="text-red-400 text-sm">{errors.mode}</p>}
         </div>
 
-        {/* Submit */}
         <button
           type="submit"
           className="w-full bg-green-600 hover:bg-green-700 p-3 rounded-lg text-white font-semibold transition duration-300"
@@ -247,7 +240,6 @@ export default function SubjectRegisterForm() {
           Register Subject
         </button>
 
-        {/* Feedback Message */}
         {message.text && (
           <div
             className={`w-full p-4 rounded-lg text-sm font-medium transition-all duration-300 ${
