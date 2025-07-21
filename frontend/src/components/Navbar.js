@@ -1,43 +1,41 @@
-// import React from "react";
 "use client";
-import Link from "next/link";
-import page from "../app/subjects/page";
-import ProductsData from "./NewPrdouct";
 import { useRouter } from "next/navigation";
 
 const Navbar = () => {
-  const route = useRouter();
-  const handleSubjects = () => {
-    route.push("/subjects");
-  };
-  const handleHome = () => {
-    route.push("/");
-  };
-  const handleAbout = () => {
-    route.push("/aboutus");
-  };
+  const router = useRouter();
+
   return (
-    <div className="hidden lg:block">
-      <div className="container">
-        <div className="flex justify-between items-center py-4 font-medium text-black">
-          {/* SIGN IN on the left */}
+    <nav className="bg-[#111] text-white shadow-md px-8 py-4 hidden lg:block">
+      <div className="container mx-auto flex items-center">
+        {/* Left spacer */}
+        <div className="flex-1" />
 
-          {/* Centered nav items */}
-          <div className="flex gap-10 mx-auto">
-            <div className="navbar__link relative cursor-pointer">
-              <button onClick={handleHome}>HOME</button>
-            </div>
-            <div className="navbar__link relative cursor-pointer">
-              <button onClick={handleSubjects}>SUBJECTS</button>
-            </div>
-
-            <div className="navbar__link relative cursor-pointer">
-              <button onClick={handleAbout}>ABOUT US</button>
-            </div>
-          </div>
+        {/* Centered Navigation Links */}
+        <div className="flex gap-10 text-lg font-semibold tracking-wide">
+          <button
+            onClick={() => router.push("/")}
+            className="hover:text-green-400 transition-colors duration-200"
+          >
+            Home
+          </button>
+          <button
+            onClick={() => router.push("/subjects")}
+            className="hover:text-green-400 transition-colors duration-200"
+          >
+            Subjects
+          </button>
+          <button
+            onClick={() => router.push("/aboutus")}
+            className="hover:text-green-400 transition-colors duration-200"
+          >
+            About Us
+          </button>
         </div>
+
+        {/* Right spacer (empty) */}
+        <div className="flex-1" />
       </div>
-    </div>
+    </nav>
   );
 };
 

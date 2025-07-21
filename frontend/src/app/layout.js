@@ -1,9 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import HeaderTop from "../components/HeaderTop";
-import HeaderMain from "../components/HeaderMain";
-import Navbar from "../components/Navbar";
-import Mobnavbar from "../components/Mobnavbar";
+
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 //import { SessionProvider } from "next-auth/react";
@@ -31,9 +28,6 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {/* ✅ All components go inside the provider */}
-        <HeaderTop />
-        <HeaderMain />
-        <Navbar />
 
         {children}
       </body>

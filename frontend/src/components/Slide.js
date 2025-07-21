@@ -50,7 +50,7 @@ const Slide = () => {
         <div className="w-full lg:w-3/5">
           <div className="bg-neutral-900 p-8 rounded-2xl shadow-xl flex flex-col justify-center">
             <h3 className="text-yellow-400 text-xl lg:text-2xl font-semibold tracking-wide">
-              HELPFUL TUTOR
+              HELPFUL TUTOR FROM HULU SCHOOL
             </h3>
             <h2 className="text-white text-3xl lg:text-4xl font-bold leading-snug mt-2">
               Helping students unlock their full academic potential.

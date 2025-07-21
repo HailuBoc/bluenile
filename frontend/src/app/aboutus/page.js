@@ -163,7 +163,7 @@ export default function AboutPage() {
         </p>
         <div className="space-x-4">
           <Link
-            href="/signup"
+            href="https://t.me/+tXsbIL4G0TM0ZGM0"
             className="bg-white text-blue-700 font-semibold py-2 px-4 rounded shadow"
           >
             Join Now
@@ -207,8 +207,8 @@ export default function AboutPage() {
           </p>
           <p>
             📧{" "}
-            <a href="mailto:info@huluschool.com" className="underline">
-              info@huluschool.com
+            <a href="huluschool77@gmail.com" className="underline">
+              tutor@huluschool.com
             </a>
           </p>
           <p>

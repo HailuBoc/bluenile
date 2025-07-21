@@ -1,81 +1,156 @@
 "use client";
-import React, { useState } from "react";
+import { Mail, Phone, MapPin } from "lucide-react";
+import {
+  BsFacebook,
+  BsLinkedin,
+  BsTelegram,
+  BsX,
+  BsYoutube,
+} from "react-icons/bs";
+import { useEffect } from "react";
 
-const Testimonial = () => {
-  const [showModal, setShowModal] = useState(false);
+export default function Testimonial() {
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash === "#phone") {
+      const phoneEl = document.getElementById("phone");
+      if (phoneEl) {
+        phoneEl.classList.add(
+          "bg-green-900",
+          "rounded",
+          "transition",
+          "duration-300"
+        );
+        setTimeout(() => {
+          phoneEl.classList.remove("bg-green-900");
+        }, 1500);
+      }
+    }
+  }, []);
 
   return (
-    <div className="container py-16">
-      <h2 className="font-medium text-2xl pb-4">Testimonials</h2>
-      <div className="grid lg:grid-cols-[300px,1fr] gap-4">
-        {/* Profile Card */}
-        <div
-          className="border border-gray-300 rounded-2xl grid place-items-center p-6 lg:p-0 cursor-pointer"
-          onClick={() => setShowModal(true)}
-        >
-          <div className="text-center flex flex-col items-center gap-1">
-            <img
-              className="rounded-full inline-block"
-              src="/hulu.jpg"
-              width={80}
-              height={80}
-              alt="profile"
-            />
-            <h2 className="text-gray-500 font-black text-[20px]">
-              Hulu School
-            </h2>
-            <p>Learn Easy</p>
-          </div>
+    <footer className="bg-[#111] text-gray-300 pt-12 pb-6 px-4 scroll-smooth">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
+        {/* Logo & About */}
+        <div>
+          <h2 className="text-2xl font-bold text-green-500 mb-2">
+            Hulu School
+          </h2>
+          <p className="text-sm">
+            Personalized tutoring to help you reach your academic potential.
+            Online or in-person – we’re here for every learner.
+          </p>
         </div>
 
-        {/* Background Image Section */}
-        <div className="bg-red-600 bg-[url('/hulu1.jpg')] bg-cover h-[500px] rounded-2xl grid place-items-center">
-          <div className="bg-[#ffffffab] min-w-[270px] sm:min-w-[300px] md:min-w-[500px] rounded-xl py-8 sm:px-8 grid place-items-center gap-3">
-            <h2 className="font-extrabold text-2xl text-[#272727]">
-              Summer Courses Are Available
-            </h2>
+        {/* Navigation */}
+        <div>
+          <h3 className="text-lg font-semibold text-white mb-2">Quick Links</h3>
+          <ul className="space-y-2 text-sm">
+            <li>
+              <a href="/" className="hover:text-green-500">
+                Home
+              </a>
+            </li>
+            <li>
+              <a href="/aboutus" className="hover:text-green-500">
+                About Us
+              </a>
+            </li>
+            <li>
+              <a href="/subjects" className="hover:text-green-500">
+                Subjects
+              </a>
+            </li>
+            <li>
+              <a href="#phone" className="hover:text-green-500">
+                Contact
+              </a>
+            </li>
+            <li>
+              <a href="/register" className="hover:text-green-500">
+                Register
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        {/* Contact Info */}
+        <div>
+          <h3 className="text-lg font-semibold text-white mb-2">Contact Us</h3>
+          <ul className="space-y-3 text-sm">
+            <li className="flex items-start gap-2">
+              <a href="huluschool77@gmail.com">
+                <Mail size={18} /> <span>tutor@huluschool.com</span>
+              </a>
+            </li>
+            <li id="phone" className="flex items-start gap-2 scroll-mt-24">
+              <Phone size={18} /> <span>+251-939-249-299</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <MapPin size={18} /> <span>Addis Ababa, Ethiopia</span>
+            </li>
+          </ul>
+        </div>
+
+        {/* Newsletter */}
+        <div>
+          <h3 className="text-lg font-semibold text-white mb-2">
+            Stay Updated
+          </h3>
+          <p className="text-sm mb-2">Subscribe to our newsletter</p>
+          <div className="flex items-center gap-2">
+            <input
+              type="email"
+              placeholder="Enter your email"
+              className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+            <button className="bg-green-600 hover:bg-green-700 p-2 rounded text-white text-sm">
+              Subscribe
+            </button>
           </div>
         </div>
       </div>
 
-      {/* 🔲 Modal Popup */}
-      {showModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          onClick={() => setShowModal(false)} // Close when clicking outside
-        >
-          <div
-            className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full"
-            onClick={(e) => e.stopPropagation()} // Prevent modal from closing on click inside
+      {/* Bottom Bar */}
+      <div className="mt-10 border-t border-gray-700 pt-6 flex flex-col sm:flex-row justify-between items-center text-sm">
+        <p className="text-gray-500">
+          &copy; {new Date().getFullYear()} Hulu School. All rights reserved.
+        </p>
+        <div className="flex gap-4 mt-4 sm:mt-0">
+          <a
+            href="https://www.youtube.com/channel/UCLKvnd9LA4mbbFDhCr29VYg"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-red-500 transition"
           >
-            <div className="flex flex-col items-center text-center gap-3">
-              <img
-                className="rounded-full"
-                src="/hulu.jpg"
-                width={100}
-                height={100}
-                alt="profile"
-              />
-              <h2 className="text-xl font-bold text-gray-700">Hulu School</h2>
-              <p className="text-sm text-gray-500">Learn Easy</p>
-              <p className="text-gray-600">
-                At Hulu School, we believe every student has the potential to
-                excel—with the right guidance, support, and inspiration. Whether
-                you're catching up, keeping up, or aiming higher, Hulu School is
-                your trusted partner in academic success.
-              </p>
-              <button
-                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg"
-                onClick={() => setShowModal(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
+            <BsYoutube size={20} />
+          </a>
+          <a
+            href="https://www.facebook.com/profile.php?id=61571803471689"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-blue-500 transition"
+          >
+            <BsFacebook size={20} />
+          </a>
+          <a
+            href="https://x.com/huluschool?t=raOpWe7YW__HKCi70NdM8Q&s=09"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-green-500 transition"
+          >
+            <BsX size={20} />
+          </a>
+          <a
+            href="https://t.me/+tXsbIL4G0TM0ZGM0"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-blue-400 transition"
+          >
+            <BsTelegram size={20} />
+          </a>
         </div>
-      )}
-    </div>
+      </div>
+    </footer>
   );
-};
-
-export default Testimonial;
+}

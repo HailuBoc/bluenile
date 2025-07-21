@@ -1,16 +1,11 @@
-import Slidering from "../components/Slidering";
-import NewPrdouct from "../components/NewPrdouct";
-import Testimonial from "../components/Testimonial";
-import Footer from "../components/Footer";
-//import Paragraph from "@/components/paragraph";
+import HeaderCombined from "./HeaderCombined/page";
+import LoginPage from "./login/page";
+import SignupPage from "./signup/page";
 
 export default function Home() {
   return (
     <main>
-      <Slidering />
-      <NewPrdouct />
-      <Testimonial />
-      <Footer />
+      <LoginPage />
     </main>
   );
 }
