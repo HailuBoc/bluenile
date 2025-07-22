@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -12,7 +13,7 @@ export default function SignupPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const router = useRouter();
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -35,6 +36,7 @@ export default function SignupPage() {
       if (res.ok) {
         setMessage("Signed up successfully!");
         setError(false);
+        router.push("/login");
       } else {
         setMessage(data.message || "Signup failed.");
         setError(true);
