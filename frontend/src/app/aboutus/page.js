@@ -2,24 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const team = [
-  {
-    name: "Dr. Abrham Yalember",
-    role: "Biology tutor",
-    image: "/abre.jpg",
-  },
+  { name: "Dr. Abrham Yalember", role: "Biology Tutor", image: "/abre.jpg" },
   {
     name: "Hailegebrel Yalember",
-    role: "General-Science Tutor",
+    role: "General Science Tutor",
     image: "/hailu.jpg",
   },
-  {
-    name: "Meklit A.",
-    role: "English Tutor",
-    image: "/profile pic.jpg",
-  },
+  { name: "Meklit A.", role: "English Tutor", image: "/profile pic.jpg" },
 ];
 
 const testimonials = [
@@ -36,44 +28,60 @@ const testimonials = [
 ];
 
 export default function AboutPage() {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-[#111]">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 border-solid"></div>
+      </div>
+    );
+  }
+
   return (
-    <main className="bg-white text-gray-800">
+    <main className="bg-[#111] text-gray-200">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-800 to-blue-600 text-white px-6 py-20 text-center">
+      <section className="bg-gradient-to-br from-blue-900 to-blue-700 px-6 py-20 text-center">
         <h1 className="text-5xl font-bold mb-4">About HuluSchool</h1>
         <p className="text-xl max-w-3xl mx-auto">
           Empowering students across Ethiopia with personalized online and
-          in-person tutoring. We make learning effective, flexible, and fun.
+          in-person tutoring.
         </p>
       </section>
 
       {/* Overview */}
       <section className="max-w-5xl mx-auto py-12 px-6">
-        <h2 className="text-3xl font-bold mb-4">Who We Are</h2>
-        <p className="text-lg leading-relaxed">
+        <h2 className="text-3xl font-bold mb-4 text-white">Who We Are</h2>
+        <p className="text-gray-300 text-lg leading-relaxed">
           HuluSchool is Ethiopia’s trusted tutoring company, offering both
-          virtual and face-to-face learning support. With experienced tutors and
-          structured plans, we help students build knowledge and confidence.
+          virtual and face-to-face support.
         </p>
       </section>
 
       {/* Mission & Vision */}
-      <section className="bg-gray-50 py-12 px-6">
+      <section className="bg-[#1a1a1a] py-12 px-6">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold mb-6">Our Mission & Vision</h2>
+          <h2 className="text-3xl font-bold mb-6 text-white">
+            Our Mission & Vision
+          </h2>
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white p-6 shadow rounded">
-              <h3 className="text-xl font-semibold mb-2">Mission</h3>
-              <p>
-                To provide accessible, high-quality tutoring for all students
-                and bridge academic gaps with care and strategy.
+            <div className="bg-[#222] p-6 shadow rounded-lg">
+              <h3 className="text-xl font-semibold mb-2 text-white">Mission</h3>
+              <p className="text-gray-300">
+                To provide accessible, high-quality tutoring and bridge academic
+                gaps with care.
               </p>
             </div>
-            <div className="bg-white p-6 shadow rounded">
-              <h3 className="text-xl font-semibold mb-2">Vision</h3>
-              <p>
+            <div className="bg-[#222] p-6 shadow rounded-lg">
+              <h3 className="text-xl font-semibold mb-2 text-white">Vision</h3>
+              <p className="text-gray-300">
                 A future where every student in Ethiopia can succeed with the
-                right support, regardless of background.
+                right support.
               </p>
             </div>
           </div>
@@ -82,47 +90,52 @@ export default function AboutPage() {
 
       {/* Services */}
       <section className="max-w-5xl mx-auto py-12 px-6">
-        <h2 className="text-3xl font-bold mb-6">What We Offer</h2>
+        <h2 className="text-3xl font-bold mb-6 text-white">What We Offer</h2>
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-blue-100 p-6 rounded shadow">
-            <h3 className="text-xl font-semibold mb-2">Online Tutoring</h3>
-            <p>
-              Interactive Zoom sessions, recorded lessons, quizzes, and progress
-              tracking.
+          <div className="bg-[#193b64] p-6 rounded-lg shadow-lg">
+            <h3 className="text-xl font-semibold mb-2 text-white">
+              Online Tutoring
+            </h3>
+            <p className="text-gray-300">
+              Zoom sessions, quizzes, recordings, and individual feedback.
             </p>
           </div>
-          <div className="bg-green-100 p-6 rounded shadow">
-            <h3 className="text-xl font-semibold mb-2">In-Person Tutoring</h3>
-            <p>
-              Small group or private sessions in Addis Ababa, at your home or
-              our center.
+          <div className="bg-[#22603b] p-6 rounded-lg shadow-lg">
+            <h3 className="text-xl font-semibold mb-2 text-white">
+              In-Person Tutoring
+            </h3>
+            <p className="text-gray-300">
+              Private and group sessions in Addis Ababa — at home or
+              center-based.
             </p>
           </div>
         </div>
       </section>
 
       {/* Why Choose Us */}
-      <section className="bg-gray-100 py-12 px-6">
+      <section className="bg-[#1f1f1f] py-12 px-6">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold mb-4">Why Choose HuluSchool?</h2>
-          <ul className="list-disc pl-6 text-lg space-y-2">
-            <li>Customized learning paths for each student</li>
-            <li>Flexible scheduling – evenings, weekends, and holidays</li>
-            <li>Trusted tutors with subject expertise</li>
-            <li>Trackable progress and regular feedback</li>
-            <li>Safe, supportive, student-centered environment</li>
+          <h2 className="text-3xl font-bold mb-4 text-white">
+            Why Choose HuluSchool?
+          </h2>
+          <ul className="list-disc pl-6 text-gray-300 text-lg space-y-2">
+            <li>Custom learning plans</li>
+            <li>Evening & weekend flexibility</li>
+            <li>Qualified, trusted tutors</li>
+            <li>Progress tracking & feedback</li>
+            <li>Supportive learning environment</li>
           </ul>
         </div>
       </section>
 
-      {/* Team */}
+      {/* Meet the Team */}
       <section className="max-w-5xl mx-auto py-12 px-6">
-        <h2 className="text-3xl font-bold mb-6">Meet Our Tutors</h2>
+        <h2 className="text-3xl font-bold mb-6 text-white">Meet Our Tutors</h2>
         <div className="grid md:grid-cols-3 gap-6">
           {team.map((member, index) => (
             <div
               key={index}
-              className="bg-white p-4 rounded shadow text-center"
+              className="bg-[#222] p-4 rounded-lg shadow text-center"
             >
               <Image
                 src={member.image}
@@ -131,24 +144,28 @@ export default function AboutPage() {
                 height={120}
                 className="rounded-full mx-auto mb-4 object-cover"
               />
-              <h3 className="text-lg font-semibold">{member.name}</h3>
-              <p className="text-sm text-gray-600">{member.role}</p>
+              <h3 className="text-lg font-semibold text-white">
+                {member.name}
+              </h3>
+              <p className="text-sm text-gray-400">{member.role}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Testimonials */}
-      <section className="bg-blue-50 py-12 px-6">
+      <section className="bg-[#0f2a40] py-12 px-6">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold mb-6 text-center">
+          <h2 className="text-3xl font-bold mb-6 text-center text-white">
             What Parents & Students Say
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
             {testimonials.map((t, i) => (
-              <div key={i} className="bg-white p-6 rounded shadow">
-                <p className="italic mb-2">“{t.quote}”</p>
-                <p className="font-semibold text-right">- {t.name}</p>
+              <div key={i} className="bg-[#1f3b54] p-6 rounded-lg shadow">
+                <p className="italic text-gray-200 mb-2">“{t.quote}”</p>
+                <p className="font-semibold text-right text-white">
+                  - {t.name}
+                </p>
               </div>
             ))}
           </div>
@@ -199,7 +216,7 @@ export default function AboutPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-8 px-6">
+      <footer className="bg-black text-gray-400 py-8 px-6">
         <div className="max-w-5xl mx-auto text-center space-y-2">
           <p>📍 Addis Ababa, Ethiopia</p>
           <p id="phone-number" className="transition-all duration-500">
@@ -207,7 +224,10 @@ export default function AboutPage() {
           </p>
           <p>
             📧{" "}
-            <a href="huluschool77@gmail.com" className="underline">
+            <a
+              href="mailto:tutor@huluschool.com"
+              className="underline text-white"
+            >
               tutor@huluschool.com
             </a>
           </p>

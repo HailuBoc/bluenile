@@ -13,6 +13,7 @@ export default function SubjectRegisterForm() {
 
   const [message, setMessage] = useState({ text: "", type: "" });
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
@@ -48,7 +49,7 @@ export default function SubjectRegisterForm() {
     });
     setErrors((prev) => ({ ...prev, daysAvailable: "" }));
   };
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+
   const handleSubjectChange = (subject) => {
     setFormData((prev) => {
       const updated = prev.subjectNames.includes(subject)
@@ -59,10 +60,13 @@ export default function SubjectRegisterForm() {
     setErrors((prev) => ({ ...prev, subjectNames: "" }));
   };
 
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
+    setLoading(true);
     try {
       const res = await fetch(`${baseUrl}/register`, {
         method: "POST",
@@ -89,16 +93,15 @@ export default function SubjectRegisterForm() {
           type: "error",
         });
       }
-
-      setTimeout(() => setMessage({ text: "", type: "" }), 4000);
     } catch (err) {
       console.error("Submission error:", err);
       setMessage({
         text: "⚠️ Network error. Check connection and try again.",
         type: "error",
       });
-      setTimeout(() => setMessage({ text: "", type: "" }), 4000);
     }
+    setLoading(false);
+    setTimeout(() => setMessage({ text: "", type: "" }), 4000);
   };
 
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -235,9 +238,10 @@ export default function SubjectRegisterForm() {
 
         <button
           type="submit"
-          className="w-full bg-green-600 hover:bg-green-700 p-3 rounded-lg text-white font-semibold transition duration-300"
+          className="w-full bg-green-600 hover:bg-green-700 p-3 rounded-lg text-white font-semibold transition duration-300 disabled:opacity-60"
+          disabled={loading}
         >
-          Register Subject
+          {loading ? "Submitting..." : "Register Subject"}
         </button>
 
         {message.text && (

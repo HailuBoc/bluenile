@@ -16,12 +16,14 @@ const PORT = process.env.PORT || 10000;
 app.use(cors());
 app.use(express.json());
 
-// SIGNUP ROUTE
+// ===================== SIGNUP =====================
 app.post("/signup", async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
-    const existingUser = await UserModel.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+    const existingUser = await UserModel.findOne({ email: normalizedEmail });
+
     if (existingUser) {
       return res.status(409).json({ message: "Email already registered." });
     }
@@ -30,7 +32,7 @@ app.post("/signup", async (req, res) => {
 
     const newUser = await UserModel.create({
       name,
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
     });
 
@@ -47,10 +49,11 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// REGISTER FOR TUTORING ROUTE
+// ===================== TUTOR REGISTRATION =====================
 app.post("/register", async (req, res) => {
   const { fullName, subjectNames, daysAvailable, timeSlot, phoneNumber, mode } =
     req.body;
+
   try {
     const newRegistration = await RegisterModel.create({
       fullName,
@@ -70,17 +73,22 @@ app.post("/register", async (req, res) => {
   }
 });
 
-// LOGIN ROUTE
+// ===================== LOGIN =====================
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await UserModel.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await UserModel.findOne({ email: normalizedEmail });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
+    if (!isMatch) {
       return res.status(401).json({ message: "Incorrect password" });
+    }
 
     res.status(200).json({
       message: "Successfully logged in",
@@ -95,7 +103,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// DATABASE CONNECTION
+// ===================== MONGODB CONNECT =====================
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {

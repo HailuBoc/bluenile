@@ -95,19 +95,13 @@ export default function Testimonial() {
         {/* Newsletter */}
         <div>
           <h3 className="text-lg font-semibold text-white mb-2">
+            Hulu School Tutoring,Learn Easy!
+          </h3>
+          <h3 className="text-lg font-semibold text-white mb-2">
             Stay Updated
           </h3>
-          <p className="text-sm mb-2">Subscribe to our newsletter</p>
-          <div className="flex items-center gap-2">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-            <button className="bg-green-600 hover:bg-green-700 p-2 rounded text-white text-sm">
-              Subscribe
-            </button>
-          </div>
+
+          <div className="flex items-center gap-2"></div>
         </div>
       </div>
 
