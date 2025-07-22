@@ -54,7 +54,7 @@ export default function LoginPage() {
         className="bg-[#1f2937] p-10 rounded-2xl shadow-2xl w-full max-w-md"
       >
         <h2 className="text-3xl font-bold mb-6 text-center text-blue-400">
-          Hulu School Login
+          Login
         </h2>
 
         <input

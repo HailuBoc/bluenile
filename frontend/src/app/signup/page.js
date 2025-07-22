@@ -56,7 +56,7 @@ export default function SignupPage() {
         className="bg-[#1f2937] p-10 rounded-2xl shadow-2xl w-full max-w-md"
       >
         <h2 className="text-3xl font-bold text-center text-blue-400 mb-6">
-          Create Your Account
+          Create Account
         </h2>
 
         <div className="space-y-4">
