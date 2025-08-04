@@ -1,11 +1,11 @@
-import HeaderCombined from "./HeaderCombined/page";
-import LoginPage from "./login/page";
-import SignupPage from "./signup/page";
+import Navbar from "../components/Navbar";
+import ProductsSection from "../components/ProductsSection";
 
 export default function Home() {
   return (
     <main>
-      <LoginPage />
+      <Navbar />
+      <ProductsSection />
     </main>
   );
 }
