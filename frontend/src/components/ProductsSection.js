@@ -101,9 +101,13 @@ const listings = [
 
 export default function ProductsSection() {
   return (
-    <section className="px-6 pt-6 pb-12">
-      <h2 className="text-2xl font-semibold pb-5">Live Anywhere</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <section className="px-4 sm:px-6 pt-6 pb-12">
+      <h2 className="text-xl sm:text-2xl font-semibold pb-5 text-gray-800">
+        Live Anywhere
+      </h2>
+
+      {/* Responsive Grid */}
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
         {listings.map((listing, index) => (
           <ProductCard key={index} {...listing} />
         ))}
@@ -111,3 +115,22 @@ export default function ProductsSection() {
     </section>
   );
 }
+// import ProductCard from "./ProductCard";
+
+// const listings = [
+//   {
+//     image: "/p1.png",
+//     title: "Cozy cabin in the woods",
+//     location: "Meskel Flower",
+//     price: "120 birr/night",
+//     rating: 4.9,
+//     guestFavorite: true,
+//   },
+//   // ... (rest of the listings)
+// ];
+
+// export default function ProductsSection() {
+//   return (
+
+//   );
+// }
