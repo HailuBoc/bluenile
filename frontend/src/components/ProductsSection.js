@@ -18,7 +18,7 @@ const listings = [
     guestFavorite: true,
   },
   {
-    image: "/p3.png",
+    image: "/p14.png",
     title: "Beachside bungalow",
     location: "Kolfe",
     price: "220 birr/night",
@@ -26,7 +26,7 @@ const listings = [
     guestFavorite: true,
   },
   {
-    image: "/p4.png",
+    image: "/p13.png",
     title: "Mountain view retreat",
     location: "Arada",
     price: "150 birr/night",
@@ -34,7 +34,7 @@ const listings = [
     guestFavorite: true,
   },
   {
-    image: "/p5.png",
+    image: "/p10.png",
     title: "Rustic country home",
     location: "Semit 72",
     price: "110 birr/night",
@@ -74,7 +74,7 @@ const listings = [
     guestFavorite: true,
   },
   {
-    image: "/p10.png",
+    image: "/p5.png",
     title: "Treehouse Experience",
     location: "Asko Addis-Sefer",
     price: "160 birr/night",
@@ -82,7 +82,7 @@ const listings = [
     guestFavorite: true,
   },
   {
-    image: "/p13.png",
+    image: "/p4.png",
     title: "Jungle Canopy Hideout",
     location: "Betel",
     price: "165 birr/night",
@@ -90,7 +90,7 @@ const listings = [
     guestFavorite: true,
   },
   {
-    image: "/p14.png",
+    image: "/p3.png",
     title: "Luxury Treetop Suite",
     location: "Megenagna",
     price: "170 birr/night",
@@ -100,37 +100,32 @@ const listings = [
 ];
 
 export default function ProductsSection() {
+  const firstGroup = listings.slice(0, 6);
+  const secondGroup = listings.slice(6, 12);
+
   return (
     <section className="px-4 sm:px-6 pt-6 pb-12">
-      <h2 className="text-xl sm:text-2xl font-semibold pb-5 text-gray-800">
-        Live Anywhere
-      </h2>
+      <div className="mb-10">
+        <h2 className="text-xl sm:text-2xl font-semibold pb-5 text-gray-800">
+          🌟 Popular Stays
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
+          {firstGroup.map((listing, index) => (
+            <ProductCard key={index} {...listing} />
+          ))}
+        </div>
+      </div>
 
-      {/* Responsive Grid */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-        {listings.map((listing, index) => (
-          <ProductCard key={index} {...listing} />
-        ))}
+      <div>
+        <h2 className="text-xl sm:text-2xl font-semibold pb-5 text-gray-800">
+          🔍 Home's for the next week
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
+          {secondGroup.map((listing, index) => (
+            <ProductCard key={index + 6} {...listing} />
+          ))}
+        </div>
       </div>
     </section>
   );
 }
-// import ProductCard from "./ProductCard";
-
-// const listings = [
-//   {
-//     image: "/p1.png",
-//     title: "Cozy cabin in the woods",
-//     location: "Meskel Flower",
-//     price: "120 birr/night",
-//     rating: 4.9,
-//     guestFavorite: true,
-//   },
-//   // ... (rest of the listings)
-// ];
-
-// export default function ProductsSection() {
-//   return (
-
-//   );
-// }

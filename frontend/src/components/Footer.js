@@ -1,11 +1,13 @@
 export default function Footer() {
   return (
-    <footer className="bg-gray-100 text-gray-600 text-sm border-t mt-10">
+    <footer className="bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-300 text-sm border-t border-gray-200 dark:border-gray-700 mt-10">
       <div className="max-w-7xl mx-auto px-6 py-10">
         {/* Top Section: Footer Columns */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 pb-10">
           <div>
-            <h3 className="font-semibold text-gray-800 mb-3">About</h3>
+            <h3 className="font-semibold text-gray-800 dark:text-white mb-3">
+              About
+            </h3>
             <ul className="space-y-2">
               <li>
                 <a href="#" className="hover:underline">
@@ -36,7 +38,9 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="font-semibold text-gray-800 mb-3">Community</h3>
+            <h3 className="font-semibold text-gray-800 dark:text-white mb-3">
+              Community
+            </h3>
             <ul className="space-y-2">
               <li>
                 <a href="#" className="hover:underline">
@@ -67,7 +71,9 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="font-semibold text-gray-800 mb-3">Host</h3>
+            <h3 className="font-semibold text-gray-800 dark:text-white mb-3">
+              Host
+            </h3>
             <ul className="space-y-2">
               <li>
                 <a href="#" className="hover:underline">
@@ -93,7 +99,9 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="font-semibold text-gray-800 mb-3">Support</h3>
+            <h3 className="font-semibold text-gray-800 dark:text-white mb-3">
+              Support
+            </h3>
             <ul className="space-y-2">
               <li>
                 <a href="#" className="hover:underline">
@@ -120,7 +128,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom Section: Copyright */}
-        <div className="flex flex-col sm:flex-row justify-between items-center border-t pt-6">
+        <div className="flex flex-col sm:flex-row justify-between items-center border-t border-gray-200 dark:border-gray-700 pt-6">
           <p>
             © {new Date().getFullYear()} Akotet, Inc. · Privacy · Terms ·
             Sitemap
