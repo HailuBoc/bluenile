@@ -28,7 +28,4 @@ const registerSchema = new mongoose.Schema([
     },
   },
 ]);
-export const RegisterModel = mongoose.model(
-  "registered tutors",
-  registerSchema
-);
+export const RegisterModel = mongoose.model("registeration", registerSchema);

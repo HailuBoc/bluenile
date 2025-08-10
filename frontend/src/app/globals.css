@@ -8,3 +8,8 @@ html {
 html.dark {
   @apply bg-gray-900 text-white;
 }
+
+/* Custom reusable class for larger navbar */
+.navbar-large {
+  @apply py-5 px-6 md:px-10 text-lg;
+}

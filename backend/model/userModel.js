@@ -17,7 +17,12 @@ const userSchema = new mongoose.Schema([
       required: [true, "Password is required"],
       minLength: [6, "Password must be at least 6 characters long"],
     },
+    role: {
+      type: String,
+      enum: ["guest", "host", "admin"],
+      default: "guest",
+    },
   },
 ]);
 
-export const UserModel = mongoose.model("signup", userSchema);
+export const User = mongoose.model("users", userSchema);

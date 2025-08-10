@@ -11,7 +11,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <a href="#" className="hover:underline">
-                  How Akotet works
+                  How Blue Nile PLC works
                 </a>
               </li>
               <li>
@@ -26,12 +26,12 @@ export default function Footer() {
               </li>
               <li>
                 <a href="#" className="hover:underline">
-                  Akotet Plus
+                  Blue Nile Plus
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:underline">
-                  Akotet Luxe
+                  Blue Nile Luxe
                 </a>
               </li>
             </ul>
@@ -82,7 +82,7 @@ export default function Footer() {
               </li>
               <li>
                 <a href="#" className="hover:underline">
-                  Akotet for Work
+                  Blue Nile for Work
                 </a>
               </li>
               <li>
@@ -130,7 +130,7 @@ export default function Footer() {
         {/* Bottom Section: Copyright */}
         <div className="flex flex-col sm:flex-row justify-between items-center border-t border-gray-200 dark:border-gray-700 pt-6">
           <p>
-            © {new Date().getFullYear()} Akotet, Inc. · Privacy · Terms ·
+            © {new Date().getFullYear()} Blue Nile PLC · Privacy · Terms ·
             Sitemap
           </p>
           <div className="flex items-center gap-4 mt-4 sm:mt-0">
