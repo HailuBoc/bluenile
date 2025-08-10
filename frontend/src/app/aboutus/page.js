@@ -7,12 +7,6 @@ export default function AboutPage() {
     <div className="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen">
       {/* Hero Section */}
       <section className="relative w-full h-[300px] md:h-[400px]">
-        <Image
-          src="/images/about-hero.jpg" // Replace with your hero image path
-          alt="About Us Hero"
-          fill
-          className="object-cover"
-        />
         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <h1 className="text-4xl md:text-5xl font-bold text-white">
             About Us
@@ -96,9 +90,7 @@ export default function AboutPage() {
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white text-center py-6">
-        <p>
-          © {new Date().getFullYear()} Your Company Name. All rights reserved.
-        </p>
+        <p>© {new Date().getFullYear()} Blue Nile plc. All rights reserved.</p>
       </footer>
     </div>
   );
