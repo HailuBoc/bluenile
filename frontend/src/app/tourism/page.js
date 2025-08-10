@@ -1,6 +1,10 @@
-import { Map, Mountain, Landmark, Building } from "lucide-react";
+"use client";
+import { Map, Mountain, Landmark, Building, Search } from "lucide-react";
+import { useState } from "react";
 
 export default function TourismEthiopia() {
+  const [search, setSearch] = useState("");
+
   const tours = [
     {
       category: "Historic Northern Route",
@@ -40,6 +44,15 @@ export default function TourismEthiopia() {
     },
   ];
 
+  // Filter tours by search
+  const filteredTours = tours.filter(
+    (tour) =>
+      tour.category.toLowerCase().includes(search.toLowerCase()) ||
+      tour.destinations.some((dest) =>
+        dest.toLowerCase().includes(search.toLowerCase())
+      )
+  );
+
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Hero */}
@@ -54,31 +67,51 @@ export default function TourismEthiopia() {
         </p>
       </header>
 
+      {/* Search Bar */}
+      <div className="max-w-3xl mx-auto px-6 -mt-8 mb-8">
+        <div className="flex items-center bg-white shadow-md rounded-lg overflow-hidden">
+          <Search className="w-6 h-6 text-gray-400 ml-3" />
+          <input
+            type="text"
+            placeholder="Search destinations or categories..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 px-4 py-3 outline-none"
+          />
+        </div>
+      </div>
+
       {/* Tour Categories */}
-      <section className="max-w-7xl mx-auto px-6 py-12">
+      <section className="max-w-7xl mx-auto px-6 pb-12">
         <h2 className="text-3xl font-semibold mb-8 text-gray-800 text-center">
           Top Ethiopian Tourist Destinations
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {tours.map((tour, index) => (
-            <div
-              key={index}
-              className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl transition"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                {tour.icon}
-                <h3 className="text-xl font-bold text-gray-800">
-                  {tour.category}
-                </h3>
+        {filteredTours.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {filteredTours.map((tour, index) => (
+              <div
+                key={index}
+                className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl transition"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  {tour.icon}
+                  <h3 className="text-xl font-bold text-gray-800">
+                    {tour.category}
+                  </h3>
+                </div>
+                <ul className="list-disc list-inside text-gray-600 space-y-2">
+                  {tour.destinations.map((dest, idx) => (
+                    <li key={idx}>{dest}</li>
+                  ))}
+                </ul>
               </div>
-              <ul className="list-disc list-inside text-gray-600 space-y-2">
-                {tour.destinations.map((dest, idx) => (
-                  <li key={idx}>{dest}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-gray-500">
+            No matching tours or destinations found.
+          </p>
+        )}
       </section>
 
       {/* Call to Action */}

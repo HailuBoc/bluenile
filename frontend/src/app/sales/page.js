@@ -1,4 +1,6 @@
+"use client";
 import { Home, Building, Map, Car } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function Sales() {
   const listings = [
@@ -43,11 +45,23 @@ export default function Sales() {
     <div className="bg-gray-50 min-h-screen">
       {/* Hero */}
       <header className="bg-gradient-to-r from-yellow-500 to-orange-600 text-white py-16 px-6 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold">Sales Listings</h1>
-        <p className="mt-4 text-lg md:text-xl max-w-2xl mx-auto">
+        <motion.h1
+          className="text-4xl md:text-5xl font-bold"
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          Sales Listings
+        </motion.h1>
+        <motion.p
+          className="mt-4 text-lg md:text-xl max-w-2xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.6 }}
+        >
           Verified listings of apartments, houses, lands, and vehicles for sale
           — direct from trusted owners or companies.
-        </p>
+        </motion.p>
       </header>
 
       {/* Listings */}
@@ -57,9 +71,13 @@ export default function Sales() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {listings.map((item, index) => (
-            <div
+            <motion.div
               key={index}
               className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl transition"
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: index * 0.15 }}
             >
               <div className="mb-4 flex justify-center">{item.icon}</div>
               <h3 className="text-xl font-bold text-gray-800 mb-1 text-center">
@@ -75,7 +93,7 @@ export default function Sales() {
               <button className="mt-4 w-full bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600 transition">
                 Contact Seller
               </button>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
@@ -86,32 +104,52 @@ export default function Sales() {
           <h2 className="text-3xl font-semibold mb-6 text-gray-800">
             Why Buy With Us?
           </h2>
-          <ul className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {highlights.map((item, idx) => (
-              <li
+              <motion.div
                 key={idx}
                 className="bg-gray-100 p-4 rounded-lg shadow-sm hover:shadow-md transition text-gray-700"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: idx * 0.15 }}
               >
                 {item}
-              </li>
+              </motion.div>
             ))}
-          </ul>
+          </div>
         </div>
       </section>
 
       {/* Call to Action */}
       <section className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12">
         <div className="max-w-4xl mx-auto text-center px-6">
-          <h2 className="text-3xl font-bold mb-4">
+          <motion.h2
+            className="text-3xl font-bold mb-4"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
             Find Your Perfect Property or Vehicle Today
-          </h2>
-          <p className="mb-6 text-lg">
+          </motion.h2>
+          <motion.p
+            className="mb-6 text-lg"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+          >
             Explore our verified listings and deal directly with trusted
             sellers.
-          </p>
-          <button className="bg-white text-blue-700 font-bold py-3 px-8 rounded-lg shadow hover:bg-gray-100 transition">
+          </motion.p>
+          <motion.button
+            className="bg-white text-blue-700 font-bold py-3 px-8 rounded-lg shadow hover:bg-gray-100 transition"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
             Browse All Listings
-          </button>
+          </motion.button>
         </div>
       </section>
 

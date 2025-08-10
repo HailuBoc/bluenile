@@ -1,6 +1,13 @@
-import { Camera, Utensils, Gift, Users } from "lucide-react";
+"use client";
+import { useState } from "react";
+import { Camera, Utensils, Gift, Users, Search } from "lucide-react";
 
 export default function EventServices() {
+  const [destination, setDestination] = useState("");
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
+  const [guests, setGuests] = useState(1);
+
   const services = [
     {
       title: "Photography & Videography",
@@ -35,6 +42,13 @@ export default function EventServices() {
     "Timely delivery & hassle-free setup",
   ];
 
+  // Filter services by "destination" input
+  const filteredServices = services.filter(
+    (service) =>
+      service.title.toLowerCase().includes(destination.toLowerCase()) ||
+      service.description.toLowerCase().includes(destination.toLowerCase())
+  );
+
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Hero Section */}
@@ -46,13 +60,87 @@ export default function EventServices() {
         </p>
       </header>
 
+      {/* Search Bar */}
+      <div className="w-full max-w-5xl mx-auto mt-8 px-6">
+        <div className="flex items-center justify-between border rounded-full shadow-lg px-6 py-3 bg-white bg-opacity-90">
+          {/* Destination */}
+          <div className="flex flex-col px-4 border-r min-w-[150px]">
+            <label className="text-xs text-gray-500 font-semibold">
+              Service Search
+            </label>
+            <input
+              type="text"
+              placeholder="What service do you need?"
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              className="bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400"
+            />
+          </div>
+
+          {/* Check-in */}
+          <div className="flex flex-col px-4 border-r min-w-[120px]">
+            <label className="text-xs text-gray-500 font-semibold">
+              Event Date
+            </label>
+            <input
+              type="date"
+              value={checkIn}
+              onChange={(e) => setCheckIn(e.target.value)}
+              className="bg-transparent outline-none text-sm text-gray-700"
+            />
+          </div>
+
+          {/* Check-out */}
+          <div className="flex flex-col px-4 border-r min-w-[120px]">
+            <label className="text-xs text-gray-500 font-semibold">
+              End Date
+            </label>
+            <input
+              type="date"
+              value={checkOut}
+              onChange={(e) => setCheckOut(e.target.value)}
+              className="bg-transparent outline-none text-sm text-gray-700"
+            />
+          </div>
+
+          {/* Guests */}
+          <div className="flex flex-col px-4 min-w-[100px]">
+            <label className="text-xs text-gray-500 font-semibold">
+              Guests
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={guests}
+              onChange={(e) => setGuests(e.target.value)}
+              className="bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400"
+            />
+          </div>
+
+          {/* Search Button */}
+          <div className="pl-4">
+            <Search
+              className="h-8 w-8 text-white bg-blue-600 p-2 rounded-full cursor-pointer shadow-lg"
+              onClick={() =>
+                console.log("Searching:", {
+                  destination,
+                  checkIn,
+                  checkOut,
+                  guests,
+                })
+              }
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Services Grid */}
       <section className="max-w-7xl mx-auto px-6 py-12">
         <h2 className="text-3xl font-semibold mb-8 text-gray-800 text-center">
           Our Professional Services
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {services.map((service, index) => (
+          {filteredServices.map((service, index) => (
             <div
               key={index}
               className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl transition"

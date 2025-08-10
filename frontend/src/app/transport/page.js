@@ -1,6 +1,10 @@
-import { Car, Bus, Briefcase, MapPin } from "lucide-react";
+"use client";
+import { useState } from "react";
+import { Car, Bus, Briefcase, MapPin, Search } from "lucide-react";
 
 export default function TransportServices() {
+  const [searchTerm, setSearchTerm] = useState("");
+
   const fleet = [
     {
       title: "Luxury Sedan",
@@ -49,6 +53,12 @@ export default function TransportServices() {
     },
   ];
 
+  const filteredFleet = fleet.filter(
+    (vehicle) =>
+      vehicle.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicle.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Hero */}
@@ -60,28 +70,90 @@ export default function TransportServices() {
         </p>
       </header>
 
+      {/* Search Bar */}
+      <div className="w-full max-w-5xl mx-auto mt-8 animate-fadeUp animation-delay-300">
+        <div className="flex items-center justify-between border rounded-full shadow-lg px-6 py-3 bg-white bg-opacity-90 dark:bg-gray-800 dark:bg-opacity-90 dark:border-gray-600">
+          {/* Destination */}
+          <div className="flex flex-col px-4 border-r dark:border-gray-600 min-w-[150px]">
+            <label className="text-xs text-gray-500 dark:text-gray-400 font-semibold">
+              Destination
+            </label>
+            <input
+              type="text"
+              placeholder="Where are you going?"
+              className="bg-transparent outline-none text-sm text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          {/* Check-in */}
+          <div className="flex flex-col px-4 border-r dark:border-gray-600 min-w-[120px]">
+            <label className="text-xs text-gray-500 dark:text-gray-400 font-semibold">
+              Check-in
+            </label>
+            <input
+              type="date"
+              className="bg-transparent outline-none text-sm text-gray-700 dark:text-white"
+            />
+          </div>
+          {/* Check-out */}
+          <div className="flex flex-col px-4 border-r dark:border-gray-600 min-w-[120px]">
+            <label className="text-xs text-gray-500 dark:text-gray-400 font-semibold">
+              Check-out
+            </label>
+            <input
+              type="date"
+              className="bg-transparent outline-none text-sm text-gray-700 dark:text-white"
+            />
+          </div>
+          {/* Guests */}
+          <div className="flex flex-col px-4 min-w-[100px]">
+            <label className="text-xs text-gray-500 dark:text-gray-400 font-semibold">
+              Guests
+            </label>
+            <input
+              type="number"
+              min="1"
+              placeholder="2 guests"
+              className="bg-transparent outline-none text-sm text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+            />
+          </div>
+          {/* Search Button */}
+          <div className="pl-4">
+            <Search className="h-8 w-8 text-white bg-blue-600 p-3 rounded-full cursor-pointer shadow-lg" />
+          </div>
+        </div>
+      </div>
+
       {/* Fleet Showcase */}
       <section className="max-w-7xl mx-auto px-6 py-12">
         <h2 className="text-3xl font-semibold mb-8 text-gray-800 text-center">
           Our Fleet
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {fleet.map((vehicle, index) => (
-            <div
-              key={index}
-              className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl transition"
-            >
-              <div className="mb-4 flex justify-center">{vehicle.icon}</div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2 text-center">
-                {vehicle.title}
-              </h3>
-              <p className="text-gray-600 text-center">{vehicle.description}</p>
-              <p className="text-blue-600 font-semibold text-center mt-3">
-                {vehicle.price}
-              </p>
-            </div>
-          ))}
-        </div>
+        {filteredFleet.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {filteredFleet.map((vehicle, index) => (
+              <div
+                key={index}
+                className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl transition"
+              >
+                <div className="mb-4 flex justify-center">{vehicle.icon}</div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2 text-center">
+                  {vehicle.title}
+                </h3>
+                <p className="text-gray-600 text-center">
+                  {vehicle.description}
+                </p>
+                <p className="text-blue-600 font-semibold text-center mt-3">
+                  {vehicle.price}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-gray-500">
+            No matching vehicles found.
+          </p>
+        )}
       </section>
 
       {/* Highlights */}
@@ -132,7 +204,7 @@ export default function TransportServices() {
   );
 }
 
-// Temporary placeholder for a calendar icon
+// Calendar icon
 function CalendarIcon() {
   return (
     <svg
