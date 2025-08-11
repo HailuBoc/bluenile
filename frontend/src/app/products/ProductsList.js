@@ -97,13 +97,15 @@ export default function ProductsPage() {
   }
 
   return (
-    <section className="px-4 sm:px-6 pt-6 pb-24 bg-gray-100 dark:bg-gray-900 min-h-screen">
-      <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200 max-w-6xl mx-auto">
+    <section className="px-2 sm:px-6 pt-6 pb-24 bg-gray-100 dark:bg-gray-900 min-h-screen">
+      <h2 className="text-base sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200 max-w-6xl mx-auto">
         All Stays
       </h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 max-w-6xl mx-auto">
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-6 max-w-6xl mx-auto">
         {listings.map((listing) => (
-          <ProductCard key={listing.id} {...listing} />
+          <div key={listing.id} className="transform scale-75 sm:scale-100">
+            <ProductCard {...listing} />
+          </div>
         ))}
       </div>
       <Footer />

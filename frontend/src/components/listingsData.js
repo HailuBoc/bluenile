@@ -134,3 +134,177 @@ const listings = [
 ];
 
 export default listings;
+// "use client";
+// import { Menu, Search, X, Home, User, List } from "lucide-react";
+// import { useState } from "react";
+// import Link from "next/link";
+
+// export default function HeroSection() {
+//   const [navOpen, setNavOpen] = useState(false);
+//   const [showSearch, setShowSearch] = useState(false);
+
+//   return (
+//     <div className="relative bg-blue-900 min-h-screen flex flex-col">
+//       {/* ==== TOP BAR ==== */}
+//       <div className="absolute top-4 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-12">
+//         <span className="text-2xl font-bold text-white tracking-wide">
+//           Blue Nile Plc
+//         </span>
+
+//         <div className="hidden md:flex items-center gap-6 text-sm text-white">
+//           <Link href="/listProperty" className="hover:underline transition">
+//             List your property
+//           </Link>
+//           <a
+//             href="/login"
+//             className="px-4 py-2 border border-white rounded-md text-white hover:bg-white hover:text-blue-900 transition"
+//           >
+//             Sign in
+//           </a>
+//           <Link href="/aboutus" className="hover:underline transition">
+//             About us
+//           </Link>
+//         </div>
+
+//         {/* Mobile Top Right Buttons */}
+//         <div className="flex md:hidden gap-3">
+//           {/* Search toggle */}
+//           <button
+//             onClick={() => setShowSearch(!showSearch)}
+//             className="p-2 bg-white/90 rounded-full shadow-lg"
+//           >
+//             <Search className="h-5 w-5 text-blue-900" />
+//           </button>
+//           {/* Menu toggle */}
+//           <button
+//             onClick={() => setNavOpen(!navOpen)}
+//             className="p-2 bg-white/90 rounded-full shadow-lg"
+//           >
+//             {navOpen ? (
+//               <X className="h-5 w-5 text-blue-900" />
+//             ) : (
+//               <Menu className="h-5 w-5 text-blue-900" />
+//             )}
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* ==== SIDE MENU MOBILE ==== */}
+//       {navOpen && (
+//         <div className="fixed inset-0 bg-black/50 z-40 flex justify-end">
+//           <div className="bg-white w-64 h-full p-6 flex flex-col gap-6">
+//             <Link href="/listProperty" onClick={() => setNavOpen(false)}>
+//               List your property
+//             </Link>
+//             <Link href="/login" onClick={() => setNavOpen(false)}>
+//               Sign in
+//             </Link>
+//             <Link href="/aboutus" onClick={() => setNavOpen(false)}>
+//               About us
+//             </Link>
+//           </div>
+//         </div>
+//       )}
+
+//       {/* ==== MAIN CONTENT ==== */}
+//       <div className="relative z-10 max-w-7xl mx-auto w-full flex flex-col h-full px-6 md:px-12 py-6 flex-grow">
+//         {/* Services & Search Section */}
+//         <div className="flex-grow flex flex-col items-center justify-center text-center px-4 space-y-10">
+//           {/* Services */}
+//           <nav className="flex flex-wrap justify-center gap-8 text-white text-sm font-semibold max-w-5xl animate-bounce">
+//             {[
+//               {
+//                 href: "/propertyrental",
+//                 icon: "🏠",
+//                 label: "Property Rentals & Bookings",
+//               },
+//               { href: "/event", icon: "🎉", label: "Event Venues & Support" },
+//               { href: "/transport", icon: "🚗", label: "Transport Services" },
+//               { href: "/sales", icon: "🏡", label: "Sales Section" },
+//               { href: "/tourism", icon: "🌍", label: "Tourism Services" },
+//             ].map((item, i) => (
+//               <a
+//                 key={i}
+//                 href={item.href}
+//                 className="group flex flex-col items-center max-w-[150px] p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-md hover:bg-slate-400/80 hover:shadow-lg transition-all duration-300 ease-out"
+//               >
+//                 <span className="text-3xl group-hover:scale-110 transition-transform duration-300">
+//                   {item.icon}
+//                 </span>
+//                 <span className="mt-2 text-center group-hover:underline">
+//                   {item.label}
+//                 </span>
+//               </a>
+//             ))}
+//           </nav>
+
+//           {/* Welcome */}
+//           <div>
+//             <h1 className="text-4xl font-extrabold text-white drop-shadow-md">
+//               Welcome to Blue Nile PLC
+//             </h1>
+//             <p className="mt-3 text-lg text-gray-200 drop-shadow-sm max-w-2xl">
+//               All-in-one booking platform for properties, events, transport, and
+//               tourism in Ethiopia
+//             </p>
+//           </div>
+
+//           {/* Search (Desktop or Mobile Toggle) */}
+//           {(showSearch || typeof window === "undefined") && (
+//             <div className="w-full max-w-5xl">
+//               <div className="flex items-center justify-between border rounded-full shadow-lg px-6 py-3 bg-white/90 dark:bg-gray-800/90 dark:border-gray-600">
+//                 {[
+//                   {
+//                     label: "Destination",
+//                     type: "text",
+//                     placeholder: "Where are you going?",
+//                   },
+//                   { label: "Check-in", type: "date" },
+//                   { label: "Check-out", type: "date" },
+//                   { label: "Guests", type: "number", placeholder: "2 guests" },
+//                 ].map((field, i) => (
+//                   <div
+//                     key={i}
+//                     className={`flex flex-col px-4 ${
+//                       i < 3 ? "border-r dark:border-gray-600" : ""
+//                     }`}
+//                   >
+//                     <label className="text-xs text-gray-500 dark:text-gray-400 font-semibold">
+//                       {field.label}
+//                     </label>
+//                     <input
+//                       type={field.type}
+//                       placeholder={field.placeholder}
+//                       min={field.type === "number" ? "1" : undefined}
+//                       className="bg-transparent outline-none text-sm text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+//                     />
+//                   </div>
+//                 ))}
+//                 <div className="pl-4">
+//                   <Search className="h-8 w-8 text-white bg-blue-600 p-2 rounded-full cursor-pointer shadow-lg" />
+//                 </div>
+//               </div>
+//             </div>
+//           )}
+//         </div>
+//       </div>
+
+//       {/* ==== MOBILE BOTTOM NAV ==== */}
+//       <div className="fixed bottom-0 left-0 right-0 bg-white shadow-md p-2 flex justify-around items-center md:hidden z-50">
+//         <Link href="/" className="flex flex-col items-center">
+//           <Home className="h-6 w-6 text-blue-900" />
+//           <span className="text-xs">Home</span>
+//         </Link>
+//         <Link href="/categories" className="flex flex-col items-center">
+//           <List className="h-6 w-6 text-blue-900" />
+//           <span className="text-xs">Categories</span>
+//         </Link>
+//         <Link href="/account" className="flex flex-col items-center">
+//           <User className="h-6 w-6 text-blue-900" />
+//           <span className="text-xs">Account</span>
+//         </Link>
+
+//       </div>
+//     </div>
+//   );
+// }

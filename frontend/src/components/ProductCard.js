@@ -16,7 +16,10 @@ export default function ProductCard({
   const [liked, setLiked] = useState(false);
 
   return (
-    <Link href={`/products?id=${id}`} className="block">
+    <Link
+      href={`/products?id=${id}`}
+      className="block transform scale-90 sm:scale-100" // Smaller on mobile, normal on desktop
+    >
       <div className="relative bg-white dark:bg-gray-800 text-gray-800 dark:text-white rounded-xl shadow hover:shadow-lg transition-all overflow-hidden group cursor-pointer">
         {guestFavorite && (
           <div className="absolute top-2 left-2 text-xs bg-rose-100 dark:bg-rose-800 text-rose-500 dark:text-white px-2 py-0.5 rounded-full z-10 shadow-sm">
@@ -41,19 +44,23 @@ export default function ProductCard({
         <img
           src={img}
           alt={title}
-          className="w-full h-40 object-cover group-hover:scale-105 transition-transform"
+          className="w-full h-32 sm:h-40 object-cover group-hover:scale-105 transition-transform" // shorter image on mobile
         />
 
-        <div className="p-4">
-          <div className="text-sm text-gray-500 dark:text-gray-300">
+        <div className="p-3 sm:p-4">
+          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-300">
             {location}
           </div>
-          <div className="font-semibold truncate">{title}</div>
-          <div className="flex items-center text-sm mt-1">
-            <Star className="h-4 w-4 text-yellow-400" />
+          <div className="font-semibold text-sm sm:text-base truncate">
+            {title}
+          </div>
+          <div className="flex items-center text-xs sm:text-sm mt-1">
+            <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400" />
             <span className="ml-1">{rating}</span>
           </div>
-          <div className="mt-2 font-bold">{price}</div>
+          <div className="mt-1 sm:mt-2 font-bold text-sm sm:text-base">
+            {price}
+          </div>
         </div>
       </div>
     </Link>

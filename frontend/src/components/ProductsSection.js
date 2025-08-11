@@ -1,3 +1,4 @@
+"use client";
 import ProductCard from "./ProductCard";
 import listings from "./listingsData";
 
@@ -20,8 +21,8 @@ export default function ProductsSection() {
           ))}
         </div>
 
-        {/* Horizontal Scroll for Mobile */}
-        <div className="sm:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory py-2 -mx-4 px-4">
+        {/* Horizontal Scroll for Mobile - scrollbar hidden */}
+        <div className="sm:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory py-2 -mx-4 px-4 scrollbar-hide">
           {firstGroup.map((listing, index) => (
             <div key={index} className="snap-start flex-shrink-0 w-72">
               <ProductCard {...listing} />
@@ -30,10 +31,10 @@ export default function ProductsSection() {
         </div>
       </div>
 
-      {/* 🔍 Homes for the next week */}
+      {/* 🔍 Cars for this week */}
       <div>
         <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
-          🔍 Cars for the this week
+          🔍 Cars for this week
         </h2>
 
         {/* Responsive Grid for Desktop */}
@@ -43,8 +44,8 @@ export default function ProductsSection() {
           ))}
         </div>
 
-        {/* Horizontal Scroll for Mobile */}
-        <div className="sm:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory py-2 -mx-4 px-4">
+        {/* Horizontal Scroll for Mobile - scrollbar hidden */}
+        <div className="sm:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory py-2 -mx-4 px-4 scrollbar-hide">
           {secondGroup.map((listing, index) => (
             <div key={index + 6} className="snap-start flex-shrink-0 w-72">
               <ProductCard {...listing} />
@@ -52,6 +53,17 @@ export default function ProductsSection() {
           ))}
         </div>
       </div>
+
+      {/* Hide scrollbar utility */}
+      <style jsx>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none; /* IE and Edge */
+          scrollbar-width: none; /* Firefox */
+        }
+      `}</style>
     </section>
   );
 }
