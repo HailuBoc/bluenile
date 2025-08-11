@@ -23,7 +23,7 @@ const listings = [
   },
   {
     id: 3,
-    image: "/p14.png",
+    image: "/p14.jpg",
     title: "Beachside bungalow",
     location: "📍 Kolfe",
     price: "220 birr/night",
@@ -34,7 +34,7 @@ const listings = [
   },
   {
     id: 4,
-    image: "/p13.png",
+    image: "/p13.jpg",
     title: "Mountain view retreat",
     location: "📍 Arada",
     price: "150 birr/night",
@@ -45,7 +45,7 @@ const listings = [
   },
   {
     id: 5,
-    image: "/p10.png",
+    image: "/p10.jpg",
     title: "Rustic country home",
     location: "📍 Semit 72",
     price: "110 birr/night",
@@ -56,7 +56,7 @@ const listings = [
   },
   {
     id: 6,
-    image: "/p11.png",
+    image: "/p11.jpg",
     title: "Tiny house getaway",
     location: "📍 Bole Arabsa",
     price: "90 birr/night",
