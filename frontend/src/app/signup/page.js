@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { FaGoogle, FaFacebookF, FaGithub } from "react-icons/fa";
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
@@ -15,8 +16,12 @@ export default function SignUp() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Submit logic here
     console.log("Form submitted:", formData);
+  };
+
+  const handleSocialLogin = (provider) => {
+    console.log(`Logging in with ${provider}`);
+    // Connect to NextAuth, Firebase, or your backend here
   };
 
   return (
@@ -83,7 +88,32 @@ export default function SignUp() {
           </button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-gray-400">
+        {/* Social Login */}
+        <div className="mt-6">
+          <p className="text-center text-gray-400 mb-4">Or sign up with</p>
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={() => handleSocialLogin("Google")}
+              className="flex items-center gap-2 bg-white text-gray-900 px-4 py-2 rounded-md hover:bg-gray-200 transition"
+            >
+              <FaGoogle className="text-red-500" /> Google
+            </button>
+            <button
+              onClick={() => handleSocialLogin("Facebook")}
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+            >
+              <FaFacebookF /> Facebook
+            </button>
+            <button
+              onClick={() => handleSocialLogin("GitHub")}
+              className="flex items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition"
+            >
+              <FaGithub /> GitHub
+            </button>
+          </div>
+        </div>
+
+        <p className="mt-6 text-center text-sm text-gray-400">
           Already have an account?{" "}
           <a href="/login" className="text-blue-400 hover:underline">
             Login

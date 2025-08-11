@@ -1,9 +1,9 @@
 export default function Footer() {
   return (
     <footer className="bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-300 text-sm border-t border-gray-200 dark:border-gray-700 mt-10">
-      <div className="max-w-7xl mx-auto px-6 py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         {/* Top Section: Footer Columns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 pb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 pb-10 text-center sm:text-left">
           <div>
             <h3 className="font-semibold text-gray-800 dark:text-white mb-3">
               About
@@ -127,13 +127,13 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom Section: Copyright */}
-        <div className="flex flex-col sm:flex-row justify-between items-center border-t border-gray-200 dark:border-gray-700 pt-6">
-          <p>
+        {/* Bottom Section */}
+        <div className="flex flex-col sm:flex-row justify-between items-center border-t border-gray-200 dark:border-gray-700 pt-6 gap-4 text-center sm:text-left">
+          <p className="text-xs sm:text-sm">
             © {new Date().getFullYear()} Blue Nile PLC · Privacy · Terms ·
             Sitemap
           </p>
-          <div className="flex items-center gap-4 mt-4 sm:mt-0">
+          <div className="flex flex-wrap justify-center sm:justify-end items-center gap-4 text-xs sm:text-sm">
             <span className="cursor-pointer hover:underline">English (EN)</span>
             <span className="cursor-pointer hover:underline">ETB (Birr)</span>
           </div>

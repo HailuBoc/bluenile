@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
-import { Search } from "lucide-react"; // make sure to install lucide-react: npm i lucide-react
+import { Search } from "lucide-react";
 
 export default function Home() {
   const [destination, setDestination] = useState("");
@@ -54,11 +54,11 @@ export default function Home() {
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Hero Section */}
-      <header className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white py-16 px-8 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold">
+      <header className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white py-12 px-4 text-center">
+        <h1 className="text-3xl md:text-5xl font-bold">
           Property Rentals & Event Bookings
         </h1>
-        <p className="mt-4 text-lg md:text-xl">
+        <p className="mt-3 text-base md:text-xl max-w-2xl mx-auto">
           Houses, apartments, guesthouses, hotel apartments, wedding & meeting
           halls — all in one place.
         </p>
@@ -66,16 +66,16 @@ export default function Home() {
 
       {/* Properties Section */}
       <div className="bg-slate-400">
-        <section className="max-w-7xl mx-auto px-6 py-12">
-          <h2 className="text-3xl font-semibold mb-8 text-gray-800">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+          <h2 className="text-2xl sm:text-3xl font-semibold mb-6 text-gray-800">
             Short & Long-Term Stays
           </h2>
 
           {/* Advanced Search Bar */}
-          <div className="w-full max-w-5xl mb-8 animate-fadeUp animation-delay-300">
-            <div className="flex items-center justify-between border rounded-full shadow-lg px-6 py-3 bg-white bg-opacity-90">
+          <div className="w-full max-w-5xl mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border rounded-2xl shadow-lg p-4 sm:px-6 sm:py-3 bg-white bg-opacity-90 gap-4 sm:gap-0">
               {/* Destination */}
-              <div className="flex flex-col px-4 border-r min-w-[150px]">
+              <div className="flex flex-col sm:px-4 sm:border-r flex-1">
                 <label className="text-xs text-gray-500 font-semibold">
                   Destination
                 </label>
@@ -89,7 +89,7 @@ export default function Home() {
               </div>
 
               {/* Check-in */}
-              <div className="flex flex-col px-4 border-r min-w-[120px]">
+              <div className="flex flex-col sm:px-4 sm:border-r flex-1">
                 <label className="text-xs text-gray-500 font-semibold">
                   Check-in
                 </label>
@@ -102,7 +102,7 @@ export default function Home() {
               </div>
 
               {/* Check-out */}
-              <div className="flex flex-col px-4 border-r min-w-[120px]">
+              <div className="flex flex-col sm:px-4 sm:border-r flex-1">
                 <label className="text-xs text-gray-500 font-semibold">
                   Check-out
                 </label>
@@ -115,7 +115,7 @@ export default function Home() {
               </div>
 
               {/* Guests */}
-              <div className="flex flex-col px-4 min-w-[100px]">
+              <div className="flex flex-col sm:px-4 flex-1">
                 <label className="text-xs text-gray-500 font-semibold">
                   Guests
                 </label>
@@ -129,9 +129,9 @@ export default function Home() {
               </div>
 
               {/* Search Button */}
-              <div className="pl-4">
+              <div className="flex justify-center sm:pl-4">
                 <Search
-                  className="h-8 w-8 text-white bg-blue-600 p-2 rounded-full cursor-pointer shadow-lg"
+                  className="h-10 w-10 text-white bg-blue-600 p-2 rounded-full cursor-pointer shadow-lg"
                   onClick={() =>
                     console.log("Searching:", {
                       destination,
@@ -146,7 +146,7 @@ export default function Home() {
           </div>
 
           {/* Property Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredProperties.map((property) => (
               <div
                 key={property.id}
@@ -160,7 +160,7 @@ export default function Home() {
                   className="w-full h-48 object-cover"
                 />
                 <div className="p-5">
-                  <h3 className="text-xl font-semibold text-gray-800">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
                     {property.title}
                   </h3>
                   <p className="text-gray-500">{property.type}</p>

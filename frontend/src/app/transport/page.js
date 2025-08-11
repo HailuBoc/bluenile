@@ -62,19 +62,19 @@ export default function TransportServices() {
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Hero */}
-      <header className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white py-16 px-6 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold">Transport Services</h1>
-        <p className="mt-4 text-lg md:text-xl max-w-2xl mx-auto">
+      <header className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white py-12 px-4 text-center">
+        <h1 className="text-3xl sm:text-5xl font-bold">Transport Services</h1>
+        <p className="mt-4 text-base sm:text-lg max-w-2xl mx-auto">
           Car rentals with drivers for daily or monthly use. Executive cars and
           vans for tours, events, and corporate needs.
         </p>
       </header>
 
       {/* Search Bar */}
-      <div className="w-full max-w-5xl mx-auto mt-8 animate-fadeUp animation-delay-300">
-        <div className="flex items-center justify-between border rounded-full shadow-lg px-6 py-3 bg-white bg-opacity-90 dark:bg-gray-800 dark:bg-opacity-90 dark:border-gray-600">
+      <div className="w-full max-w-5xl mx-auto mt-8 px-4 animate-fadeUp animation-delay-300">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border rounded-2xl shadow-lg px-4 sm:px-6 py-4 bg-white bg-opacity-90 dark:bg-gray-800 dark:bg-opacity-90 dark:border-gray-600 gap-4">
           {/* Destination */}
-          <div className="flex flex-col px-4 border-r dark:border-gray-600 min-w-[150px]">
+          <div className="flex flex-col flex-1 sm:border-r dark:border-gray-600 sm:pr-4">
             <label className="text-xs text-gray-500 dark:text-gray-400 font-semibold">
               Destination
             </label>
@@ -86,7 +86,7 @@ export default function TransportServices() {
             />
           </div>
           {/* Check-in */}
-          <div className="flex flex-col px-4 border-r dark:border-gray-600 min-w-[120px]">
+          <div className="flex flex-col flex-1 sm:border-r dark:border-gray-600 sm:pr-4">
             <label className="text-xs text-gray-500 dark:text-gray-400 font-semibold">
               Check-in
             </label>
@@ -96,7 +96,7 @@ export default function TransportServices() {
             />
           </div>
           {/* Check-out */}
-          <div className="flex flex-col px-4 border-r dark:border-gray-600 min-w-[120px]">
+          <div className="flex flex-col flex-1 sm:border-r dark:border-gray-600 sm:pr-4">
             <label className="text-xs text-gray-500 dark:text-gray-400 font-semibold">
               Check-out
             </label>
@@ -106,7 +106,7 @@ export default function TransportServices() {
             />
           </div>
           {/* Guests */}
-          <div className="flex flex-col px-4 min-w-[100px]">
+          <div className="flex flex-col flex-1">
             <label className="text-xs text-gray-500 dark:text-gray-400 font-semibold">
               Guests
             </label>
@@ -118,29 +118,29 @@ export default function TransportServices() {
             />
           </div>
           {/* Search Button */}
-          <div className="pl-4">
-            <Search className="h-8 w-8 text-white bg-blue-600 p-3 rounded-full cursor-pointer shadow-lg" />
-          </div>
+          <button className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 transition text-white p-3 rounded-full shadow-lg sm:ml-2">
+            <Search className="h-5 w-5" />
+          </button>
         </div>
       </div>
 
       {/* Fleet Showcase */}
-      <section className="max-w-7xl mx-auto px-6 py-12">
-        <h2 className="text-3xl font-semibold mb-8 text-gray-800 text-center">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        <h2 className="text-2xl sm:text-3xl font-semibold mb-8 text-gray-800 text-center">
           Our Fleet
         </h2>
         {filteredFleet.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredFleet.map((vehicle, index) => (
               <div
                 key={index}
                 className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl transition"
               >
                 <div className="mb-4 flex justify-center">{vehicle.icon}</div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2 text-center">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 text-center">
                   {vehicle.title}
                 </h3>
-                <p className="text-gray-600 text-center">
+                <p className="text-gray-600 text-center text-sm sm:text-base">
                   {vehicle.description}
                 </p>
                 <p className="text-blue-600 font-semibold text-center mt-3">
@@ -158,11 +158,11 @@ export default function TransportServices() {
 
       {/* Highlights */}
       <section className="bg-white py-12">
-        <div className="max-w-5xl mx-auto px-6">
-          <h2 className="text-3xl font-semibold mb-6 text-gray-800 text-center">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <h2 className="text-2xl sm:text-3xl font-semibold mb-6 text-gray-800 text-center">
             Why Ride With Us?
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {highlights.map((item, idx) => (
               <div
                 key={idx}
@@ -179,15 +179,17 @@ export default function TransportServices() {
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="bg-gradient-to-r from-green-600 to-emerald-700 text-white py-12">
-        <div className="max-w-4xl mx-auto text-center px-6">
-          <h2 className="text-3xl font-bold mb-4">Book Your Ride Today</h2>
-          <p className="mb-6 text-lg">
+      {/* CTA */}
+      <section className="bg-gradient-to-r from-green-600 to-emerald-700 text-white py-12 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4">
+            Book Your Ride Today
+          </h2>
+          <p className="mb-6 text-sm sm:text-lg">
             Reliable transport for business, leisure, and special events —
             anytime, anywhere.
           </p>
-          <button className="bg-white text-green-700 font-bold py-3 px-8 rounded-lg shadow hover:bg-gray-100 transition">
+          <button className="bg-white text-green-700 font-bold py-3 px-6 sm:px-8 rounded-lg shadow hover:bg-gray-100 transition">
             Get a Quote
           </button>
         </div>
@@ -204,7 +206,6 @@ export default function TransportServices() {
   );
 }
 
-// Calendar icon
 function CalendarIcon() {
   return (
     <svg
