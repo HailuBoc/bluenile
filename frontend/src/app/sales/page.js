@@ -44,9 +44,9 @@ export default function Sales() {
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Hero */}
-      <header className="bg-gradient-to-r from-yellow-500 to-orange-600 text-white py-12 sm:py-16 px-4 sm:px-6 text-center">
+      <header className="bg-gradient-to-r from-yellow-500 to-orange-600 text-white py-16 px-6 text-center">
         <motion.h1
-          className="text-3xl sm:text-4xl md:text-5xl font-bold"
+          className="text-4xl md:text-5xl font-bold"
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -54,7 +54,7 @@ export default function Sales() {
           Sales Listings
         </motion.h1>
         <motion.p
-          className="mt-3 sm:mt-4 text-base sm:text-lg md:text-xl max-w-2xl mx-auto"
+          className="mt-4 text-lg md:text-xl max-w-2xl mx-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.6 }}
@@ -65,22 +65,22 @@ export default function Sales() {
       </header>
 
       {/* Listings */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
-        <h2 className="text-2xl sm:text-3xl font-semibold mb-6 sm:mb-8 text-gray-800 text-center">
+      <section className="max-w-7xl mx-auto px-6 py-12">
+        <h2 className="text-3xl font-semibold mb-8 text-gray-800 text-center">
           Featured Listings
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {listings.map((item, index) => (
             <motion.div
               key={index}
-              className="bg-white p-5 sm:p-6 rounded-2xl shadow-md hover:shadow-xl transition"
+              className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl transition"
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.15 }}
             >
               <div className="mb-4 flex justify-center">{item.icon}</div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-1 text-center">
+              <h3 className="text-xl font-bold text-gray-800 mb-1 text-center">
                 {item.title}
               </h3>
               <p className="text-gray-500 text-center">{item.category}</p>
@@ -99,16 +99,16 @@ export default function Sales() {
       </section>
 
       {/* Highlights */}
-      <section className="bg-white py-10 sm:py-12">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-2xl sm:text-3xl font-semibold mb-5 sm:mb-6 text-gray-800">
+      <section className="bg-white py-12">
+        <div className="max-w-5xl mx-auto px-6 text-center">
+          <h2 className="text-3xl font-semibold mb-6 text-gray-800">
             Why Buy With Us?
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {highlights.map((item, idx) => (
               <motion.div
                 key={idx}
-                className="bg-gray-100 p-4 rounded-lg shadow-sm hover:shadow-md transition text-gray-700 text-sm sm:text-base"
+                className="bg-gray-100 p-4 rounded-lg shadow-sm hover:shadow-md transition text-gray-700"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -122,10 +122,10 @@ export default function Sales() {
       </section>
 
       {/* Call to Action */}
-      <section className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-10 sm:py-12">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6">
+      <section className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12">
+        <div className="max-w-4xl mx-auto text-center px-6">
           <motion.h2
-            className="text-2xl sm:text-3xl font-bold mb-4"
+            className="text-3xl font-bold mb-4"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -134,7 +134,7 @@ export default function Sales() {
             Find Your Perfect Property or Vehicle Today
           </motion.h2>
           <motion.p
-            className="mb-6 text-base sm:text-lg"
+            className="mb-6 text-lg"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -144,7 +144,7 @@ export default function Sales() {
             sellers.
           </motion.p>
           <motion.button
-            className="bg-white text-blue-700 font-bold py-2 sm:py-3 px-6 sm:px-8 rounded-lg shadow hover:bg-gray-100 transition"
+            className="bg-white text-blue-700 font-bold py-3 px-8 rounded-lg shadow hover:bg-gray-100 transition"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -154,7 +154,7 @@ export default function Sales() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-gray-300 py-6 sm:py-8 text-center mt-8 sm:mt-10 text-sm sm:text-base">
+      <footer className="bg-gray-800 text-gray-300 py-8 text-center mt-10">
         <p>
           &copy; {new Date().getFullYear()} Sales Listings. All rights reserved.
         </p>

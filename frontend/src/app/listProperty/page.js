@@ -1,3 +1,6 @@
+// src/app/list-property/page.js  (App Router)
+// or pages/list-property.js     (Pages Router)
+
 "use client";
 import React, { useState } from "react";
 
@@ -8,28 +11,23 @@ export default function ListPropertyPage() {
     <div className="min-h-screen bg-gray-950 flex flex-col items-center">
       {/* Header */}
       <header className="w-full bg-blue-950 py-4 text-white">
-        <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0">
-          <h1 className="text-2xl font-bold text-center sm:text-left">
-            List Your Property
-          </h1>
-          <button className="bg-white text-blue-700 px-4 py-2 rounded hover:bg-gray-100 w-full sm:w-auto">
+        <div className="max-w-6xl mx-auto px-4 flex justify-between items-center">
+          <h1 className="text-2xl font-bold">List Your Property</h1>
+          <button className="bg-white text-blue-700 px-4 py-2 rounded hover:bg-gray-100">
             Help
           </button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-10 flex flex-col lg:flex-row gap-8">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-10 flex gap-8">
         {/* Left: Form */}
-        <div className="flex-1 bg-gray-500 p-6 sm:p-8 rounded shadow">
+        <div className="flex-1 bg-gray-500 p-8 rounded shadow">
           {/* Progress Steps */}
-          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 mb-8">
+          <div className="flex items-center justify-between mb-8">
             {["Property Info", "Rooms", "Facilities", "Pricing"].map(
               (label, idx) => (
-                <div
-                  key={idx}
-                  className="flex-1 flex flex-col items-center min-w-[70px]"
-                >
+                <div key={idx} className="flex-1 flex flex-col items-center">
                   <div
                     className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold 
                     ${
@@ -42,7 +40,7 @@ export default function ListPropertyPage() {
                   >
                     {idx + 1}
                   </div>
-                  <span className="text-xs mt-2 text-center">{label}</span>
+                  <span className="text-xs mt-2">{label}</span>
                 </div>
               )
             )}
@@ -82,11 +80,11 @@ export default function ListPropertyPage() {
           )}
 
           {/* Step Navigation */}
-          <div className="mt-8 flex flex-col sm:flex-row justify-between gap-4">
+          <div className="mt-8 flex justify-between">
             {step > 1 ? (
               <button
                 onClick={() => setStep(step - 1)}
-                className="px-6 py-3 border border-gray-400 rounded hover:bg-gray-100 w-full sm:w-auto"
+                className="px-6 py-3 border border-gray-400 rounded hover:bg-gray-100"
               >
                 Back
               </button>
@@ -96,12 +94,12 @@ export default function ListPropertyPage() {
             {step < 4 ? (
               <button
                 onClick={() => setStep(step + 1)}
-                className="px-6 py-3 bg-blue-700 text-white rounded hover:bg-blue-800 w-full sm:w-auto"
+                className="px-6 py-3 bg-blue-700 text-white rounded hover:bg-blue-800"
               >
                 Next
               </button>
             ) : (
-              <button className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 w-full sm:w-auto">
+              <button className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700">
                 Submit
               </button>
             )}
@@ -109,7 +107,7 @@ export default function ListPropertyPage() {
         </div>
 
         {/* Right: Info / Benefits */}
-        <aside className="w-full lg:w-1/3 bg-gray-200 p-6 sm:p-8 rounded shadow">
+        <aside className="w-1/3 bg-gray-200 p-8 rounded shadow">
           <h3 className="text-lg text-blue-950 font-semibold mb-4">
             Why list with us?
           </h3>
@@ -120,11 +118,7 @@ export default function ListPropertyPage() {
             <li>✔ 24/7 customer support</li>
           </ul>
           <div className="mt-6">
-            <img
-              src="/oppp.jpg"
-              alt="Promo"
-              className="rounded shadow w-full object-cover"
-            />
+            <img src="/oppp.jpg" alt="Promo" className="rounded shadow" />
           </div>
         </aside>
       </main>

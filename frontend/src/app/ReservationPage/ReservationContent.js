@@ -48,8 +48,14 @@ export default function ReservationPage() {
     setSuccessMessage(
       `Successfully reserved ${listing.title} from ${checkIn} to ${checkOut}. Total: ${totalPrice} birr.`
     );
+
+    // Optionally clear form
+    // setGuestInfo({ name: "", email: "", phone: "", paymentMethod: "chapa" });
+    // setCheckIn(new Date().toISOString().split("T")[0]);
+    // setCheckOut(new Date(Date.now() + 2 * 86400000).toISOString().split("T")[0]);
   }
 
+  // Auto-hide success message after 3 seconds
   useEffect(() => {
     if (successMessage) {
       const timer = setTimeout(() => setSuccessMessage(""), 3000);
@@ -58,113 +64,130 @@ export default function ReservationPage() {
   }, [successMessage]);
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 flex justify-center">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 flex justify-center relative">
       {/* Success Banner */}
       {successMessage && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded shadow-lg text-sm sm:text-base z-50 text-center">
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded shadow-lg z-50">
           {successMessage}
         </div>
       )}
 
-      <div className="w-full max-w-6xl bg-white dark:bg-gray-800 rounded-lg shadow-lg grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 p-4 sm:p-6">
+      <div className="max-w-6xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg grid grid-cols-1 md:grid-cols-3 gap-8 p-6">
         {/* Left: Listing Info */}
-        <section className="md:col-span-2 flex flex-col gap-4 sm:gap-6">
+        <section className="md:col-span-2 flex flex-col gap-6">
           <img
-            src={listing.image}
+            src={listing.img}
             alt={listing.title}
-            className="rounded-lg w-full max-h-72 sm:max-h-80 object-cover shadow"
+            className="rounded-lg w-full h-80 object-cover shadow"
           />
           <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-white">
+            <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">
               {listing.title}
             </h1>
             <p className="text-blue-600 dark:text-blue-400 text-sm mt-1">
               {listing.location}
             </p>
-            <div className="flex items-center mt-2 space-x-2 text-sm sm:text-base">
+            <div className="flex items-center mt-2 space-x-2">
               <span className="text-yellow-400 font-semibold">
                 {listing.rating} ★
               </span>
-              <span className="text-gray-500 dark:text-gray-400">
+              <span className="text-gray-500 dark:text-gray-400 text-sm">
                 Guest Favorite
               </span>
             </div>
-            <p className="mt-3 sm:mt-4 text-gray-700 dark:text-gray-300 text-sm sm:text-base">
+            <p className="mt-4 text-gray-700 dark:text-gray-300">
               {listing.description}
             </p>
           </div>
         </section>
 
         {/* Right: Reservation Form */}
-        <aside className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 sm:p-6 flex flex-col justify-between shadow-lg">
+        <aside className="bg-gray-100 dark:bg-gray-700 rounded-lg p-6 flex flex-col justify-between shadow-lg">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
               Your Reservation
             </h2>
 
             {/* Dates */}
             <div>
-              <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium text-sm sm:text-base">
+              <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">
                 Check-in
               </label>
               <input
                 type="date"
+                name="checkIn"
                 value={checkIn}
                 onChange={(e) => setCheckIn(e.target.value)}
                 required
-                className="w-full p-2 text-sm sm:text-base rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 min={new Date().toISOString().split("T")[0]}
               />
             </div>
             <div>
-              <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium text-sm sm:text-base">
+              <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">
                 Check-out
               </label>
               <input
                 type="date"
+                name="checkOut"
                 value={checkOut}
                 onChange={(e) => setCheckOut(e.target.value)}
                 required
-                className="w-full p-2 text-sm sm:text-base rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 min={checkIn}
               />
             </div>
 
             {/* Guest Info */}
-            {["name", "email", "phone"].map((field) => (
-              <div key={field}>
-                <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium text-sm sm:text-base capitalize">
-                  {field === "phone" ? "Phone Number" : field}
-                </label>
-                <input
-                  type={
-                    field === "email"
-                      ? "email"
-                      : field === "phone"
-                      ? "tel"
-                      : "text"
-                  }
-                  name={field}
-                  value={guestInfo[field]}
-                  onChange={handleChange}
-                  placeholder={
-                    field === "phone"
-                      ? "+251 9XX XXX XXX"
-                      : field === "email"
-                      ? "john@example.com"
-                      : "John Doe"
-                  }
-                  required
-                  className="w-full p-2 text-sm sm:text-base rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                />
-              </div>
-            ))}
+            <div>
+              <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">
+                Full Name
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={guestInfo.name}
+                onChange={handleChange}
+                placeholder="John Doe"
+                required
+                className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">
+                Email Address
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={guestInfo.email}
+                onChange={handleChange}
+                placeholder="john@example.com"
+                required
+                className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                value={guestInfo.phone}
+                onChange={handleChange}
+                placeholder="+251 9XX XXX XXX"
+                required
+                className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              />
+            </div>
 
             {/* Payment Methods */}
-            <fieldset className="border border-gray-300 dark:border-gray-600 rounded-md p-3 sm:p-4 max-h-40 sm:max-h-48 overflow-auto">
-              <legend className="text-gray-700 dark:text-gray-300 font-medium mb-2 text-sm sm:text-base">
+            <fieldset className="border border-gray-300 dark:border-gray-600 rounded-md p-4 max-h-48 overflow-auto">
+              <legend className="text-gray-700 dark:text-gray-300 font-medium mb-2">
                 Payment Method
               </legend>
+
               {[
                 { value: "chapa", label: "Chapa" },
                 { value: "sentimpay", label: "SentiMPay" },
@@ -177,10 +200,10 @@ export default function ReservationPage() {
               ].map(({ value, label, disabled }) => (
                 <label
                   key={value}
-                  className={`flex items-center gap-2 mb-2 text-sm sm:text-base ${
+                  className={`flex items-center gap-3 mb-2 cursor-pointer ${
                     disabled
                       ? "cursor-not-allowed text-gray-400 dark:text-gray-500"
-                      : "cursor-pointer"
+                      : ""
                   }`}
                 >
                   <input
@@ -190,30 +213,34 @@ export default function ReservationPage() {
                     checked={guestInfo.paymentMethod === value}
                     onChange={handleChange}
                     disabled={disabled}
+                    className="form-radio text-blue-600"
+                    required
                   />
-                  {label}
+                  <span>{label}</span>
                 </label>
               ))}
             </fieldset>
 
             {/* Price Summary */}
-            <div className="border-t border-gray-300 dark:border-gray-600 pt-3 sm:pt-4 mt-3 sm:mt-4 text-sm sm:text-base">
-              <div className="flex justify-between font-semibold text-gray-900 dark:text-white mb-1 sm:mb-2">
+            <div className="border-t border-gray-300 dark:border-gray-600 pt-4 mt-4">
+              <div className="flex justify-between font-semibold text-gray-900 dark:text-white mb-2">
                 <span>
                   {daysDiff} {daysDiff === 1 ? "night" : "nights"} ×{" "}
                   {listing.price}
                 </span>
                 <span>{totalPrice} birr</span>
               </div>
-              <div className="flex justify-between font-bold text-green-700 dark:text-green-400">
+              <div className="flex justify-between font-bold text-lg text-green-700 dark:text-green-400">
                 <span>Total</span>
                 <span>{totalPrice} birr</span>
               </div>
             </div>
 
+            {/* Submit */}
+
             <button
               type="submit"
-              className="mt-4 sm:mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 rounded-md transition"
+              className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-md transition duration-200"
             >
               Confirm Reservation
             </button>

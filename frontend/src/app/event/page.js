@@ -42,6 +42,7 @@ export default function EventServices() {
     "Timely delivery & hassle-free setup",
   ];
 
+  // Filter services by "destination" input
   const filteredServices = services.filter(
     (service) =>
       service.title.toLowerCase().includes(destination.toLowerCase()) ||
@@ -51,19 +52,19 @@ export default function EventServices() {
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Hero Section */}
-      <header className="bg-gradient-to-r from-pink-500 to-purple-600 text-white py-12 px-4 text-center">
-        <h1 className="text-3xl md:text-5xl font-bold">Event Services</h1>
-        <p className="mt-3 text-base md:text-xl max-w-2xl mx-auto">
+      <header className="bg-gradient-to-r from-pink-500 to-purple-600 text-white py-16 px-6 text-center">
+        <h1 className="text-4xl md:text-5xl font-bold">Event Services</h1>
+        <p className="mt-4 text-lg md:text-xl max-w-2xl mx-auto">
           Full event support including photography, catering, decoration, and
           other professional services for weddings, meetings, and gatherings.
         </p>
       </header>
 
       {/* Search Bar */}
-      <div className="w-full max-w-5xl mx-auto mt-6 px-4">
-        <div className="flex flex-col md:flex-row md:items-center border rounded-2xl shadow-lg px-4 py-3 bg-white bg-opacity-90 gap-4">
+      <div className="w-full max-w-5xl mx-auto mt-8 px-6">
+        <div className="flex items-center justify-between border rounded-full shadow-lg px-6 py-3 bg-white bg-opacity-90">
           {/* Destination */}
-          <div className="flex flex-col flex-1">
+          <div className="flex flex-col px-4 border-r min-w-[150px]">
             <label className="text-xs text-gray-500 font-semibold">
               Service Search
             </label>
@@ -76,8 +77,8 @@ export default function EventServices() {
             />
           </div>
 
-          {/* Event Date */}
-          <div className="flex flex-col flex-1">
+          {/* Check-in */}
+          <div className="flex flex-col px-4 border-r min-w-[120px]">
             <label className="text-xs text-gray-500 font-semibold">
               Event Date
             </label>
@@ -89,8 +90,8 @@ export default function EventServices() {
             />
           </div>
 
-          {/* End Date */}
-          <div className="flex flex-col flex-1">
+          {/* Check-out */}
+          <div className="flex flex-col px-4 border-r min-w-[120px]">
             <label className="text-xs text-gray-500 font-semibold">
               End Date
             </label>
@@ -103,7 +104,7 @@ export default function EventServices() {
           </div>
 
           {/* Guests */}
-          <div className="flex flex-col flex-1">
+          <div className="flex flex-col px-4 min-w-[100px]">
             <label className="text-xs text-gray-500 font-semibold">
               Guests
             </label>
@@ -117,7 +118,7 @@ export default function EventServices() {
           </div>
 
           {/* Search Button */}
-          <div className="flex justify-center md:justify-end">
+          <div className="pl-4">
             <Search
               className="h-8 w-8 text-white bg-blue-600 p-2 rounded-full cursor-pointer shadow-lg"
               onClick={() =>
@@ -134,39 +135,37 @@ export default function EventServices() {
       </div>
 
       {/* Services Grid */}
-      <section className="max-w-7xl mx-auto px-4 py-10">
-        <h2 className="text-2xl md:text-3xl font-semibold mb-6 text-gray-800 text-center">
+      <section className="max-w-7xl mx-auto px-6 py-12">
+        <h2 className="text-3xl font-semibold mb-8 text-gray-800 text-center">
           Our Professional Services
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {filteredServices.map((service, index) => (
             <div
               key={index}
               className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl transition"
             >
               <div className="mb-4 flex justify-center">{service.icon}</div>
-              <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-2 text-center">
+              <h3 className="text-xl font-bold text-gray-800 mb-2 text-center">
                 {service.title}
               </h3>
-              <p className="text-gray-600 text-center text-sm md:text-base">
-                {service.description}
-              </p>
+              <p className="text-gray-600 text-center">{service.description}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Why Choose Us */}
-      <section className="bg-white py-10 px-4">
-        <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-semibold mb-5 text-gray-800">
+      <section className="bg-white py-12">
+        <div className="max-w-5xl mx-auto px-6 text-center">
+          <h2 className="text-3xl font-semibold mb-6 text-gray-800">
             Why Choose Us?
           </h2>
-          <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {highlights.map((item, index) => (
               <li
                 key={index}
-                className="bg-gray-100 p-4 rounded-lg shadow-sm hover:shadow-md transition text-gray-700 text-sm md:text-base"
+                className="bg-gray-100 p-4 rounded-lg shadow-sm hover:shadow-md transition text-gray-700"
               >
                 {item}
               </li>
@@ -176,12 +175,12 @@ export default function EventServices() {
       </section>
 
       {/* Call to Action */}
-      <section className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-10 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-3">
+      <section className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12">
+        <div className="max-w-4xl mx-auto text-center px-6">
+          <h2 className="text-3xl font-bold mb-4">
             Let’s Make Your Event Unforgettable
           </h2>
-          <p className="mb-5 text-sm md:text-lg">
+          <p className="mb-6 text-lg">
             Contact our team today to start planning your perfect event with
             full professional support.
           </p>
@@ -192,7 +191,7 @@ export default function EventServices() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-gray-300 py-6 text-center text-sm md:text-base">
+      <footer className="bg-gray-800 text-gray-300 py-8 text-center mt-10">
         <p>
           &copy; {new Date().getFullYear()} Event Services. All rights reserved.
         </p>
