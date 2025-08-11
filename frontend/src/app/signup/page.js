@@ -1,8 +1,10 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { FaGoogle, FaFacebookF, FaGithub } from "react-icons/fa";
 
 export default function SignUp() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -16,12 +18,21 @@ export default function SignUp() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
+
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
+
+    // Save to localStorage (can be replaced with API/DB)
+    localStorage.setItem("userProfile", JSON.stringify(formData));
+
+    // Redirect to profile page
+    router.push("/profile");
   };
 
   const handleSocialLogin = (provider) => {
     console.log(`Logging in with ${provider}`);
-    // Connect to NextAuth, Firebase, or your backend here
   };
 
   return (
@@ -88,10 +99,9 @@ export default function SignUp() {
           </button>
         </form>
 
-        {/* Social Login */}
         <div className="mt-6">
           <p className="text-center text-gray-400 mb-4">Or sign up with</p>
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center gap-4 flex-wrap">
             <button
               onClick={() => handleSocialLogin("Google")}
               className="flex items-center gap-2 bg-white text-gray-900 px-4 py-2 rounded-md hover:bg-gray-200 transition"

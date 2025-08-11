@@ -161,21 +161,32 @@ export default function Navbar() {
       )}
       {/* ==== MOBILE BOTTOM NAV ==== */}
 
+      {/* ==== MOBILE BOTTOM NAV ==== */}
       <nav className="fixed bottom-0 z-50 w-full bg-white dark:bg-gray-900 border-t shadow-md flex justify-around items-center px-4 py-2 sm:hidden">
         {[
-          { icon: <Home className="h-5 w-5 mb-1" />, label: "Home" },
-          { icon: <Briefcase className="h-5 w-5 mb-1" />, label: "Services" },
-          { icon: <User className="h-5 w-5 mb-1" />, label: "Profile" },
+          { href: "/", icon: <Home className="h-5 w-5 mb-1" />, label: "Home" },
+          {
+            href: "/services",
+            icon: <Briefcase className="h-5 w-5 mb-1" />,
+            label: "Services",
+          },
+          {
+            href: "/profile",
+            icon: <User className="h-5 w-5 mb-1" />,
+            label: "Profile",
+          },
         ].map((item, i) => (
-          <button
+          <Link
             key={i}
+            href={item.href}
             className="flex flex-col items-center text-xs text-gray-600 dark:text-gray-300 hover:text-blue-600 focus:outline-none"
           >
             {item.icon}
             {item.label}
-          </button>
+          </Link>
         ))}
       </nav>
+
       {/* ==== MOBILE NAV DRAWER ==== */}
       {navOpen && (
         <div className="fixed top-16 right-4 bg-white dark:bg-gray-800 shadow-md flex flex-col items-start px-5 py-4 space-y-3 sm:hidden z-50 rounded-xl animate-slideDown">
