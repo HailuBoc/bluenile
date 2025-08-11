@@ -41,7 +41,7 @@ export default function ProductsPage() {
           {/* Left side - Image */}
           <div className="md:w-1/2 relative rounded-xl overflow-hidden shadow-lg">
             <img
-              src={selectedProduct.image}
+              src={selectedProduct.img}
               alt={selectedProduct.title}
               className="w-full h-full object-cover rounded-xl"
               style={{ minHeight: "400px" }}
