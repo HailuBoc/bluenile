@@ -1,7 +1,7 @@
 const listings = [
   {
     id: 1,
-    image: "/p1.png",
+    img: "/p1.png",
     title: "Cozy cabin in the woods",
     location: "📍 Meskel Flower",
     price: "120 birr/night",
@@ -12,7 +12,7 @@ const listings = [
   },
   {
     id: 2,
-    image: "/p2.png",
+    img: "/p2.png",
     title: "Modern apartment near downtown",
     location: "📍 CMC",
     price: "180 birr/night",
@@ -23,7 +23,7 @@ const listings = [
   },
   {
     id: 3,
-    image: "/p14.jpg",
+    img: "/p14.jpg",
     title: "Beachside bungalow",
     location: "📍 Kolfe",
     price: "220 birr/night",
@@ -34,7 +34,7 @@ const listings = [
   },
   {
     id: 4,
-    image: "/p13.jpg",
+    img: "/p13.jpg",
     title: "Mountain view retreat",
     location: "📍 Arada",
     price: "150 birr/night",
@@ -45,7 +45,7 @@ const listings = [
   },
   {
     id: 5,
-    image: "/p10.jpg",
+    img: "/p10.jpg",
     title: "Rustic country home",
     location: "📍 Semit 72",
     price: "110 birr/night",
@@ -56,7 +56,7 @@ const listings = [
   },
   {
     id: 6,
-    image: "/p11.jpg",
+    img: "/p11.jpg",
     title: "Tiny house getaway",
     location: "📍 Bole Arabsa",
     price: "90 birr/night",
@@ -67,7 +67,7 @@ const listings = [
   },
   {
     id: 7,
-    image: "/car1.png",
+    img: "/car1.png",
     title: "Desert Cruiser 4x4",
     location: "📍 Fiyel Bet",
     price: "140 birr/day",
@@ -78,7 +78,7 @@ const listings = [
   },
   {
     id: 8,
-    image: "/car2.png",
+    img: "/car2.png",
     title: "Skyline Sedan",
     location: "📍 Kaliti",
     price: "175 birr/day",
@@ -89,7 +89,7 @@ const listings = [
   },
   {
     id: 9,
-    image: "/car3.png",
+    img: "/car3.png",
     title: "Countryside SUV",
     location: "📍 Jemo 1",
     price: "200 birr/day",
@@ -100,7 +100,7 @@ const listings = [
   },
   {
     id: 10,
-    image: "/car4.png",
+    img: "/car4.png",
     title: "Eco Tree Compact",
     location: "📍 Asko Addis-Sefer",
     price: "160 birr/day",
@@ -111,7 +111,7 @@ const listings = [
   },
   {
     id: 11,
-    image: "/car5.png",
+    img: "/car5.png",
     title: "Jungle Runner Jeep",
     location: "📍 Betel",
     price: "165 birr/day",
@@ -122,7 +122,7 @@ const listings = [
   },
   {
     id: 12,
-    image: "/car6.jpg",
+    img: "/car6.jpg",
     title: "Luxury Cruiser X",
     location: "📍 Megenagna",
     price: "170 birr/day",

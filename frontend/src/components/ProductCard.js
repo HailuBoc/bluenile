@@ -6,7 +6,7 @@ import { useState } from "react";
 
 export default function ProductCard({
   id,
-  image,
+  img,
   title,
   location,
   price,
@@ -39,7 +39,7 @@ export default function ProductCard({
         </button>
 
         <img
-          src={image}
+          src={img}
           alt={title}
           className="w-full h-40 object-cover group-hover:scale-105 transition-transform"
         />
