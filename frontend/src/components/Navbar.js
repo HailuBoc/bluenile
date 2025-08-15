@@ -2,6 +2,7 @@
 import { Menu, Search, Briefcase, User, X, Home } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Navbar() {
   const [navOpen, setNavOpen] = useState(false);
@@ -15,7 +16,7 @@ export default function Navbar() {
 
   return (
     <>
-      {/* ==== FULL HEADER (NOW ALSO ON MOBILE) ==== */}
+      {/* ==== FULL HEADER ==== */}
       <header className="relative flex h-screen w-full top-0 z-40 flex-col">
         {/* Background */}
         <div
@@ -24,13 +25,25 @@ export default function Navbar() {
         />
         <div className="absolute inset-0 bg-black/50"></div>
 
-        {/* Content container */}
-        <div className="relative z-10 max-w-7xl mx-auto w-full flex flex-col h-full px-4 sm:px-6 md:px-12 py-4 sm:py-6">
+        {/* Content */}
+        <div className="relative z-10 max-w-7xl mx-auto w-full flex flex-col h-full px-4 sm:px-6 md:px-12 py-4 sm:py-6 gap-y-8 sm:gap-y-12 lg:gap-y-16">
           {/* Top Navbar */}
           <div className="flex items-center justify-between">
-            <span className="text-lg sm:text-2xl font-bold text-white tracking-wide">
-              Blue Nile Plc
-            </span>
+            {/* Logo + Company Name */}
+            <div className="flex items-center gap-3">
+              <Image
+                src="/logo.jpg"
+                alt="Blue Nile PLC Logo"
+                width={40}
+                height={40}
+                className="rounded-full"
+              />
+              <span className="text-lg sm:text-2xl font-bold text-white tracking-wide">
+                Blue Nile PLC
+              </span>
+            </div>
+
+            {/* Desktop Links */}
             <div className="hidden sm:flex items-center gap-6 text-sm text-white">
               <Link href="/listProperty">
                 <button className="hover:underline transition">
@@ -49,87 +62,98 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Services & Search Section */}
-          <div className="flex-grow flex flex-col items-center justify-center text-center px-2 sm:px-4 space-y-6 sm:space-y-10">
-            {/* Services */}
-            <nav className="flex flex-wrap justify-center gap-4 sm:gap-8 text-white text-xs sm:text-sm font-semibold max-w-5xl animate-bounce">
+          {/* Welcome Section */}
+          <div className="flex flex-col items-center text-center gap-2">
+            <h1 className="text-4xl sm:text-5xl font-extrabold text-white drop-shadow-md">
+              Welcome to Blue Nile PLC
+            </h1>
+            <p className="text-sm sm:text-lg text-gray-200 drop-shadow-sm max-w-2xl">
+              All-in-one booking platform for properties, events, transport, and
+              tourism in Ethiopia
+            </p>
+          </div>
+
+          {/* Services Section */}
+          <nav className="flex flex-wrap justify-center gap-4 items-center sm:gap-8 text-white text-xs sm:text-sm font-semibold max-w-5xl">
+            {[
+              {
+                href: "/propertyrental",
+                icon: "🏠",
+                label: "Property Rentals & Bookings",
+              },
+              { href: "/event", icon: "🎉", label: "Event Venues" },
+              { href: "/transport", icon: "🚗", label: "Transport Services" },
+              { href: "/sales", icon: "🏡", label: "Sales Section" },
+              { href: "/tourism", icon: "🌍", label: "Tourism Services" },
+            ].map((item, i) => (
+              <a
+                key={i}
+                href={item.href}
+                className="group flex flex-col items-center max-w-[120px] sm:max-w-[150px] p-3 sm:p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-md hover:bg-slate-400/80 hover:shadow-lg transition-all duration-300 ease-out"
+              >
+                <span className="text-xl sm:text-3xl group-hover:scale-110 transition-transform duration-300">
+                  {item.icon}
+                </span>
+                <span className="mt-1 text-center group-hover:underline">
+                  {item.label}
+                </span>
+              </a>
+            ))}
+          </nav>
+
+          {/* Search Section */}
+          <div className="w-full max-w-6xl">
+            {" "}
+            {/* increased from max-w-5xl */}
+            <div className="flex flex-col sm:flex-row items-stretch border justify-center text-center rounded-xl sm:rounded-full shadow-lg p-3 sm:px-8 sm:py-3 bg-white/90 dark:bg-gray-800/90 dark:border-gray-600 gap-y-3 sm:gap-y-0">
               {[
                 {
-                  href: "/propertyrental",
-                  icon: "🏠",
-                  label: "Property Rentals",
+                  label: "Services",
+                  type: "text",
+                  placeholder: "What service do you need?",
                 },
-                { href: "/event", icon: "🎉", label: "Event Venues" },
-                { href: "/transport", icon: "🚗", label: "Transport Services" },
-                { href: "/sales", icon: "🏡", label: "Sales Section" },
-                { href: "/tourism", icon: "🌍", label: "Tourism Services" },
-              ].map((item, i) => (
-                <a
+                {
+                  label: "Property Rental & Bookings",
+                  type: "text",
+                  placeholder: "Search property rentals ",
+                },
+                { label: "Events", type: "text", placeholder: "Search events" },
+                {
+                  label: "Transport service",
+                  type: "text",
+                  placeholder: "Search transport options",
+                },
+                { label: "Sales", type: "text", placeholder: "Search sales" },
+              ].map((field, i) => (
+                <div
                   key={i}
-                  href={item.href}
-                  className="group flex flex-col items-center max-w-[120px] sm:max-w-[150px] p-3 sm:p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20
-                  shadow-md hover:bg-slate-400/80 hover:shadow-lg transition-all duration-300 ease-out"
+                  className={`flex flex-col px-3 sm:px-5 ${
+                    i < 4 ? "sm:border-r dark:border-gray-600" : ""
+                  }`}
                 >
-                  <span className="text-xl sm:text-3xl group-hover:scale-110 transition-transform duration-300">
-                    {item.icon}
-                  </span>
-                  <span className="mt-1 sm:mt-2 text-center group-hover:underline">
-                    {item.label}
-                  </span>
-                </a>
-              ))}
-            </nav>
-
-            {/* Welcome */}
-            <div>
-              <h1 className="text-2xl sm:text-4xl font-extrabold text-white drop-shadow-md">
-                Welcome to Blue Nile PLC
-              </h1>
-              <p className="mt-2 sm:mt-3 text-sm sm:text-lg text-gray-200 drop-shadow-sm max-w-2xl">
-                All-in-one booking platform for properties, events, transport,
-                and tourism in Ethiopia
-              </p>
-            </div>
-
-            {/* Search */}
-            <div className="w-full max-w-5xl px-2 sm:px-0">
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between border rounded-xl sm:rounded-full shadow-lg p-3 sm:px-6 sm:py-3 bg-white/90 dark:bg-gray-800/90 dark:border-gray-600 space-y-2 sm:space-y-0">
-                {[
-                  {
-                    label: "Destination",
-                    type: "text",
-                    placeholder: "Where are you going?",
-                  },
-                  { label: "Check-in", type: "date" },
-                  { label: "Check-out", type: "date" },
-                  { label: "Guests", type: "number", placeholder: "2 guests" },
-                ].map((field, i) => (
-                  <div
-                    key={i}
-                    className={`flex flex-col px-2 sm:px-4 ${
-                      i < 3 ? "sm:border-r dark:border-gray-600" : ""
-                    }`}
-                  >
-                    <label className="text-xs text-gray-500 dark:text-gray-400 font-semibold">
-                      {field.label}
-                    </label>
+                  <label className="text-xs text-gray-500 dark:text-gray-400 font-semibold">
+                    {field.label}
+                  </label>
+                  <div className="flex items-center">
                     <input
                       type={field.type}
                       placeholder={field.placeholder}
-                      min={field.type === "number" ? "1" : undefined}
-                      className="bg-transparent outline-none text-sm text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                      className="bg-transparent outline-none text-sm text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 flex-1"
                     />
+                    {i === 4 && (
+                      <button className="text-blue-600 hover:text-blue-700 p-1 flex items-center justify-center">
+                        <Search className="h-5 w-5" />
+                      </button>
+                    )}
                   </div>
-                ))}
-                <div className="pl-0 sm:pl-4 flex justify-center">
-                  <Search className="h-8 w-8 text-white bg-blue-600 p-2 rounded-full cursor-pointer shadow-lg" />
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
       </header>
-      {/* ==== TOP RIGHT MOBILE BUTTONS ==== */}
+
+      {/* ==== Mobile Top Buttons ==== */}
       <div className="fixed top-4 right-4 flex gap-2 z-50 sm:hidden">
         <button
           onClick={() => setNavOpen(!navOpen)}
@@ -142,7 +166,8 @@ export default function Navbar() {
           )}
         </button>
       </div>
-      {/* ==== MOBILE SEARCH SLIDE ==== */}
+
+      {/* ==== Mobile Search Slide ==== */}
       {showMobileSearch && (
         <div className="fixed top-0 left-0 w-full z-50 bg-white dark:bg-gray-900 border-b shadow px-4 py-3 flex items-center gap-2 sm:hidden animate-slideDown">
           <input
@@ -159,9 +184,8 @@ export default function Navbar() {
           </button>
         </div>
       )}
-      {/* ==== MOBILE BOTTOM NAV ==== */}
 
-      {/* ==== MOBILE BOTTOM NAV ==== */}
+      {/* ==== Mobile Bottom Nav ==== */}
       <nav className="fixed bottom-0 z-50 w-full bg-white dark:bg-gray-900 border-t shadow-md flex justify-around items-center px-4 py-2 sm:hidden">
         {[
           { href: "/", icon: <Home className="h-5 w-5 mb-1" />, label: "Home" },
@@ -179,7 +203,7 @@ export default function Navbar() {
           <Link
             key={i}
             href={item.href}
-            className="flex flex-col items-center text-xs text-gray-600 dark:text-gray-300 hover:text-blue-600 focus:outline-none"
+            className="flex flex-col items-center text-xs text-gray-600 dark:text-gray-300 hover:text-blue-600"
           >
             {item.icon}
             {item.label}
@@ -187,21 +211,31 @@ export default function Navbar() {
         ))}
       </nav>
 
-      {/* ==== MOBILE NAV DRAWER ==== */}
+      {/* ==== Mobile Drawer ==== */}
       {navOpen && (
         <div className="fixed top-16 right-4 bg-white dark:bg-gray-800 shadow-md flex flex-col items-start px-5 py-4 space-y-3 sm:hidden z-50 rounded-xl animate-slideDown">
-          {["Homes", "List your property", "About us"].map((link, i) => (
-            <a
-              key={i}
-              href="#"
-              onClick={closeMobileMenu}
-              className="text-gray-700 dark:text-gray-200 text-sm hover:text-blue-600"
-            >
-              {link}
-            </a>
-          ))}
+          <a
+            href="/"
+            onClick={closeMobileMenu}
+            className="text-gray-700 dark:text-gray-200 text-sm hover:text-blue-600"
+          >
+            Homes
+          </a>
+          <a
+            href="/listProperty"
+            onClick={closeMobileMenu}
+            className="text-gray-700 dark:text-gray-200 text-sm hover:text-blue-600"
+          >
+            List your property
+          </a>
+          <a
+            href="/aboutus"
+            onClick={closeMobileMenu}
+            className="text-gray-700 dark:text-gray-200 text-sm hover:text-blue-600"
+          >
+            About us
+          </a>
           <hr className="w-full border-t dark:border-gray-700 mt-2" />
-
           <a
             href="/login"
             onClick={closeMobileMenu}
@@ -211,6 +245,7 @@ export default function Navbar() {
           </a>
         </div>
       )}
+
       <div className="sm:hidden pt-4 pb-20" />
     </>
   );

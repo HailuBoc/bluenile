@@ -80,7 +80,7 @@ export default function Home() {
               {/* Destination */}
               <div className="flex flex-col flex-1 sm:border-r border-gray-300 pr-0 sm:pr-4">
                 <label className="text-xs text-gray-500 font-semibold">
-                  Destination
+                  where is your property?
                 </label>
                 <input
                   type="text"
@@ -105,7 +105,7 @@ export default function Home() {
                   <option value="House">House</option>
                   <option value="Apartment">Apartment</option>
                   <option value="Guesthouse">Guesthouse</option>
-                  <option value="Hotel Apartment">Hotel Apartment</option>
+                  <option value="Hotel Apartment">Car</option>
                 </select>
               </div>
 

@@ -1,10 +1,13 @@
 "use client";
 import ProductCard from "./ProductCard";
 import listings from "./listingsData";
+import HousesCard from "./HousesCard";
 
 export default function ProductsSection() {
-  const firstGroup = listings.slice(0, 6);
-  const secondGroup = listings.slice(6, 12);
+  const firstGroup = listings.slice(0, 6); // Popular Stays
+  const secondGroup = listings.slice(6, 12); // Cars
+  const thirdGroup = listings.slice(12, 18); // Tourism Sites
+  const fourthGroup = listings.slice(18, 24); // Properties for Sale
 
   return (
     <section className="px-4 sm:px-6 pt-6 pb-24 bg-gray-100 dark:bg-gray-900">
@@ -13,15 +16,11 @@ export default function ProductsSection() {
         <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
           🌟 Popular Stays
         </h2>
-
-        {/* Responsive Grid for Desktop */}
         <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
           {firstGroup.map((listing, index) => (
             <ProductCard key={index} {...listing} />
           ))}
         </div>
-
-        {/* Horizontal Scroll for Mobile - scrollbar hidden */}
         <div className="sm:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory py-2 -mx-4 px-4 scrollbar-hide">
           {firstGroup.map((listing, index) => (
             <div key={index} className="snap-start flex-shrink-0 w-72">
@@ -31,20 +30,16 @@ export default function ProductsSection() {
         </div>
       </div>
 
-      {/* 🔍 Cars for this week */}
-      <div>
+      {/* 🔍 Cars for this Rental */}
+      <div className="mb-10">
         <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
-          🔍 Cars for this week
+          🔍 Cars for this Rental
         </h2>
-
-        {/* Responsive Grid for Desktop */}
         <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
           {secondGroup.map((listing, index) => (
             <ProductCard key={index + 6} {...listing} />
           ))}
         </div>
-
-        {/* Horizontal Scroll for Mobile - scrollbar hidden */}
         <div className="sm:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory py-2 -mx-4 px-4 scrollbar-hide">
           {secondGroup.map((listing, index) => (
             <div key={index + 6} className="snap-start flex-shrink-0 w-72">
@@ -54,14 +49,51 @@ export default function ProductsSection() {
         </div>
       </div>
 
-      {/* Hide scrollbar utility */}
+      {/* 🏞️ Tourism Sites in Ethiopia */}
+      <div className="mb-10">
+        <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
+          🏞️ Tourism Sites in Ethiopia
+        </h2>
+        <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
+          {thirdGroup.map((listing, index) => (
+            <ProductCard key={index + 12} {...listing} />
+          ))}
+        </div>
+        <div className="sm:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory py-2 -mx-4 px-4 scrollbar-hide">
+          {thirdGroup.map((listing, index) => (
+            <div key={index + 12} className="snap-start flex-shrink-0 w-72">
+              <ProductCard {...listing} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 🏠 Properties for Sale */}
+      <div>
+        <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
+          🏠 Houses for Sale
+        </h2>
+        <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
+          {fourthGroup.map((listing, index) => (
+            <HousesCard key={index + 18} {...listing} />
+          ))}
+        </div>
+        <div className="sm:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory py-2 -mx-4 px-4 scrollbar-hide">
+          {fourthGroup.map((listing, index) => (
+            <div key={index + 18} className="snap-start flex-shrink-0 w-72">
+              <HousesCard {...listing} />
+            </div>
+          ))}
+        </div>
+      </div>
+
       <style jsx>{`
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
         }
         .scrollbar-hide {
-          -ms-overflow-style: none; /* IE and Edge */
-          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </section>

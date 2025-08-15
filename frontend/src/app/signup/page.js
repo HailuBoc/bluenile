@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { FaGoogle, FaFacebookF, FaGithub } from "react-icons/fa";
 
 export default function SignUp() {
@@ -11,12 +12,13 @@ export default function SignUp() {
     password: "",
     confirmPassword: "",
   });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
@@ -24,22 +26,48 @@ export default function SignUp() {
       return;
     }
 
-    // Save to localStorage (can be replaced with API/DB)
-    localStorage.setItem("userProfile", JSON.stringify(formData));
+    setLoading(true);
 
-    // Redirect to profile page
-    router.push("/profile");
+    try {
+      // Call your own API route that registers the user in DB
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to register");
+
+      alert("Account created successfully!");
+      // Optionally log them in right after signup
+      await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+
+      router.push("/");
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSocialLogin = (provider) => {
-    console.log(`Logging in with ${provider}`);
+    signIn(provider, { callbackUrl: "/" });
   };
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-gray-900 rounded-2xl shadow-lg p-8">
+      <div className="w-full max-w-md">
         <h2 className="text-2xl font-bold text-center mb-6 tracking-wide">
-          Sign Up for Blue Nile PLC
+          Register
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -93,9 +121,10 @@ export default function SignUp() {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 transition-colors py-2 rounded-md font-semibold"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 transition-colors py-2 rounded-md font-semibold disabled:opacity-50"
           >
-            Create Account
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 
@@ -103,22 +132,22 @@ export default function SignUp() {
           <p className="text-center text-gray-400 mb-4">Or sign up with</p>
           <div className="flex justify-center gap-4 flex-wrap">
             <button
-              onClick={() => handleSocialLogin("Google")}
+              onClick={() => handleSocialLogin("google")}
               className="flex items-center gap-2 bg-white text-gray-900 px-4 py-2 rounded-md hover:bg-gray-200 transition"
             >
-              <FaGoogle className="text-red-500" /> Google
+              <FaGoogle className="text-red-500" />
             </button>
             <button
-              onClick={() => handleSocialLogin("Facebook")}
+              onClick={() => handleSocialLogin("facebook")}
               className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
             >
-              <FaFacebookF /> Facebook
+              <FaFacebookF />
             </button>
             <button
-              onClick={() => handleSocialLogin("GitHub")}
+              onClick={() => handleSocialLogin("github")}
               className="flex items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition"
             >
-              <FaGithub /> GitHub
+              <FaGithub />
             </button>
           </div>
         </div>

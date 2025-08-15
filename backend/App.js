@@ -10,23 +10,34 @@ dotenv.config();
 const PORT = process.env.PORT || 10000;
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Next.js dev server
+    credentials: true,
+  })
+);
 
 app.post("/signup", async (req, res) => {
-  const { name, email, password } = req.body;
+  const { fullName, email, password, confirmPassword } = req.body;
 
   try {
+    // Check if passwords match
+    if (password !== confirmPassword) {
+      return res.status(400).json({ error: "Passwords do not match" });
+    }
+
     // Check if user already exists
     const existingUser = await User.findOne({ email });
-    if (existingUser)
+    if (existingUser) {
       return res.status(400).json({ error: "Email already in use" });
+    }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create new host user
     const newUser = new User({
-      name,
+      fullName,
       email,
       password: hashedPassword,
       role: "host", // specifically marking them as host
@@ -39,6 +50,7 @@ app.post("/signup", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
 // Login route with JWT
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;

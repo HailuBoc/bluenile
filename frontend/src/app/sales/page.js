@@ -1,6 +1,7 @@
 "use client";
 import { Home, Building, Map, Car } from "lucide-react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 export default function Sales() {
   const listings = [
@@ -143,13 +144,16 @@ export default function Sales() {
             Explore our verified listings and deal directly with trusted
             sellers.
           </motion.p>
-          <motion.button
-            className="bg-white text-blue-700 font-bold py-2 sm:py-3 px-6 sm:px-8 rounded-lg shadow hover:bg-gray-100 transition"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Browse All Listings
-          </motion.button>
+          <Link href={"/sales/postSale"}>
+            {" "}
+            <motion.button
+              className="bg-white text-blue-700 font-bold py-2 sm:py-3 px-6 sm:px-8 rounded-lg shadow hover:bg-gray-100 transition"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Browse All Listings
+            </motion.button>
+          </Link>
         </div>
       </section>
 

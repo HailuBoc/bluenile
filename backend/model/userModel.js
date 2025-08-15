@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema([
   {
-    name: {
+    fullName: {
       type: String,
       required: true,
     },
@@ -14,9 +14,9 @@ const userSchema = new mongoose.Schema([
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
-      minLength: [6, "Password must be at least 6 characters long"],
+      required: true,
     },
+
     role: {
       type: String,
       enum: ["guest", "host", "admin"],
