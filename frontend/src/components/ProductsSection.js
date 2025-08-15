@@ -33,7 +33,7 @@ export default function ProductsSection() {
       {/* 🔍 Cars for this Rental */}
       <div className="mb-10">
         <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
-          🔍 Cars for this Rental
+          🔍 Cars for Rental
         </h2>
         <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
           {secondGroup.map((listing, index) => (
