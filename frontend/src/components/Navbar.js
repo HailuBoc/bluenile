@@ -7,9 +7,20 @@ import Image from "next/image";
 export default function Navbar() {
   const [navOpen, setNavOpen] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [showSticky, setShowSticky] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.add("dark");
+
+    const handleScroll = () => {
+      if (window.scrollY > window.innerHeight * 0.7) {
+        setShowSticky(true);
+      } else {
+        setShowSticky(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const closeMobileMenu = () => setNavOpen(false);
@@ -73,7 +84,7 @@ export default function Navbar() {
             </p>
           </div>
 
-          {/* Services Section */}
+          {/* Services Section (Hero version) */}
           <nav className="flex flex-wrap justify-center gap-4 items-center sm:gap-8 text-white text-xs sm:text-sm font-semibold max-w-5xl">
             {[
               {
@@ -103,23 +114,12 @@ export default function Navbar() {
 
           {/* Search Section */}
           <div className="w-full max-w-6xl">
-            {" "}
-            {/* increased from max-w-5xl */}
             <div className="flex flex-col sm:flex-row items-stretch border justify-center text-center rounded-xl sm:rounded-full shadow-lg p-3 sm:px-8 sm:py-3 bg-white/90 dark:bg-gray-800/90 dark:border-gray-600 gap-y-3 sm:gap-y-0">
               {[
-                {
-                  label: "Services",
-                  type: "text",
-                },
-                {
-                  label: "Property Rental & Bookings",
-                  type: "text",
-                },
+                { label: "Services", type: "text" },
+                { label: "Property Rental & Bookings", type: "text" },
                 { label: "Events", type: "text" },
-                {
-                  label: "Transport service",
-                  type: "text",
-                },
+                { label: "Transport service", type: "text" },
                 { label: "Sales", type: "text" },
               ].map((field, i) => (
                 <div
@@ -149,6 +149,34 @@ export default function Navbar() {
           </div>
         </div>
       </header>
+
+      {/* ==== Sticky Services Nav (mobile + desktop) ==== */}
+      {showSticky && (
+        <div className="sticky top-0 z-50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-md animate-slideDown">
+          <nav className="flex overflow-x-auto sm:overflow-visible gap-4 sm:gap-8 py-3 px-4 sm:px-0 text-sm font-semibold text-gray-700 dark:text-gray-200">
+            {[
+              {
+                href: "/propertyrental",
+                icon: "🏠",
+                label: "Property Rentals",
+              },
+              { href: "/event", icon: "🎉", label: "Event Venues" },
+              { href: "/transport", icon: "🚗", label: "Transport" },
+              { href: "/sales", icon: "🏡", label: "Sales" },
+              { href: "/tourism", icon: "🌍", label: "Tourism" },
+            ].map((item, i) => (
+              <Link
+                key={i}
+                href={item.href}
+                className="flex items-center gap-1 flex-shrink-0 hover:text-blue-600 transition"
+              >
+                <span className="text-lg">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </nav>
+        </div>
+      )}
 
       {/* ==== Mobile Top Buttons ==== */}
       <div className="fixed top-4 right-4 flex gap-2 z-50 sm:hidden">
