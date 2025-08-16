@@ -19,21 +19,35 @@ export default function GraduationsPage() {
     date: "",
     guests: "",
     specialRequests: "",
+    selectedServices: [],
   });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleServiceChange = (service) => {
+    setFormData((prev) => {
+      const selected = prev.selectedServices.includes(service)
+        ? prev.selectedServices.filter((s) => s !== service)
+        : [...prev.selectedServices, service];
+      return { ...prev, selectedServices: selected };
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert(`Graduation booking submitted for ${formData.name}! 🎓`);
+    alert(
+      `Graduation booking submitted for ${
+        formData.name
+      }!\nServices: ${formData.selectedServices.join(", ")}`
+    );
   };
 
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Hero */}
-      <header className="bg-gradient-to-r from-green-500 to-emerald-600 text-white py-16 text-center">
+      <header className="bg-gradient-to-r from-green-500 to-emerald-600 text-white py-16 text-center px-4">
         <GraduationCap className="w-12 h-12 mx-auto mb-4" />
         <h1 className="text-4xl font-bold">Graduations</h1>
         <p className="mt-3 text-lg max-w-xl mx-auto">
@@ -92,6 +106,25 @@ export default function GraduationsPage() {
             className="w-full border rounded px-4 py-2"
             required
           />
+
+          {/* Service selection checkboxes */}
+          <div>
+            <h3 className="font-semibold mb-2">Select Services</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {services.map((service, i) => (
+                <label key={i} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.selectedServices.includes(service)}
+                    onChange={() => handleServiceChange(service)}
+                    className="h-4 w-4"
+                  />
+                  <span>{service}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
           <textarea
             name="specialRequests"
             placeholder="Special Requests"
@@ -99,9 +132,10 @@ export default function GraduationsPage() {
             onChange={handleChange}
             className="w-full border rounded px-4 py-2"
           />
+
           <button
             type="submit"
-            className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition"
+            className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition w-full sm:w-auto"
           >
             Submit Booking
           </button>

@@ -91,37 +91,65 @@ export default function EventServices() {
       </header>
 
       {/* Search Bar */}
-      <div className="max-w-5xl mx-auto mt-6 px-4">
-        <div className="flex flex-col md:flex-row bg-white shadow-lg rounded-full overflow-hidden">
-          <input
-            type="text"
-            placeholder="Search for a service..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 px-4 py-3 text-gray-700 outline-none"
-          />
-          <input
-            type="date"
-            value={eventDate}
-            onChange={(e) => setEventDate(e.target.value)}
-            className="px-4 py-3 border-t md:border-t-0 md:border-l outline-none"
-          />
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="px-4 py-3 border-t md:border-t-0 md:border-l outline-none"
-          />
-          <input
-            type="number"
-            min="1"
-            value={guests}
-            onChange={(e) => setGuests(e.target.value)}
-            className="px-4 py-3 border-t md:border-t-0 md:border-l outline-none"
-          />
-          <button className="bg-blue-600 text-white px-6 flex items-center justify-center">
-            <Search className="w-6 h-6" />
-          </button>
+      <div className="max-w-6xl mx-auto mt-6 px-4">
+        <div className="flex flex-col sm:flex-row items-stretch border justify-center text-center rounded-xl sm:rounded-full shadow-lg p-4 sm:px-8 sm:py-3 bg-white/90 dark:bg-gray-800/90 dark:border-gray-600 gap-y-4 sm:gap-y-0">
+          <div className="flex flex-col px-3 sm:px-5 sm:border-r dark:border-gray-600 w-full sm:w-auto">
+            <label className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-semibold">
+              Search
+            </label>
+            <div className="flex items-center">
+              <input
+                type="text"
+                placeholder="Search for a service..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full bg-transparent outline-none text-sm sm:text-base text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col px-3 sm:px-5 sm:border-r dark:border-gray-600 w-full sm:w-auto">
+            <label className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-semibold">
+              Event Date
+            </label>
+            <div className="flex items-center">
+              <input
+                type="date"
+                value={eventDate}
+                onChange={(e) => setEventDate(e.target.value)}
+                className="w-full bg-transparent outline-none text-sm sm:text-base text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col px-3 sm:px-5 sm:border-r dark:border-gray-600 w-full sm:w-auto">
+            <label className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-semibold">
+              End Date
+            </label>
+            <div className="flex items-center">
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full bg-transparent outline-none text-sm sm:text-base text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col px-3 sm:px-5 w-full sm:w-auto">
+            <label className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-semibold">
+              Guests
+            </label>
+            <div className="flex items-center">
+              <input
+                type="number"
+                min="1"
+                value={guests}
+                onChange={(e) => setGuests(e.target.value)}
+                className="w-full bg-transparent outline-none text-sm sm:text-base text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+              />
+              <button className="text-blue-600 hover:text-blue-700 p-1 flex items-center justify-center">
+                <Search className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

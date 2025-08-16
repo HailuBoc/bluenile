@@ -1,5 +1,5 @@
 "use client";
-import { Heart, Camera, Utensils, Car, Users, Music } from "lucide-react";
+import { Heart } from "lucide-react";
 import { useState } from "react";
 
 export default function WeddingsPage() {
@@ -19,15 +19,32 @@ export default function WeddingsPage() {
     date: "",
     guests: "",
     specialRequests: "",
+    selectedServices: [],
   });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleServiceToggle = (service) => {
+    setFormData((prev) => {
+      const alreadySelected = prev.selectedServices.includes(service);
+      return {
+        ...prev,
+        selectedServices: alreadySelected
+          ? prev.selectedServices.filter((s) => s !== service)
+          : [...prev.selectedServices, service],
+      };
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert(`Wedding booking submitted for ${formData.name}! 🎉`);
+    alert(
+      `Wedding booking submitted for ${
+        formData.name
+      }!\nSelected Services: ${formData.selectedServices.join(", ")}`
+    );
   };
 
   return (
@@ -41,7 +58,7 @@ export default function WeddingsPage() {
         </p>
       </header>
 
-      {/* Services */}
+      {/* Services Section */}
       <section className="max-w-5xl mx-auto px-4 py-12">
         <h2 className="text-2xl font-bold mb-6">Our Wedding Services</h2>
         <ul className="list-disc list-inside space-y-2 text-gray-700">
@@ -57,6 +74,7 @@ export default function WeddingsPage() {
           Book Your Wedding
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Personal Details */}
           <input
             type="text"
             name="name"
@@ -92,6 +110,29 @@ export default function WeddingsPage() {
             className="w-full border rounded px-4 py-2"
             required
           />
+
+          {/* Service Selection */}
+          <div>
+            <h3 className="font-semibold mb-2">Select Services</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {services.map((service, i) => (
+                <label
+                  key={i}
+                  className="flex items-center space-x-2 border rounded px-3 py-2 cursor-pointer hover:bg-gray-50"
+                >
+                  <input
+                    type="checkbox"
+                    checked={formData.selectedServices.includes(service)}
+                    onChange={() => handleServiceToggle(service)}
+                    className="accent-pink-600"
+                  />
+                  <span>{service}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Special Requests */}
           <textarea
             name="specialRequests"
             placeholder="Special Requests"
@@ -99,9 +140,11 @@ export default function WeddingsPage() {
             onChange={handleChange}
             className="w-full border rounded px-4 py-2"
           />
+
+          {/* Submit */}
           <button
             type="submit"
-            className="bg-pink-600 text-white px-6 py-2 rounded hover:bg-pink-700 transition"
+            className="bg-pink-600 text-white px-6 py-2 rounded hover:bg-pink-700 transition w-full sm:w-auto"
           >
             Submit Booking
           </button>

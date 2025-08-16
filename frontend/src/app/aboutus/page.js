@@ -27,11 +27,10 @@ export default function AboutPage() {
           Who We Are
         </h2>
         <p className="text-lg leading-relaxed text-center text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-          We are a modern accommodation and hosting platform, inspired by the
-          likes of Airbnb, built with a passion for connecting travelers and
-          hosts across the globe. Our mission is simple — to make booking stays,
-          hosting guests, and exploring new destinations effortless, affordable,
-          and unforgettable.
+          We are a modern accommodation and hosting platform built with a
+          passion for connecting travelers and hosts across the globe. Our
+          mission is simple — to make booking stays, hosting guests, and
+          exploring new destinations effortless, affordable, and unforgettable.
         </p>
       </section>
 

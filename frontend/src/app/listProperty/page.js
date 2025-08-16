@@ -1,10 +1,9 @@
-// src/app/list-property/page.js
-
 "use client";
 import React, { useState } from "react";
 
 export default function ListPropertyPage() {
   const [listingType, setListingType] = useState("");
+  const [propertyName, setPropertyName] = useState("");
 
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col items-center">
@@ -44,29 +43,111 @@ export default function ListPropertyPage() {
 
             {/* Property Info */}
             <div>
-              <input
-                type="text"
-                placeholder="Property Name"
-                className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white mb-4"
-              />
-              <input
-                type="text"
-                placeholder="Address"
-                className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white mb-4"
-              />
+              <label className="block mb-2 font-medium">Property Name</label>
               <select
-                className="w-full border border-gray-500 bg-gray-900 text-gray-300 rounded p-3"
-                defaultValue=""
+                className="w-full border border-gray-500 bg-gray-900 text-gray-300 rounded p-3 mb-4"
+                value={propertyName}
+                onChange={(e) => setPropertyName(e.target.value)}
               >
-                <option value="" disabled>
-                  Property Type
-                </option>
-                <option>Hotel</option>
-                <option>Apartment</option>
-                <option>Guesthouse</option>
-                <option>Villa</option>
+                <option value="">Select Property</option>
+                <option value="apartment">Apartment</option>
+                <option value="house">House</option>
+                <option value="villa">Villa</option>
+                <option value="guesthouse">Guesthouse</option>
+                <option value="car">Car</option>
+                <option value="land">Land</option>
+                <option value="office">Office Space</option>
+                <option value="shop">Shop</option>
               </select>
+
+              <input
+                type="text"
+                placeholder="Address / Location"
+                className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white mb-4"
+              />
             </div>
+
+            {/* Conditional Fields Based on Property Type */}
+            {["apartment", "house", "villa", "guesthouse"].includes(
+              propertyName
+            ) && (
+              <>
+                {/* Rooms */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Rooms</h3>
+                  <input
+                    type="number"
+                    placeholder="Number of Bedrooms"
+                    className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white mb-3"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Number of Bathrooms"
+                    className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white"
+                  />
+                </div>
+
+                {/* Facilities */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Facilities</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      "WiFi",
+                      "Parking",
+                      "Air Conditioning",
+                      "Swimming Pool",
+                      "Gym",
+                      "Garden",
+                    ].map((facility, i) => (
+                      <label key={i} className="flex items-center space-x-2">
+                        <input type="checkbox" className="accent-blue-600" />
+                        <span>{facility}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {propertyName === "car" && (
+              <>
+                <input
+                  type="text"
+                  placeholder="Car Model"
+                  className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white mb-3"
+                />
+                <input
+                  type="number"
+                  placeholder="Year"
+                  className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white mb-3"
+                />
+                <input
+                  type="number"
+                  placeholder="Mileage (km)"
+                  className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white mb-3"
+                />
+                <select
+                  className="w-full border border-gray-500 bg-gray-900 text-gray-300 rounded p-3"
+                  defaultValue=""
+                >
+                  <option value="" disabled>
+                    Fuel Type
+                  </option>
+                  <option>Petrol</option>
+                  <option>Diesel</option>
+                  <option>Electric</option>
+                  <option>Hybrid</option>
+                </select>
+              </>
+            )}
+
+            {propertyName === "land" && (
+              <input
+                type="number"
+                placeholder="Land Size (sq. meters)"
+                className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white"
+              />
+            )}
 
             {/* Conditional Rent Term */}
             {listingType === "rent" && (
@@ -83,41 +164,6 @@ export default function ListPropertyPage() {
                 <option>Yearly</option>
               </select>
             )}
-
-            {/* Rooms */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Rooms</h3>
-              <input
-                type="number"
-                placeholder="Number of Bedrooms"
-                className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white mb-3"
-              />
-              <input
-                type="number"
-                placeholder="Number of Bathrooms"
-                className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white"
-              />
-            </div>
-
-            {/* Facilities */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Facilities</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  "WiFi",
-                  "Parking",
-                  "Air Conditioning",
-                  "Swimming Pool",
-                  "Gym",
-                  "Garden",
-                ].map((facility, i) => (
-                  <label key={i} className="flex items-center space-x-2">
-                    <input type="checkbox" className="accent-blue-600" />
-                    <span>{facility}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
 
             {/* Pricing */}
             <div>
@@ -136,7 +182,7 @@ export default function ListPropertyPage() {
               type="submit"
               className="w-full py-3 bg-green-600 text-white rounded hover:bg-green-700"
             >
-              Submit Property
+              Post Property
             </button>
           </form>
         </div>
