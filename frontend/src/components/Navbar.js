@@ -110,20 +110,17 @@ export default function Navbar() {
                 {
                   label: "Services",
                   type: "text",
-                  placeholder: "What service do you need?",
                 },
                 {
                   label: "Property Rental & Bookings",
                   type: "text",
-                  placeholder: "Search property rentals ",
                 },
-                { label: "Events", type: "text", placeholder: "Search events" },
+                { label: "Events", type: "text" },
                 {
                   label: "Transport service",
                   type: "text",
-                  placeholder: "Search transport options",
                 },
-                { label: "Sales", type: "text", placeholder: "Search sales" },
+                { label: "Sales", type: "text" },
               ].map((field, i) => (
                 <div
                   key={i}

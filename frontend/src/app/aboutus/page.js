@@ -14,11 +14,6 @@ export default function AboutPage() {
           className="object-cover h-screen"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/40 flex items-center justify-center">
-          <h1 className="text-4xl md:text-6xl font-extrabold text-white drop-shadow-lg">
-            About Us
-          </h1>
-        </div>
       </section>
 
       {/* Company Intro */}
