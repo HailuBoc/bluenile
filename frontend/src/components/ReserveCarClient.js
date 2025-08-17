@@ -3,8 +3,8 @@ export const dynamic = "force-dynamic";
 
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import carlisting from "../../../components/listingCar";
-import Footer from "../../../components/Footer";
+import carlisting from "./listingCar";
+import Footer from "./Footer";
 
 export default function ReservationPage() {
   const searchParams = useSearchParams();
