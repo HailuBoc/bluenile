@@ -12,14 +12,44 @@ export default function GetQuotePage() {
     message: "",
   });
 
+  const [feedback, setFeedback] = useState({ type: "", text: "" });
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Example validation
+    if (!form.name || !form.email || !form.phone) {
+      setFeedback({
+        type: "error",
+        text: "⚠️ Please fill all required fields.",
+      });
+      setTimeout(() => setFeedback({ type: "", text: "" }), 4000);
+      return;
+    }
+
     console.log("Quote Request Submitted:", form);
-    alert("Your quote request has been sent! We will contact you shortly.");
+
+    // Success message
+    setFeedback({
+      type: "success",
+      text: "🎉 Your quote request has been sent! We’ll contact you shortly.",
+    });
+    setTimeout(() => setFeedback({ type: "", text: "" }), 4000);
+
+    // Reset form
+    setForm({
+      name: "",
+      email: "",
+      phone: "",
+      eventType: "",
+      eventDate: "",
+      guests: "",
+      message: "",
+    });
   };
 
   return (
@@ -28,6 +58,20 @@ export default function GetQuotePage() {
         <h1 className="text-3xl font-bold mb-6 text-center text-blue-700">
           Request a Quote
         </h1>
+
+        {/* Success/Error Message */}
+        {feedback.text && (
+          <div
+            className={`mb-4 p-3 rounded text-center font-medium ${
+              feedback.type === "success"
+                ? "bg-green-100 text-green-700 border border-green-300"
+                : "bg-red-100 text-red-700 border border-red-300"
+            }`}
+          >
+            {feedback.text}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-5">
           <input
             type="text"

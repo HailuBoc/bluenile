@@ -1,6 +1,45 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { Car, Bus, Briefcase, MapPin, Search } from "lucide-react";
+
+export const fleet = [
+  {
+    id: "1",
+    title: "Luxury Sedan",
+    description:
+      "Executive comfort for business or VIP travel with a professional driver.",
+    icon: <Car className="w-10 h-10 text-blue-600" />,
+    price: "$120 / day",
+    image: "/casualcar1.jpg",
+  },
+  {
+    id: "2",
+    title: "SUV / 4x4",
+    description:
+      "Spacious and powerful, perfect for family trips or adventure tours.",
+    icon: <Car className="w-10 h-10 text-green-600" />,
+    price: "$150 / day",
+    image: "/casualcar2.jpg",
+  },
+  {
+    id: "3",
+    title: "Executive Van",
+    description: "Ideal for group travel, events, and corporate shuttles.",
+    icon: <Bus className="w-10 h-10 text-purple-600" />,
+    price: "$200 / day",
+    image: "/casualcar3.jpg",
+  },
+  {
+    id: "4",
+    title: "Tour Bus",
+    description:
+      "Comfortable large buses for city tours and out-of-town excursions.",
+    icon: <Bus className="w-10 h-10 text-pink-600" />,
+    price: "Contact for quote",
+    image: "/casualcar4.jpg",
+  },
+];
 
 export default function TransportServices() {
   const [searchData, setSearchData] = useState({
@@ -10,39 +49,9 @@ export default function TransportServices() {
     guests: 1,
   });
 
-  const fleet = [
-    {
-      title: "Luxury Sedan",
-      description:
-        "Executive comfort for business or VIP travel with a professional driver.",
-      icon: <Car className="w-10 h-10 text-blue-600" />,
-      price: "$120 / day",
-    },
-    {
-      title: "SUV / 4x4",
-      description:
-        "Spacious and powerful, perfect for family trips or adventure tours.",
-      icon: <Car className="w-10 h-10 text-green-600" />,
-      price: "$150 / day",
-    },
-    {
-      title: "Executive Van",
-      description: "Ideal for group travel, events, and corporate shuttles.",
-      icon: <Bus className="w-10 h-10 text-purple-600" />,
-      price: "$200 / day",
-    },
-    {
-      title: "Tour Bus",
-      description:
-        "Comfortable large buses for city tours and out-of-town excursions.",
-      icon: <Bus className="w-10 h-10 text-pink-600" />,
-      price: "Contact for quote",
-    },
-  ];
-
   const highlights = [
     {
-      title: "Daily & Monthly Rentals",
+      title: "Daily, Weekly & Monthly Rentals",
       desc: "Flexible rental periods to match your schedule.",
       icon: <CalendarIcon />,
     },
@@ -159,10 +168,11 @@ export default function TransportServices() {
         </h2>
         {filteredFleet.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredFleet.map((vehicle, index) => (
-              <div
-                key={index}
-                className="bg-white p-5 rounded-2xl shadow-md hover:shadow-xl transition"
+            {filteredFleet.map((vehicle) => (
+              <Link
+                key={vehicle.id}
+                href={`/transport/${vehicle.id}`}
+                className="bg-white p-5 rounded-2xl shadow-md hover:shadow-xl transition block"
               >
                 <div className="mb-3 flex justify-center">{vehicle.icon}</div>
                 <h3 className="text-lg font-bold text-gray-800 text-center">
@@ -174,7 +184,7 @@ export default function TransportServices() {
                 <p className="text-blue-600 font-semibold text-center mt-2">
                   {vehicle.price}
                 </p>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (

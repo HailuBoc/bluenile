@@ -2,6 +2,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Search } from "lucide-react"; // npm i lucide-react
+import Footer from "../../components/Footer";
+import Link from "next/link";
 
 export default function Home() {
   const [destination, setDestination] = useState("");
@@ -59,11 +61,10 @@ export default function Home() {
       {/* Hero Section */}
       <header className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white py-10 sm:py-16 px-4 sm:px-8 text-center">
         <h1 className="text-2xl sm:text-5xl font-bold">
-          Property Rentals & Event Bookings
+          Property Rentals & Bookings
         </h1>
         <p className="mt-2 sm:mt-4 text-sm sm:text-xl">
-          Houses, apartments, guesthouses, hotel apartments, wedding & meeting
-          halls — all in one place.
+          Houses, apartments, guesthouses, hotel apartments — all in one place.
         </p>
       </header>
 
@@ -197,14 +198,17 @@ export default function Home() {
                   <p className="text-blue-600 font-bold mt-1 sm:mt-2 text-sm sm:text-base">
                     {property.price}
                   </p>
-                  <button className="mt-2 sm:mt-4 w-full bg-blue-600 text-white text-xs sm:text-sm py-1.5 sm:py-2 rounded-lg hover:bg-blue-700 transition">
-                    Book Now
-                  </button>
+                  <Link href={"/propertyrental/Bookproperty"}>
+                    <button className="mt-2 sm:mt-4 w-full bg-blue-600 text-white text-xs sm:text-sm py-1.5 sm:py-2 rounded-lg hover:bg-blue-700 transition">
+                      Book Now
+                    </button>
+                  </Link>
                 </div>
               </div>
             ))}
           </div>
         </section>
+        <Footer />
       </div>
     </div>
   );

@@ -191,7 +191,7 @@ export default function EventServices() {
         <p className="mb-6">
           Let our team handle every detail, from planning to execution.
         </p>
-        <Link href={"/quote"}>
+        <Link href={"/event/quote"}>
           <button className="bg-white text-blue-700 px-8 py-3 rounded-lg font-bold hover:bg-gray-100 transition">
             Get a Quote
           </button>

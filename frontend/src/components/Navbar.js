@@ -84,32 +84,32 @@ export default function Navbar() {
             </p>
           </div>
 
-          {/* Services Section (Hero version) */}
-          <nav className="flex flex-wrap justify-center gap-4 items-center sm:gap-8 text-white text-xs sm:text-sm font-semibold max-w-5xl">
-            {[
-              {
-                href: "/propertyrental",
-                icon: "🏠",
-                label: "Property Rentals & Bookings",
-              },
-              { href: "/event", icon: "🎉", label: "Event Venues" },
-              { href: "/transport", icon: "🚗", label: "Transport Services" },
-              { href: "/sales", icon: "🏡", label: "Sales Section" },
-              { href: "/tourism", icon: "🌍", label: "Tourism Services" },
-            ].map((item, i) => (
-              <a
-                key={i}
-                href={item.href}
-                className="group flex flex-col items-center max-w-[120px] sm:max-w-[150px] p-3 sm:p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-md hover:bg-slate-400/80 hover:shadow-lg transition-all duration-300 ease-out"
-              >
-                <span className="text-xl sm:text-3xl group-hover:scale-110 transition-transform duration-300">
-                  {item.icon}
-                </span>
-                <span className="mt-1 text-center group-hover:underline">
-                  {item.label}
-                </span>
-              </a>
-            ))}
+          {/* Services Section */}
+          <nav className="w-full">
+            <div className="flex sm:grid sm:grid-cols-5 gap-4 overflow-x-auto scrollbar-hide px-2 sm:px-0">
+              {[
+                {
+                  href: "/propertyrental",
+                  icon: "🏠",
+                  label: "Property Rentals & Bookings",
+                },
+                { href: "/event", icon: "🎉", label: "Event Venues" },
+                { href: "/transport", icon: "🚗", label: "Transport Services" },
+                { href: "/sales", icon: "🏡", label: "Sales Section" },
+                { href: "/tourism", icon: "🌍", label: "Tourism Services" },
+              ].map((item, i) => (
+                <a
+                  key={i}
+                  href={item.href}
+                  className="flex flex-col items-center min-w-[120px] sm:min-w-0 p-3 sm:p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-md hover:bg-slate-400/80 hover:shadow-lg transition-all duration-300 ease-out"
+                >
+                  <span className="text-xl sm:text-3xl">{item.icon}</span>
+                  <span className="mt-1 text-center text-xs sm:text-sm font-semibold text-white group-hover:underline">
+                    {item.label}
+                  </span>
+                </a>
+              ))}
+            </div>
           </nav>
 
           {/* Search Section */}
@@ -150,7 +150,7 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* ==== Sticky Services Nav (mobile + desktop) ==== */}
+      {/* ==== Sticky Services Nav ==== */}
       {showSticky && (
         <div className="sticky top-0 z-50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-md animate-slideDown">
           <nav className="flex overflow-x-auto sm:overflow-visible gap-4 sm:gap-8 py-3 px-4 sm:px-0 text-sm font-semibold text-gray-700 dark:text-gray-200">

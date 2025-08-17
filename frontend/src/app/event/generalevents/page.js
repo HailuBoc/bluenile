@@ -23,6 +23,8 @@ export default function GeneralEventsPage() {
     specialRequests: "",
   });
 
+  const [status, setStatus] = useState(null); // success or error message
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -38,15 +40,39 @@ export default function GeneralEventsPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert(
-      `📅 General Event booking submitted!\nName: ${formData.name}\nEmail: ${
-        formData.email
-      }\nDate: ${formData.date}\nGuests: ${
-        formData.guests
-      }\nServices: ${formData.services.join(", ")}\nRequests: ${
-        formData.specialRequests
-      }`
-    );
+
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.date ||
+      !formData.guests
+    ) {
+      setStatus({
+        type: "error",
+        text: "❌ Please fill in all required fields.",
+      });
+      setTimeout(() => setStatus(null), 4000); // ⏳ hide after 4s
+      return;
+    }
+
+    // ✅ Replace with API call later if needed
+    console.log("📅 Booking submitted:", formData);
+
+    setStatus({
+      type: "success",
+      text: "✅ Your booking request has been sent! We’ll contact you shortly.",
+    });
+    setTimeout(() => setStatus(null), 4000); // ⏳ hide after 4s
+
+    // reset form after success
+    setFormData({
+      name: "",
+      email: "",
+      date: "",
+      guests: "",
+      services: [],
+      specialRequests: "",
+    });
   };
 
   return (
@@ -63,6 +89,20 @@ export default function GeneralEventsPage() {
       {/* Registration Form */}
       <section className="bg-white py-12 px-4 max-w-3xl mx-auto shadow-lg rounded-lg mt-8">
         <h2 className="text-2xl font-bold text-center mb-6">Book Your Event</h2>
+
+        {/* Success / Error Message */}
+        {status && (
+          <div
+            className={`mb-4 p-3 rounded-lg text-center font-medium ${
+              status.type === "success"
+                ? "bg-green-100 text-green-700 border border-green-300"
+                : "bg-red-100 text-red-700 border border-red-300"
+            }`}
+          >
+            {status.text}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Name */}
           <input

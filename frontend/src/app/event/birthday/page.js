@@ -22,6 +22,8 @@ export default function BirthdaysPage() {
     specialRequests: "",
   });
 
+  const [status, setStatus] = useState(null); // success or error message
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -37,15 +39,36 @@ export default function BirthdaysPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert(
-      `🎂 Birthday booking submitted!\nName: ${formData.name}\nEmail: ${
-        formData.email
-      }\nDate: ${formData.date}\nGuests: ${
-        formData.guests
-      }\nServices: ${formData.services.join(", ")}\nRequests: ${
-        formData.specialRequests
-      }`
-    );
+
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.date ||
+      !formData.guests
+    ) {
+      setStatus({
+        type: "error",
+        text: "❌ Please fill in all required fields.",
+      });
+      return;
+    }
+
+    console.log("🎂 Birthday booking submitted:", formData);
+
+    setStatus({
+      type: "success",
+      text: "🎉 Your birthday booking request has been sent! We’ll contact you soon.",
+    });
+
+    // reset form after success
+    setFormData({
+      name: "",
+      email: "",
+      date: "",
+      guests: "",
+      services: [],
+      specialRequests: "",
+    });
   };
 
   return (
@@ -64,6 +87,20 @@ export default function BirthdaysPage() {
         <h2 className="text-2xl font-bold text-center mb-6">
           Book Your Birthday Party
         </h2>
+
+        {/* Success / Error Message */}
+        {status && (
+          <div
+            className={`mb-4 p-3 rounded-lg text-center font-medium ${
+              status.type === "success"
+                ? "bg-green-100 text-green-700 border border-green-300"
+                : "bg-red-100 text-red-700 border border-red-300"
+            }`}
+          >
+            {status.text}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Name */}
           <input

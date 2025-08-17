@@ -2,14 +2,15 @@
 import ProductCard from "./ProductCard";
 import listings from "./listingsData";
 import HousesCard from "./HousesCard";
-import CarsCard from "./CarsCard";
+import CarSalecard from "./CarSalecard";
+import carlisting from "./listingCar";
 
 export default function ProductsSection() {
   const firstGroup = listings.slice(0, 6); // Popular Stays
   const secondGroup = listings.slice(6, 12); // Cars for Rental
   const thirdGroup = listings.slice(12, 18); // Tourism Sites
   const fourthGroup = listings.slice(18, 24); // Houses for Sale
-  const fifthGroup = listings.slice(24, 30); // Cars for Sale ✅ new
+  const fifthGroup = carlisting.slice(0, 6); // Cars for Sale ✅ new
 
   return (
     <section className="px-4 sm:px-6 pt-6 pb-24 bg-gray-100 dark:bg-gray-900">
@@ -95,14 +96,14 @@ export default function ProductsSection() {
           🚗 Cars for Sale
         </h2>
         <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
-          {fifthGroup.map((listing, index) => (
-            <CarsCard key={index + 24} {...listing} />
+          {fifthGroup.map((carlisting, index) => (
+            <CarSalecard key={index + 24} {...carlisting} />
           ))}
         </div>
         <div className="sm:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory py-2 -mx-4 px-4 scrollbar-hide">
-          {fifthGroup.map((listing, index) => (
+          {fifthGroup.map((carlisting, index) => (
             <div key={index + 24} className="snap-start flex-shrink-0 w-72">
-              <CarsCard {...listing} />
+              <CarSalecard {...carlisting} />
             </div>
           ))}
         </div>
