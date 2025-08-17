@@ -1,6 +1,4 @@
 "use client";
-
-// Tell Next.js to render this page dynamically (no prerender)
 export const dynamic = "force-dynamic";
 
 import { useSearchParams } from "next/navigation";
@@ -8,7 +6,7 @@ import { useState, useEffect } from "react";
 import carlisting from "../../../components/listingCar";
 import Footer from "../../../components/Footer";
 
-export default function ReservationPages() {
+export default function ReservationPage() {
   const searchParams = useSearchParams();
   const [id, setId] = useState(null);
   const [listing, setListing] = useState(null);
@@ -29,6 +27,7 @@ export default function ReservationPages() {
 
   const [successMessage, setSuccessMessage] = useState("");
 
+  // Safe extraction of ID from URL
   useEffect(() => {
     if (searchParams) {
       const paramId = parseInt(searchParams.get("id"), 10);
@@ -54,17 +53,17 @@ export default function ReservationPages() {
   const pricePerNight = parseInt(listing.price.split(" ")[0], 10);
   const totalPrice = pricePerNight * daysDiff;
 
-  function handleChange(e) {
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setGuestInfo((prev) => ({ ...prev, [name]: value }));
-  }
+  };
 
-  function handleSubmit(e) {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setSuccessMessage(
       `Successfully reserved ${listing.title} from ${checkIn} to ${checkOut}. Total: ${totalPrice} birr.`
     );
-  }
+  };
 
   useEffect(() => {
     if (successMessage) {
@@ -90,7 +89,6 @@ export default function ReservationPages() {
               alt={listing.title}
               className="rounded-lg w-full h-56 sm:h-80 object-cover shadow"
             />
-
             <div>
               <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-white">
                 {listing.title}
@@ -149,8 +147,153 @@ export default function ReservationPages() {
               onSubmit={handleSubmit}
               className="flex flex-col gap-3 sm:gap-4"
             >
-              {/* ...rest of your form remains unchanged */}
+              <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-4 text-gray-900 dark:text-white">
+                Your Reservation
+              </h2>
+
+              {/* Dates */}
+              {["checkIn", "checkOut"].map((field) => (
+                <div key={field}>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm sm:text-base font-medium">
+                    {field === "checkIn" ? "Check-in" : "Check-out"}
+                  </label>
+                  <input
+                    type="date"
+                    name={field}
+                    value={field === "checkIn" ? checkIn : checkOut}
+                    onChange={(e) =>
+                      field === "checkIn"
+                        ? setCheckIn(e.target.value)
+                        : setCheckOut(e.target.value)
+                    }
+                    required
+                    className="w-full p-2 sm:p-3 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm sm:text-base"
+                    min={
+                      field === "checkIn"
+                        ? new Date().toISOString().split("T")[0]
+                        : checkIn
+                    }
+                  />
+                </div>
+              ))}
+
+              {/* Guest Info */}
+              {["name", "email", "phone"].map((field) => (
+                <div key={field}>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm sm:text-base font-medium capitalize">
+                    {field === "name"
+                      ? "Full Name"
+                      : field === "email"
+                      ? "Email Address"
+                      : "Phone Number"}
+                  </label>
+                  <input
+                    type={
+                      field === "email"
+                        ? "email"
+                        : field === "phone"
+                        ? "tel"
+                        : "text"
+                    }
+                    name={field}
+                    value={guestInfo[field]}
+                    onChange={handleChange}
+                    placeholder={
+                      field === "name"
+                        ? "John Doe"
+                        : field === "email"
+                        ? "john@example.com"
+                        : "+251 9XX XXX XXX"
+                    }
+                    required
+                    className="w-full p-2 sm:p-3 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm sm:text-base"
+                  />
+                </div>
+              ))}
+
+              {/* Payment Method */}
+              <fieldset className="border border-gray-300 dark:border-gray-600 rounded-md p-3 sm:p-4 max-h-40 sm:max-h-48 overflow-auto">
+                <legend className="text-gray-700 dark:text-gray-300 font-medium text-sm sm:text-base mb-1 sm:mb-2">
+                  Payment Method
+                </legend>
+                {[
+                  { value: "chapa", label: "Chapa" },
+                  { value: "sentimpay", label: "SentiMPay" },
+                  { value: "cbe", label: "Commercial Bank of Ethiopia (CBE)" },
+                  { value: "abyssinia", label: "Abyssinia Bank" },
+                  { value: "awash", label: "Awash Bank" },
+                  { value: "telebirr", label: "Tele Birr" },
+                  { value: "mpesa", label: "M-Pesa" },
+                  { value: "soon", label: "Soon (coming)", disabled: true },
+                ].map(({ value, label, disabled }) => (
+                  <label
+                    key={value}
+                    className={`flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2 ${
+                      disabled
+                        ? "cursor-not-allowed text-gray-400 dark:text-gray-500"
+                        : "cursor-pointer"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value={value}
+                      checked={guestInfo.paymentMethod === value}
+                      onChange={handleChange}
+                      disabled={disabled}
+                      className="form-radio text-blue-600"
+                      required
+                    />
+                    <span className="text-sm sm:text-base">{label}</span>
+                  </label>
+                ))}
+              </fieldset>
+
+              {/* Price Summary */}
+              <div className="border-t border-gray-300 dark:border-gray-600 pt-3 sm:pt-4 mt-3 sm:mt-4">
+                <div className="flex justify-between font-semibold text-gray-900 dark:text-white mb-1 sm:mb-2 text-sm sm:text-base">
+                  <span>
+                    {daysDiff} {daysDiff === 1 ? "night" : "nights"} ×{" "}
+                    {listing.price}
+                  </span>
+                  <span>{totalPrice} birr</span>
+                </div>
+                <div className="flex justify-between font-bold text-green-700 dark:text-green-400 text-base sm:text-lg">
+                  <span>Total</span>
+                  <span>{totalPrice} birr</span>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="mt-4 sm:mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 rounded-md transition duration-200 text-sm sm:text-base"
+              >
+                Confirm Reservation
+              </button>
             </form>
+
+            {/* Help Section */}
+            <div className="mt-4 sm:mt-6 text-xs sm:text-sm text-gray-600 dark:text-gray-300 text-center">
+              <p>Need help with your booking?</p>
+              <p>
+                Call us at{" "}
+                <a
+                  href="tel:+251900000000"
+                  className="text-blue-600 dark:text-blue-400 underline"
+                >
+                  +251 900 000 000
+                </a>
+              </p>
+              <p>
+                or email{" "}
+                <a
+                  href="mailto:support@example.com"
+                  className="text-blue-600 dark:text-blue-400 underline"
+                >
+                  support@example.com
+                </a>
+              </p>
+            </div>
           </aside>
         </div>
       </main>
