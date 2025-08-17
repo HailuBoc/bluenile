@@ -6,9 +6,9 @@ import carlisting from "../../../components/listingCar";
 import Footer from "../../../components/Footer";
 
 export default function ReservationPages() {
-  const params = useSearchParams();
-  const id = parseInt(params.get("id"), 10);
-  const listing = carlisting.find((item) => item.id === id);
+  const searchParams = useSearchParams();
+  const [id, setId] = useState(null);
+  const [listing, setListing] = useState(null);
 
   const [guestInfo, setGuestInfo] = useState({
     name: "",
@@ -16,13 +16,25 @@ export default function ReservationPages() {
     phone: "",
     paymentMethod: "chapa",
   });
+
   const [checkIn, setCheckIn] = useState(
     new Date().toISOString().split("T")[0]
   );
   const [checkOut, setCheckOut] = useState(
     new Date(Date.now() + 2 * 86400000).toISOString().split("T")[0]
   );
+
   const [successMessage, setSuccessMessage] = useState("");
+
+  // Safe extraction of ID after mount
+  useEffect(() => {
+    if (searchParams) {
+      const paramId = parseInt(searchParams.get("id"), 10);
+      setId(paramId);
+      const foundListing = carlisting.find((item) => item.id === paramId);
+      setListing(foundListing || null);
+    }
+  }, [searchParams]);
 
   if (!listing) {
     return (
@@ -36,6 +48,7 @@ export default function ReservationPages() {
     1,
     Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24))
   );
+
   const pricePerNight = parseInt(listing.price.split(" ")[0], 10);
   const totalPrice = pricePerNight * daysDiff;
 
