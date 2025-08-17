@@ -2,6 +2,43 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Car, Bus, Briefcase, MapPin, Search } from "lucide-react";
+export const fleet = [
+  {
+    id: "1",
+    title: "Luxury Sedan",
+    description:
+      "Executive comfort for business or VIP travel with a professional driver.",
+    icon: <Car className="w-10 h-10 text-blue-600" />,
+    price: "$120 / day",
+    image: "/casualcar1.jpg",
+  },
+  {
+    id: "2",
+    title: "SUV / 4x4",
+    description:
+      "Spacious and powerful, perfect for family trips or adventure tours.",
+    icon: <Car className="w-10 h-10 text-green-600" />,
+    price: "$150 / day",
+    image: "/casualcar2.jpg",
+  },
+  {
+    id: "3",
+    title: "Executive Van",
+    description: "Ideal for group travel, events, and corporate shuttles.",
+    icon: <Bus className="w-10 h-10 text-purple-600" />,
+    price: "$200 / day",
+    image: "/casualcar3.jpg",
+  },
+  {
+    id: "4",
+    title: "Tour Bus",
+    description:
+      "Comfortable large buses for city tours and out-of-town excursions.",
+    icon: <Bus className="w-10 h-10 text-pink-600" />,
+    price: "Contact for quote",
+    image: "/casualcar4.jpg",
+  },
+];
 
 export default function TransportServices() {
   const [searchData, setSearchData] = useState({
@@ -10,39 +47,6 @@ export default function TransportServices() {
     date: "",
     guests: 1,
   });
-
-  // Fleet data (sample vehicles)
-  const fleet = [
-    {
-      id: 1,
-      title: "Toyota Land Cruiser Prado",
-      description:
-        "Luxury SUV with high comfort, perfect for city & outstation trips.",
-      price: "3,200,000 birr",
-      icon: <Car className="w-12 h-12 text-blue-600" />,
-    },
-    {
-      id: 2,
-      title: "Hiace Van",
-      description: "Spacious van for group tours and family trips.",
-      price: "1,800,000 birr",
-      icon: <Bus className="w-12 h-12 text-green-600" />,
-    },
-    {
-      id: 3,
-      title: "Executive Sedan",
-      description: "Stylish sedan for business meetings and VIP guests.",
-      price: "2,400,000 birr",
-      icon: <Car className="w-12 h-12 text-purple-600" />,
-    },
-    {
-      id: 4,
-      title: "Tour Bus",
-      description: "Large bus for city tours and event transportation.",
-      price: "5,500,000 birr",
-      icon: <Bus className="w-12 h-12 text-red-600" />,
-    },
-  ];
 
   const highlights = [
     {

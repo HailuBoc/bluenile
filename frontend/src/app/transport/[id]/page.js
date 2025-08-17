@@ -1,11 +1,15 @@
 "use client";
 import { Car, CheckCircle, XCircle } from "lucide-react";
 import { useState, useEffect } from "react";
-import { fleet } from "../page"; // 👈 import the same fleet list
+import { use } from "react"; // 👈 required to unwrap `params` Promise
+import { fleet } from "../page"; // 👈 import fleet list from /transport/page.js
 
 export default function TransportDetailPage({ params }) {
-  const id = params.id;
-  const transport = fleet.find((item) => item.id === id) || fleet[0];
+  const { id } = use(params); // 👈 unwrap params safely
+
+  // Find the selected transport/car from fleet
+  const transport =
+    fleet.find((item) => String(item.id) === String(id)) || fleet[0];
 
   const services = [
     "Chauffeur",
