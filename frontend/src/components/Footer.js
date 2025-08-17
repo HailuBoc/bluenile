@@ -1,4 +1,6 @@
-import { Facebook, Twitter, Instagram, Linkedin, Youtube } from "lucide-react";
+import { Instagram, Linkedin, Youtube } from "lucide-react";
+import { FaTiktok } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 
 export default function Footer() {
   return (
@@ -136,23 +138,23 @@ export default function Footer() {
         {/* Social Media Links */}
         <div className="flex justify-center sm:justify-start gap-4 pb-6">
           <a
-            href="https://facebook.com"
+            href="https://www.tiktok.com/@bluenile32?_t=ZM-8ywz8okk59J&_r=1"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-blue-600"
           >
-            <Facebook className="h-5 w-5" />
+            <FaTiktok className="h-5 w-5" />
           </a>
           <a
-            href="https://twitter.com"
+            href="https://x.com/BlueNile374131?t=p0q0DtyhwBVfQwIysudJXQ&s=35"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-sky-500"
           >
-            <Twitter className="h-5 w-5" />
+            <FaXTwitter className="h-5 w-5" />
           </a>
           <a
-            href="https://instagram.com"
+            href="https://www.instagram.com/blue.nile66?utm_source=qr&igsh=MWE0enpybWRqa2k2dQ=="
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-pink-500"
@@ -160,7 +162,7 @@ export default function Footer() {
             <Instagram className="h-5 w-5" />
           </a>
           <a
-            href="https://linkedin.com"
+            href="https://www.linkedin.com/groups/13354352"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-blue-700"
@@ -168,7 +170,7 @@ export default function Footer() {
             <Linkedin className="h-5 w-5" />
           </a>
           <a
-            href="https://youtube.com"
+            href="https://youtube.com/@bluenile-z8t?si=Gyhp8MsqaPwvaCoO"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-red-600"

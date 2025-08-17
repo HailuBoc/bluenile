@@ -1,13 +1,13 @@
 "use client";
 import { Car, CheckCircle, XCircle } from "lucide-react";
 import { useState, useEffect } from "react";
-import { use } from "react"; // 👈 required to unwrap `params` Promise
-import { fleet } from "../page"; // 👈 import fleet list from /transport/page.js
+import { use } from "react"; // 👈 unwrap params
+import { fleet } from "../../../data/fleet"; // ✅ Import fleet
 
 export default function TransportDetailPage({ params }) {
-  const { id } = use(params); // 👈 unwrap params safely
+  const { id } = use(params); // unwrap params safely
 
-  // Find the selected transport/car from fleet
+  // Find the selected car
   const transport =
     fleet.find((item) => String(item.id) === String(id)) || fleet[0];
 
@@ -84,7 +84,7 @@ export default function TransportDetailPage({ params }) {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* Car Hero Section */}
+      {/* Hero Section */}
       <header className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-16 text-center px-4">
         <Car className="w-12 h-12 mx-auto mb-4" />
         <h1 className="text-4xl font-bold">{transport.title}</h1>
@@ -106,7 +106,7 @@ export default function TransportDetailPage({ params }) {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5 max-w-2xl mx-auto">
-            {/* Show Selected Car Name */}
+            {/* Selected Car */}
             <input
               type="text"
               value={transport.title}
@@ -179,7 +179,7 @@ export default function TransportDetailPage({ params }) {
               className="w-full border rounded px-4 py-2"
             />
 
-            {/* Success/Error Message */}
+            {/* Messages */}
             {message.text && (
               <div
                 className={`flex items-center gap-2 p-3 rounded-lg text-sm ${
