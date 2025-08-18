@@ -3,7 +3,6 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import listings from "../../components/listingsData";
-import ProductCard from "../../components/ProductCard";
 import { Star, Heart } from "lucide-react";
 import Link from "next/link";
 import Footer from "../../components/Footer";
@@ -28,8 +27,9 @@ export default function ProductsPage() {
 
   if (selectedProduct) {
     return (
-      <>
-        <main className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-6 max-w-7xl mx-auto">
+      <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+        {/* Main Content */}
+        <main className="flex-grow p-6 max-w-7xl mx-auto w-full">
           <div className="flex flex-col md:flex-row gap-6">
             {/* Left side - Image */}
             <div className="md:w-1/2 relative rounded-xl overflow-hidden shadow-lg">
@@ -88,8 +88,19 @@ export default function ProductsPage() {
             </div>
           </div>
         </main>
+
+        {/* Footer always visible */}
         <Footer />
-      </>
+      </div>
     );
   }
+
+  return (
+    <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+      <main className="flex-grow flex items-center justify-center">
+        <p className="text-lg">Product not found.</p>
+      </main>
+      <Footer />
+    </div>
+  );
 }
