@@ -2,11 +2,11 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import listings from "../../components/listingsData";
+import listings from "../../../components/listingsData";
 import { Star, Heart } from "lucide-react";
 import Link from "next/link";
-import Footer from "../../components/Footer";
-import CarsCard from "../../components/CarsCard"; // Updated import
+import Footer from "../../../components/Footer";
+import HousesCard from "../../../components/HousesCard";
 
 export default function ProductsPage() {
   const searchParams = useSearchParams();
@@ -83,7 +83,7 @@ export default function ProductsPage() {
                   type="button"
                   className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200"
                 >
-                  Rent Now
+                  Buy Now
                 </button>
               </Link>
             </div>
@@ -101,12 +101,12 @@ export default function ProductsPage() {
     <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-gray-900">
       <section className="flex-grow px-2 sm:px-6 pt-6 pb-24">
         <h2 className="text-base sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200 max-w-6xl mx-auto">
-          All Cars
+          All Stays
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-6 max-w-6xl mx-auto">
           {listings.map((listing) => (
             <div key={listing.id} className="transform scale-75 sm:scale-100">
-              <CarsCard {...listing} />
+              <HousesCard {...listing} />
             </div>
           ))}
         </div>
