@@ -30,14 +30,6 @@ export default function ProductsPage() {
     return (
       <>
         <main className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-6 max-w-7xl mx-auto">
-          <button
-            onClick={() => router.push("/products")}
-            className="mb-4 px-4 py-2 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900 rounded-md font-medium hover:bg-blue-100 dark:hover:bg-blue-800 transition duration-200 ease-in-out flex items-center gap-2"
-            aria-label="Back to products list"
-          >
-            Go to products
-          </button>
-
           <div className="flex flex-col md:flex-row gap-6">
             {/* Left side - Image */}
             <div className="md:w-1/2 relative rounded-xl overflow-hidden shadow-lg">
@@ -100,22 +92,4 @@ export default function ProductsPage() {
       </>
     );
   }
-
-  return (
-    <>
-      <section className="px-2 sm:px-6 pt-6 pb-24 bg-gray-100 dark:bg-gray-900 min-h-screen">
-        <h2 className="text-base sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200 max-w-6xl mx-auto">
-          All Stays
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-6 max-w-6xl mx-auto">
-          {listings.map((listing) => (
-            <div key={listing.id} className="transform scale-75 sm:scale-100">
-              <ProductCard {...listing} />
-            </div>
-          ))}
-        </div>
-      </section>
-      <Footer />
-    </>
-  );
 }

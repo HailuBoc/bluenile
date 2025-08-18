@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
-import carlisting from "./listingCar";
+import listings from "./listingsData";
 import Footer from "./Footer";
 
 export default function ReservationPage() {
@@ -32,7 +32,7 @@ export default function ReservationPage() {
     if (searchParams) {
       const paramId = parseInt(searchParams.get("id"), 10);
       setId(paramId);
-      const foundListing = carlisting.find((item) => item.id === paramId);
+      const foundListing = listings.find((item) => item.id === paramId);
       setListing(foundListing || null);
     }
   }, [searchParams]);

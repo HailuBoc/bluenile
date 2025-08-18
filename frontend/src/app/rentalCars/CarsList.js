@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import listings from "../../components/listingsData";
 import { Star, Heart } from "lucide-react";
@@ -10,18 +10,17 @@ import CarsCard from "../../components/CarsCard"; // Updated import
 
 export default function ProductsPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const idParam = searchParams.get("id");
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [liked, setLiked] = useState(false);
-  const [likes, setLikes] = useState(0);
 
   useEffect(() => {
     if (idParam) {
       const product = listings.find((p) => p.id === parseInt(idParam));
       setSelectedProduct(product || null);
       setLiked(false);
-      setLikes(product?.initialLikes || 0);
     } else {
       setSelectedProduct(null);
     }
@@ -31,31 +30,27 @@ export default function ProductsPage() {
   if (selectedProduct) {
     return (
       <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-        <main className="flex-grow p-4 sm:p-6 max-w-7xl mx-auto">
+        <main className="flex-grow p-6 max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row gap-6">
             {/* Left side - Image */}
             <div className="md:w-1/2 relative rounded-xl overflow-hidden shadow-lg">
               <img
                 src={selectedProduct.img}
                 alt={selectedProduct.title}
-                className="w-full h-64 sm:h-full object-cover rounded-xl"
+                className="w-full h-full object-cover rounded-xl"
+                style={{ minHeight: "400px" }}
               />
               <button
-                onClick={() => {
-                  setLiked(!liked);
-                  setLikes((prev) => prev + (liked ? -1 : 1));
-                }}
-                className="absolute top-4 right-4 bg-white dark:bg-gray-800 p-2 rounded-full shadow flex items-center gap-1"
-                aria-label={liked ? "Unlike" : "Like"}
+                onClick={() => setLiked(!liked)}
+                className="absolute top-4 right-4 bg-white dark:bg-gray-800 p-2 rounded-full shadow"
+                aria-pressed={liked}
+                aria-label={liked ? "Unlike product" : "Like product"}
               >
                 <Heart
-                  className={`w-6 h-6 transition-colors duration-200 ${
+                  className={`w-6 h-6 ${
                     liked ? "text-red-500 fill-red-500" : "text-gray-500"
                   }`}
                 />
-                <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
-                  {likes}
-                </span>
               </button>
               {selectedProduct.guestFavorite && (
                 <div className="absolute top-4 left-4 text-sm bg-rose-200 dark:bg-rose-800 text-rose-700 dark:text-white px-3 py-1 rounded-full shadow">
@@ -66,7 +61,7 @@ export default function ProductsPage() {
 
             {/* Right side - Details */}
             <div className="md:w-1/2 flex flex-col justify-start">
-              <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+              <h1 className="text-3xl font-bold mb-2">
                 {selectedProduct.title}
               </h1>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
@@ -76,7 +71,7 @@ export default function ProductsPage() {
                 <Star className="w-5 h-5 text-yellow-400" />
                 <span className="ml-1">{selectedProduct.rating}</span>
               </div>
-              <div className="text-lg sm:text-xl font-semibold mb-4">
+              <div className="text-xl font-semibold mb-4">
                 {selectedProduct.price}
               </div>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
@@ -86,9 +81,9 @@ export default function ProductsPage() {
               <Link href={`/ReservationPage?id=${selectedProduct.id}`}>
                 <button
                   type="button"
-                  className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200"
                 >
-                  Buy Now
+                  Rent Now
                 </button>
               </Link>
             </div>
@@ -110,7 +105,9 @@ export default function ProductsPage() {
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-6 max-w-6xl mx-auto">
           {listings.map((listing) => (
-            <CarsCard key={listing.id} {...listing} />
+            <div key={listing.id} className="transform scale-75 sm:scale-100">
+              <CarsCard {...listing} />
+            </div>
           ))}
         </div>
       </section>

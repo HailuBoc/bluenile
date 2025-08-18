@@ -12,13 +12,13 @@ export default function CarsCard({
   price,
   rating,
   guestFavorite,
-  initialLikes = 0, // optional starting likes
+  initialLikes = 0, // new prop
 }) {
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(initialLikes);
 
   const toggleLike = (e) => {
-    e.preventDefault(); // stop navigation on click
+    e.preventDefault(); // prevent Link navigation
     if (liked) {
       setLikes((prev) => prev - 1);
     } else {
@@ -29,7 +29,7 @@ export default function CarsCard({
 
   return (
     <Link
-      href={`/cars?id=${id}`} // route to car detail page
+      href={`/rentalCars?id=${id}`}
       className="block transform scale-90 sm:scale-100"
     >
       <div className="relative bg-white dark:bg-gray-800 text-gray-800 dark:text-white rounded-xl shadow hover:shadow-lg transition-all overflow-hidden group cursor-pointer">
@@ -50,19 +50,20 @@ export default function CarsCard({
               liked ? "text-red-500 fill-red-500" : "text-gray-500"
             }`}
           />
+          {/* Like count badge */}
           <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
             {likes}
           </span>
         </button>
 
-        {/* Car image */}
+        {/* Car image (same sizing as HousesCard) */}
         <img
           src={img}
           alt={title}
           className="w-full h-32 sm:h-40 object-cover group-hover:scale-105 transition-transform"
         />
 
-        {/* Car details */}
+        {/* Car details (aligned with HousesCard) */}
         <div className="p-3 sm:p-4">
           <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-300">
             {location}

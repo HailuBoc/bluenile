@@ -4,6 +4,7 @@ import listings from "./listingsData";
 import HousesCard from "./HousesCard";
 import CarSalecard from "./CarSalecard";
 import carlisting from "./listingCar";
+import CarsCard from "./CarsCard";
 
 export default function ProductsSection() {
   const firstGroup = listings.slice(0, 6); // Popular Stays
@@ -40,13 +41,13 @@ export default function ProductsSection() {
         </h2>
         <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
           {secondGroup.map((listing, index) => (
-            <ProductCard key={index + 6} {...listing} />
+            <CarsCard key={index + 6} {...listing} />
           ))}
         </div>
         <div className="sm:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory py-2 -mx-4 px-4 scrollbar-hide">
           {secondGroup.map((listing, index) => (
             <div key={index + 6} className="snap-start flex-shrink-0 w-72">
-              <ProductCard {...listing} />
+              <CarsCard {...listing} />
             </div>
           ))}
         </div>

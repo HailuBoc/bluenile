@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Heart, Star } from "lucide-react";
 import { useState } from "react";
 
-export default function HousesCard({
+export default function CarsCard({
   id,
   img,
   title,
@@ -29,7 +29,7 @@ export default function HousesCard({
 
   return (
     <Link
-      href={`/houses?id=${id}`}
+      href={`/rentalCars?id=${id}`}
       className="block transform scale-90 sm:scale-100"
     >
       <div className="relative bg-white dark:bg-gray-800 text-gray-800 dark:text-white rounded-xl shadow hover:shadow-lg transition-all overflow-hidden group cursor-pointer">
@@ -56,12 +56,14 @@ export default function HousesCard({
           </span>
         </button>
 
+        {/* Car image (same sizing as HousesCard) */}
         <img
           src={img}
           alt={title}
           className="w-full h-32 sm:h-40 object-cover group-hover:scale-105 transition-transform"
         />
 
+        {/* Car details (same font sizes / spacing as HousesCard) */}
         <div className="p-3 sm:p-4">
           <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-300">
             {location}
