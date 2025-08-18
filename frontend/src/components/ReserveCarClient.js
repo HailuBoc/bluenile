@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import carlisting from "./listingCar";
 import Footer from "./Footer";
 
@@ -27,7 +27,7 @@ export default function ReservationPage() {
 
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Safe extraction of ID from URL
+  // Extract ID from URL and find listing
   useEffect(() => {
     if (searchParams) {
       const paramId = parseInt(searchParams.get("id"), 10);
@@ -37,34 +37,7 @@ export default function ReservationPage() {
     }
   }, [searchParams]);
 
-  if (!listing) {
-    return (
-      <div className="flex items-center justify-center min-h-screen p-4">
-        <p className="text-lg sm:text-xl text-red-600">Listing not found.</p>
-      </div>
-    );
-  }
-
-  const daysDiff = Math.max(
-    1,
-    Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24))
-  );
-
-  const pricePerNight = parseInt(listing.price.split(" ")[0], 10);
-  const totalPrice = pricePerNight * daysDiff;
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setGuestInfo((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSuccessMessage(
-      `Successfully reserved ${listing.title} from ${checkIn} to ${checkOut}. Total: ${totalPrice} birr.`
-    );
-  };
-
+  // Auto-hide success message
   useEffect(() => {
     if (successMessage) {
       const timer = setTimeout(() => setSuccessMessage(""), 3000);
@@ -72,6 +45,47 @@ export default function ReservationPage() {
     }
   }, [successMessage]);
 
+  // Compute days and price safely
+  const { daysDiff, totalPrice } = useMemo(() => {
+    if (!listing) return { daysDiff: 0, totalPrice: 0 };
+    const diff = Math.max(
+      1,
+      Math.ceil(
+        (new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)
+      )
+    );
+    const pricePerNight = parseInt(listing.price.split(" ")[0], 10);
+    return { daysDiff: diff, totalPrice: pricePerNight * diff };
+  }, [listing, checkIn, checkOut]);
+
+  // --- Handle form actions ---
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setGuestInfo((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!listing) return; // guard
+
+    setSuccessMessage(
+      `Successfully reserved ${listing.title} from ${checkIn} to ${checkOut}. Total: ${totalPrice} birr.`
+    );
+  };
+
+  // --- If listing not found, render fallback ---
+  if (!listing) {
+    return (
+      <>
+        <main className="flex items-center justify-center min-h-screen p-4">
+          <p className="text-lg sm:text-xl text-red-600">Listing not found.</p>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  // --- Normal UI ---
   return (
     <>
       <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 flex justify-center relative">
