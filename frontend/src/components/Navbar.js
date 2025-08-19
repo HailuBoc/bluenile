@@ -87,8 +87,8 @@ export default function Navbar() {
           {/* Services Section */}
 
           <nav className="w-full">
-            <div className="grid grid-cols-5 gap-2 px-2 sm:gap-4 sm:px-0">
-              {[
+            {(() => {
+              const services = [
                 {
                   href: "/propertyrental",
                   icon: "🏠",
@@ -98,19 +98,51 @@ export default function Navbar() {
                 { href: "/transport", icon: "🚗", label: "Transport Services" },
                 { href: "/sales", icon: "🏡", label: "Sales Section" },
                 { href: "/tourism", icon: "🌍", label: "Tourism Services" },
-              ].map((item, i) => (
-                <a
-                  key={i}
-                  href={item.href}
-                  className="flex flex-col items-center p-2 sm:p-3 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 shadow hover:bg-slate-400/80 hover:shadow-lg transition-all duration-300 ease-out"
+              ];
+
+              const Tile = ({ href, icon, label }) => (
+                <Link
+                  href={href}
+                  className="flex flex-col items-center justify-center 
+                   p-6 sm:p-4 rounded-xl 
+                   bg-white/10 backdrop-blur-md 
+                   border border-white/20 shadow 
+                   hover:bg-slate-400/80 hover:shadow-lg 
+                   transition-all duration-300 ease-out 
+                   min-h-[100px] sm:min-h-[110px]"
                 >
-                  <span className="text-lg sm:text-2xl">{item.icon}</span>
-                  <span className="mt-1 text-[10px] sm:text-xs font-semibold text-white text-center group-hover:underline">
-                    {item.label}
+                  <span className="text-2xl sm:text-xl">{icon}</span>
+                  <span className="mt-2 text-xs sm:text-sm font-semibold text-white text-center">
+                    {label}
                   </span>
-                </a>
-              ))}
-            </div>
+                </Link>
+              );
+
+              return (
+                <>
+                  {/* Mobile: 2 rows (2 + 3) */}
+                  <div className="sm:hidden w-full">
+                    <div className="grid grid-cols-2 gap-3 px-2">
+                      {services.slice(0, 2).map((s) => (
+                        <Tile key={s.label} {...s} />
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 px-2 mt-3">
+                      {services.slice(2).map((s) => (
+                        <Tile key={s.label} {...s} />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Desktop: 5 across */}
+                  <div className="hidden sm:grid grid-cols-5 gap-4 sm:px-0">
+                    {services.map((s) => (
+                      <Tile key={s.label} {...s} />
+                    ))}
+                  </div>
+                </>
+              );
+            })()}
           </nav>
 
           {/* Search Section */}

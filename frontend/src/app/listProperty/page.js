@@ -4,12 +4,45 @@ import React, { useState } from "react";
 export default function ListPropertyPage() {
   const [listingType, setListingType] = useState("");
   const [propertyName, setPropertyName] = useState("");
-  const [successMessage, setSuccessMessage] = useState(""); // ✅ new state
+  const [formData, setFormData] = useState({});
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault(); // stop page reload
-    setSuccessMessage("✅ Your property has been posted successfully!");
-    setTimeout(() => setSuccessMessage(""), 4000); // clear message after 4s
+  // ✅ Handle input changes
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  // ✅ Submit form
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const propertyData = {
+      listingType,
+      propertyName,
+      address,
+      price,
+    };
+
+    try {
+      const res = await fetch("/api/properties", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(propertyData),
+      });
+
+      if (!res.ok) throw new Error("Failed to post property");
+
+      setSuccessMessage("✅ Your property has been posted successfully!");
+      setTimeout(() => setSuccessMessage(""), 4000);
+    } catch (err) {
+      console.error(err);
+      setSuccessMessage("❌ Failed to post property. Try again.");
+    }
   };
 
   return (
@@ -70,12 +103,14 @@ export default function ListPropertyPage() {
 
               <input
                 type="text"
+                name="address"
                 placeholder="Address / Location"
+                onChange={handleChange}
                 className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white mb-4"
               />
             </div>
 
-            {/* Conditional Fields Based on Property Type */}
+            {/* Conditional Fields */}
             {["apartment", "house", "villa", "guesthouse"].includes(
               propertyName
             ) && (
@@ -85,12 +120,16 @@ export default function ListPropertyPage() {
                   <h3 className="text-lg font-semibold mb-3">Rooms</h3>
                   <input
                     type="number"
+                    name="bedrooms"
                     placeholder="Number of Bedrooms"
+                    onChange={handleChange}
                     className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white mb-3"
                   />
                   <input
                     type="number"
+                    name="bathrooms"
                     placeholder="Number of Bathrooms"
+                    onChange={handleChange}
                     className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white"
                   />
                 </div>
@@ -108,7 +147,12 @@ export default function ListPropertyPage() {
                       "Garden",
                     ].map((facility, i) => (
                       <label key={i} className="flex items-center space-x-2">
-                        <input type="checkbox" className="accent-blue-600" />
+                        <input
+                          type="checkbox"
+                          name={facility}
+                          onChange={handleChange}
+                          className="accent-blue-600"
+                        />
                         <span>{facility}</span>
                       </label>
                     ))}
@@ -121,20 +165,28 @@ export default function ListPropertyPage() {
               <>
                 <input
                   type="text"
+                  name="carModel"
                   placeholder="Car Model"
+                  onChange={handleChange}
                   className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white mb-3"
                 />
                 <input
                   type="number"
+                  name="year"
                   placeholder="Year"
+                  onChange={handleChange}
                   className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white mb-3"
                 />
                 <input
                   type="number"
+                  name="mileage"
                   placeholder="Mileage (km)"
+                  onChange={handleChange}
                   className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white mb-3"
                 />
                 <select
+                  name="fuelType"
+                  onChange={handleChange}
                   className="w-full border border-gray-500 bg-gray-900 text-gray-300 rounded p-3"
                   defaultValue=""
                 >
@@ -152,14 +204,18 @@ export default function ListPropertyPage() {
             {propertyName === "land" && (
               <input
                 type="number"
+                name="landSize"
                 placeholder="Land Size (sq. meters)"
+                onChange={handleChange}
                 className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white"
               />
             )}
 
-            {/* Conditional Rent Term */}
+            {/* Rent Term */}
             {listingType === "rent" && (
               <select
+                name="rentTerm"
+                onChange={handleChange}
                 className="w-full border border-gray-500 bg-gray-900 text-gray-300 rounded p-3"
                 defaultValue=""
               >
@@ -178,9 +234,11 @@ export default function ListPropertyPage() {
               <h3 className="text-lg font-semibold mb-3">Pricing</h3>
               <input
                 type="number"
+                name="price"
                 placeholder={
                   listingType === "sale" ? "Sale Price (BIRR)" : "Price (Birr)"
                 }
+                onChange={handleChange}
                 className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white"
               />
             </div>
@@ -193,10 +251,15 @@ export default function ListPropertyPage() {
               Post Property
             </button>
 
-            {/* ✅ Success Message */}
+            {/* ✅ Success / Error Message */}
             {successMessage && (
               <p className="mt-4 text-green-400 font-semibold text-center">
                 {successMessage}
+              </p>
+            )}
+            {errorMessage && (
+              <p className="mt-4 text-red-400 font-semibold text-center">
+                {errorMessage}
               </p>
             )}
           </form>
