@@ -2,8 +2,8 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import listings from "../../components/listingsData";
-import Footer from "../../components/Footer"; // ✅ Import Footer
+import listings from "../../../../components/listingsData";
+import Footer from "../../../../components/Footer"; // ✅ Import Footer
 
 export default function ReservationPage() {
   const params = useSearchParams();
@@ -97,17 +97,20 @@ export default function ReservationPage() {
             </div>
 
             {/* Amenities */}
+            {/* Amenities */}
             <div>
               <h2 className="text-xl font-semibold mt-6 mb-3 text-gray-900 dark:text-white">
-                Amenities & Features
+                Tourism Features
               </h2>
               <ul className="grid grid-cols-2 gap-2 text-gray-700 dark:text-gray-300">
-                <li>✔ Free Wi-Fi</li>
-                <li>✔ Free Parking</li>
-                <li>✔ Breakfast Included</li>
-                <li>✔ 24/7 Reception</li>
-                <li>✔ Air Conditioning</li>
-                <li>✔ Pool Access</li>
+                <li>✔ Guided Tours</li>
+                <li>✔ Historical Site Access</li>
+                <li>✔ Cultural Experiences</li>
+                <li>✔ Transportation Included</li>
+                <li>✔ Local Cuisine Tasting</li>
+                <li>✔ Professional Tour Guide</li>
+                <li>✔ Group & Private Options</li>
+                <li>✔ Safety & Security</li>
               </ul>
             </div>
 

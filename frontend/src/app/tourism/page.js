@@ -92,7 +92,7 @@ export default function TourismPage() {
       highlights: [
         "Create your own custom itinerary",
         "Flexible travel dates & locations",
-        "VIP transportation options (private car, limo, luxury bus, helicopter if available)",
+        "VIP transportation options (private car, limo, luxury bus, airplane if available)",
         "Personal tour guide / concierge",
         "Private booking management by our team",
         "Premium pricing model for unmatched service quality",
@@ -330,10 +330,10 @@ export default function TourismPage() {
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
-                        checked={formData.extras.includes("helicopter")}
-                        onChange={() => handleCheckboxChange("helicopter")}
+                        checked={formData.extras.includes("airplane")}
+                        onChange={() => handleCheckboxChange("airplane")}
                       />
-                      <Plane className="w-4 h-4" /> Helicopter Ride
+                      <Plane className="w-4 h-4" /> Airplane Ride
                     </label>
                     <label className="flex items-center gap-2">
                       <input

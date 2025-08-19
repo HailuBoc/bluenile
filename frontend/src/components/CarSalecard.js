@@ -29,7 +29,7 @@ export default function CarCard({
 
   return (
     <Link
-      href={`/ReservationCar?id=${id}`}
+      href={`/sections/saleCar?id=${id}`}
       className="block transform scale-95 sm:scale-100"
     >
       <div className="relative bg-white dark:bg-gray-800 text-gray-800 dark:text-white rounded-xl shadow hover:shadow-lg transition-all overflow-hidden group cursor-pointer">

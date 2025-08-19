@@ -78,7 +78,9 @@ export default function ProductsPage() {
                 {selectedProduct.description}
               </p>
 
-              <Link href={`/ReservationPage?id=${selectedProduct.id}`}>
+              <Link
+                href={`/sections/houses/reserveHouse?id=${selectedProduct.id}`}
+              >
                 <button
                   type="button"
                   className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200"

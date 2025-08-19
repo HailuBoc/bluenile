@@ -3,8 +3,8 @@ export const dynamic = "force-dynamic";
 
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
-import listings from "./listingsData";
-import Footer from "./Footer";
+import listings from "../../../../components/listingsData";
+import Footer from "../../../../components/Footer";
 
 export default function ReservationPage() {
   const searchParams = useSearchParams();
@@ -124,17 +124,20 @@ export default function ReservationPage() {
             </div>
 
             {/* Features */}
+            {/* Features */}
             <div>
               <h2 className="text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-2 sm:mb-3 text-gray-900 dark:text-white">
-                Car Features
+                Rental Car Features
               </h2>
               <ul className="grid grid-cols-2 gap-2 text-gray-700 dark:text-gray-300 text-sm sm:text-base">
-                <li>✔ Low Mileage</li>
-                <li>✔ Accident Free</li>
-                <li>✔ Full Service History</li>
-                <li>✔ Fuel Efficient</li>
+                <li>✔ Unlimited Mileage</li>
                 <li>✔ Air Conditioning</li>
-                <li>✔ Modern Safety Features</li>
+                <li>✔ Automatic Transmission</li>
+                <li>✔ GPS Navigation Available</li>
+                <li>✔ Child Seat on Request</li>
+                <li>✔ Comprehensive Insurance</li>
+                <li>✔ Roadside Assistance</li>
+                <li>✔ Free Cancellation</li>
               </ul>
             </div>
 

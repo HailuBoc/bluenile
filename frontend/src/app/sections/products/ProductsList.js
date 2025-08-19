@@ -2,10 +2,10 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import listings from "../../components/listingsData";
+import listings from "../../../components/listingsData";
 import { Star, Heart } from "lucide-react";
 import Link from "next/link";
-import Footer from "../../components/Footer";
+import Footer from "../../../components/Footer";
 
 export default function ProductsPage() {
   const searchParams = useSearchParams();
@@ -77,7 +77,9 @@ export default function ProductsPage() {
                 {selectedProduct.description}
               </p>
 
-              <Link href={`/ReservationPage?id=${selectedProduct.id}`}>
+              <Link
+                href={`/sections/products/reserveProducts?id=${selectedProduct.id}`}
+              >
                 <button
                   type="button"
                   className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200"

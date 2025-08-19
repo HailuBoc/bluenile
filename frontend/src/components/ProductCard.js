@@ -29,7 +29,7 @@ export default function ProductCard({
 
   return (
     <Link
-      href={`/products?id=${id}`}
+      href={`/sections/products?id=${id}`}
       className="block transform scale-90 sm:scale-100"
     >
       <div className="relative bg-white dark:bg-gray-800 text-gray-800 dark:text-white rounded-xl shadow hover:shadow-lg transition-all overflow-hidden group cursor-pointer">

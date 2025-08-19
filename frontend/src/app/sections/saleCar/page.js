@@ -1,12 +1,11 @@
 // products/page.js (server component)
-"use client";
 import { Suspense } from "react";
-import Reservation from "./Reservation";
-
+//import ProductsList from "./ProductsList"; // Client component
+import SaleCard from "./SaleCar";
 export default function ProductsPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <Reservation />
+      <SaleCard />
     </Suspense>
   );
 }

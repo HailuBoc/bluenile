@@ -85,8 +85,9 @@ export default function Navbar() {
           </div>
 
           {/* Services Section */}
+
           <nav className="w-full">
-            <div className="flex sm:grid sm:grid-cols-5 gap-4 overflow-x-auto scrollbar-hide px-2 sm:px-0">
+            <div className="grid grid-cols-5 gap-2 px-2 sm:gap-4 sm:px-0">
               {[
                 {
                   href: "/propertyrental",
@@ -101,10 +102,10 @@ export default function Navbar() {
                 <a
                   key={i}
                   href={item.href}
-                  className="flex flex-col items-center min-w-[120px] sm:min-w-0 p-3 sm:p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-md hover:bg-slate-400/80 hover:shadow-lg transition-all duration-300 ease-out"
+                  className="flex flex-col items-center p-2 sm:p-3 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 shadow hover:bg-slate-400/80 hover:shadow-lg transition-all duration-300 ease-out"
                 >
-                  <span className="text-xl sm:text-3xl">{item.icon}</span>
-                  <span className="mt-1 text-center text-xs sm:text-sm font-semibold text-white group-hover:underline">
+                  <span className="text-lg sm:text-2xl">{item.icon}</span>
+                  <span className="mt-1 text-[10px] sm:text-xs font-semibold text-white text-center group-hover:underline">
                     {item.label}
                   </span>
                 </a>
