@@ -4,6 +4,13 @@ import React, { useState } from "react";
 export default function ListPropertyPage() {
   const [listingType, setListingType] = useState("");
   const [propertyName, setPropertyName] = useState("");
+  const [successMessage, setSuccessMessage] = useState(""); // ✅ new state
+
+  const handleSubmit = (e) => {
+    e.preventDefault(); // stop page reload
+    setSuccessMessage("✅ Your property has been posted successfully!");
+    setTimeout(() => setSuccessMessage(""), 4000); // clear message after 4s
+  };
 
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col items-center">
@@ -24,7 +31,8 @@ export default function ListPropertyPage() {
           <h2 className="text-xl font-semibold mb-6">
             Tell us about your property
           </h2>
-          <form className="space-y-6">
+
+          <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Listing Purpose */}
             <div>
               <label className="block mb-2 font-medium">Listing Purpose</label>
@@ -171,7 +179,7 @@ export default function ListPropertyPage() {
               <input
                 type="number"
                 placeholder={
-                  listingType === "sale" ? "Sale Price (USD)" : "Price (USD)"
+                  listingType === "sale" ? "Sale Price (BIRR)" : "Price (Birr)"
                 }
                 className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white"
               />
@@ -184,6 +192,13 @@ export default function ListPropertyPage() {
             >
               Post Property
             </button>
+
+            {/* ✅ Success Message */}
+            {successMessage && (
+              <p className="mt-4 text-green-400 font-semibold text-center">
+                {successMessage}
+              </p>
+            )}
           </form>
         </div>
 
