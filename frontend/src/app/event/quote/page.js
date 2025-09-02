@@ -1,7 +1,53 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function GetQuotePage() {
+  // Services from each event type
+  const eventServices = {
+    Wedding: [
+      { name: "Church / Mosque Venue", price: 5000 },
+      { name: "Religious Ceremony Setup", price: 3000 },
+      { name: "Choir / Spiritual Music", price: 1500 },
+      { name: "Photography & Videography", price: 4000 },
+      { name: "Decoration & Flowers", price: 2500 },
+      { name: "Catering", price: 3500 },
+      { name: "DJ / Music Setup", price: 2000 },
+      { name: "Car Service", price: 1000 },
+      { name: "Guest Management", price: 800 },
+    ],
+    Birthday: [
+      { name: "Hall", price: 3000 },
+      { name: "Photography & Videography", price: 2000 },
+      { name: "Catering", price: 2500 },
+      { name: "Decoration", price: 1200 },
+      { name: "DJ", price: 1000 },
+      { name: "Car Service", price: 800 },
+      { name: "Guest Management", price: 700 },
+    ],
+    Graduation: [
+      { name: "Hall", price: 3500 },
+      { name: "Photography & Videography", price: 2000 },
+      { name: "Catering", price: 2500 },
+      { name: "Decoration", price: 1200 },
+      { name: "DJ", price: 1000 },
+      { name: "Car Service", price: 800 },
+      { name: "Guest Management", price: 700 },
+    ],
+    "General Event": [
+      { name: "Event Hall / Meeting Room", price: 3000 },
+      {
+        name: "Audio-Visual Setup (Projectors, Screens, Microphones)",
+        price: 1500,
+      },
+      { name: "Photography & Videography", price: 2000 },
+      { name: "Catering (Snacks, Lunch, Coffee Breaks)", price: 2500 },
+      { name: "Decoration & Branding (Banners, Backdrops)", price: 1200 },
+      { name: "Event Coordinator & Staff Support", price: 1000 },
+      { name: "Transportation Service (VIP Pickup, Shuttle)", price: 800 },
+      { name: "Guest Management & Registration Desk", price: 700 },
+    ],
+  };
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -9,20 +55,43 @@ export default function GetQuotePage() {
     eventType: "",
     eventDate: "",
     guests: "",
+    selectedServices: [],
     message: "",
   });
 
+  const [totalPrice, setTotalPrice] = useState(0);
   const [feedback, setFeedback] = useState({ type: "", text: "" });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleServiceChange = (service) => {
+    setForm((prev) => {
+      const exists = prev.selectedServices.includes(service.name);
+      const updatedServices = exists
+        ? prev.selectedServices.filter((s) => s !== service.name)
+        : [...prev.selectedServices, service.name];
+
+      // Calculate total price dynamically
+      const price = updatedServices.reduce((acc, s) => {
+        const srv = eventServices[form.eventType].find(
+          (item) => item.name === s
+        );
+        return acc + (srv ? srv.price : 0);
+      }, 0);
+      setTotalPrice(price);
+
+      return { ...prev, selectedServices: updatedServices };
+    });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Example validation
-    if (!form.name || !form.email || !form.phone) {
+    if (!form.name || !form.email || !form.phone || !form.eventType) {
       setFeedback({
         type: "error",
         text: "⚠️ Please fill all required fields.",
@@ -31,25 +100,50 @@ export default function GetQuotePage() {
       return;
     }
 
-    console.log("Quote Request Submitted:", form);
+    setLoading(true);
+    setFeedback({ type: "", text: "" });
 
-    // Success message
-    setFeedback({
-      type: "success",
-      text: "🎉 Your quote request has been sent! We’ll contact you shortly.",
-    });
-    setTimeout(() => setFeedback({ type: "", text: "" }), 4000);
+    try {
+      const res = await fetch("http://localhost:10000/quotes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, totalPrice }),
+      });
 
-    // Reset form
-    setForm({
-      name: "",
-      email: "",
-      phone: "",
-      eventType: "",
-      eventDate: "",
-      guests: "",
-      message: "",
-    });
+      const data = await res.json();
+
+      if (res.ok) {
+        setFeedback({
+          type: "success",
+          text: `🎉 Quote submitted! Estimated total: ${totalPrice} ETB. We’ll contact you shortly.`,
+        });
+        setForm({
+          name: "",
+          email: "",
+          phone: "",
+          eventType: "",
+          eventDate: "",
+          guests: "",
+          selectedServices: [],
+          message: "",
+        });
+        setTotalPrice(0);
+      } else {
+        setFeedback({
+          type: "error",
+          text: data.error || "❌ Something went wrong.",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      setFeedback({
+        type: "error",
+        text: "❌ Network error. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setFeedback({ type: "", text: "" }), 4000);
+    }
   };
 
   return (
@@ -59,7 +153,7 @@ export default function GetQuotePage() {
           Request a Quote
         </h1>
 
-        {/* Success/Error Message */}
+        {/* Feedback */}
         {feedback.text && (
           <div
             className={`mb-4 p-3 rounded text-center font-medium ${
@@ -100,10 +194,15 @@ export default function GetQuotePage() {
             className="w-full p-3 border rounded-lg outline-none"
             required
           />
+
           <select
             name="eventType"
             value={form.eventType}
-            onChange={handleChange}
+            onChange={(e) => {
+              handleChange(e);
+              setForm((prev) => ({ ...prev, selectedServices: [] }));
+              setTotalPrice(0);
+            }}
             className="w-full p-3 border rounded-lg outline-none"
             required
           >
@@ -113,13 +212,13 @@ export default function GetQuotePage() {
             <option value="Graduation">Graduation</option>
             <option value="General Event">General Event</option>
           </select>
+
           <input
             type="date"
             name="eventDate"
             value={form.eventDate}
             onChange={handleChange}
             className="w-full p-3 border rounded-lg outline-none"
-            required
           />
           <input
             type="number"
@@ -128,8 +227,36 @@ export default function GetQuotePage() {
             value={form.guests}
             onChange={handleChange}
             className="w-full p-3 border rounded-lg outline-none"
-            required
           />
+
+          {/* Dynamic Services */}
+          {form.eventType && (
+            <div>
+              <h3 className="font-semibold mb-2">Select Services</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {eventServices[form.eventType].map((service, i) => (
+                  <label
+                    key={i}
+                    className="flex items-center space-x-2 border p-2 rounded hover:bg-gray-50 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={form.selectedServices.includes(service.name)}
+                      onChange={() => handleServiceChange(service)}
+                      className="w-4 h-4 accent-blue-600"
+                    />
+                    <span>
+                      {service.name} ({service.price} ETB)
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <div className="font-semibold text-lg mt-2">
+                Total Price: {totalPrice} ETB
+              </div>
+            </div>
+          )}
+
           <textarea
             name="message"
             placeholder="Additional details..."
@@ -138,11 +265,15 @@ export default function GetQuotePage() {
             className="w-full p-3 border rounded-lg outline-none"
             rows={4}
           />
+
           <button
             type="submit"
-            className="w-full bg-blue-700 text-white py-3 rounded-lg font-bold hover:bg-blue-800 transition"
+            className={`w-full bg-blue-700 text-white py-3 rounded-lg font-bold hover:bg-blue-800 transition ${
+              loading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={loading}
           >
-            Submit Request
+            {loading ? "Submitting..." : "Submit Request"}
           </button>
         </form>
       </div>

@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import listings from "../../../../components/listingsData";
-import Footer from "../../../../components/Footer"; // ✅ Import Footer
+import Footer from "../../../../components/Footer";
 
 export default function ReservationPage() {
   const params = useSearchParams();
@@ -15,7 +15,9 @@ export default function ReservationPage() {
     email: "",
     phone: "",
     paymentMethod: "chapa",
+    paymentEvidence: null,
   });
+
   const [checkIn, setCheckIn] = useState(
     new Date().toISOString().split("T")[0]
   );
@@ -23,6 +25,7 @@ export default function ReservationPage() {
     new Date(Date.now() + 2 * 86400000).toISOString().split("T")[0]
   );
   const [successMessage, setSuccessMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   if (!listing) {
     return (
@@ -40,20 +43,101 @@ export default function ReservationPage() {
   const totalPrice = pricePerNight * daysDiff;
 
   function handleChange(e) {
-    const { name, value } = e.target;
-    setGuestInfo((prev) => ({ ...prev, [name]: value }));
+    const { name, value, files } = e.target;
+    if (files) {
+      setGuestInfo((prev) => ({ ...prev, paymentEvidence: files[0] }));
+    } else {
+      setGuestInfo((prev) => ({ ...prev, [name]: value }));
+    }
   }
 
-  function handleSubmit(e) {
+  function validateForm() {
+    if (!guestInfo.name || !guestInfo.email || !guestInfo.phone)
+      return "Please fill in name, email, and phone.";
+    if (!checkIn || !checkOut)
+      return "Please select check-in and check-out dates.";
+    if (!guestInfo.paymentMethod) return "Please select a payment method.";
+    if (
+      ["telebirr", "cbe-birr", "mpesa"].includes(guestInfo.paymentMethod) &&
+      !guestInfo.paymentEvidence
+    )
+      return "Please upload payment evidence for the selected method.";
+    return null;
+  }
+
+  async function handleSubmit(e) {
     e.preventDefault();
-    setSuccessMessage(
-      `Successfully reserved ${listing.title} from ${checkIn} to ${checkOut}. Total: ${totalPrice} birr.`
-    );
+    setSuccessMessage("");
+    const err = validateForm();
+    if (err) return setSuccessMessage("❌ " + err);
+
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("listingId", listing.id);
+      formData.append("listingTitle", listing.title);
+      formData.append("name", guestInfo.name);
+      formData.append("email", guestInfo.email);
+      formData.append("phone", guestInfo.phone);
+      formData.append("checkIn", checkIn);
+      formData.append("checkOut", checkOut);
+      formData.append("nights", daysDiff);
+      formData.append("amount", totalPrice);
+      formData.append("paymentMethod", guestInfo.paymentMethod);
+      if (guestInfo.paymentEvidence)
+        formData.append("paymentEvidence", guestInfo.paymentEvidence);
+
+      const createRes = await fetch(
+        "http://localhost:10000/products/reservations",
+        { method: "POST", body: formData }
+      );
+      const createData = await createRes.json();
+      if (!createRes.ok)
+        throw new Error(createData?.error || "Failed to create reservation");
+
+      const reservationId = createData?.reservation?._id;
+
+      if (guestInfo.paymentMethod === "chapa") {
+        const payRes = await fetch(
+          "http://localhost:10000/bookings/pay/chapa",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              amount: totalPrice,
+              currency: "ETB",
+              email: guestInfo.email,
+              fullName: guestInfo.name,
+              bookingId: reservationId,
+            }),
+          }
+        );
+        const payData = await payRes.json();
+        const redirectUrl = payData?.checkout_url || payData?.checkoutUrl;
+        if (redirectUrl) return (window.location.href = redirectUrl);
+        throw new Error("Failed to start Chapa payment.");
+      }
+
+      setSuccessMessage(
+        `✅ Reservation submitted! Payment of ${totalPrice} birr via ${guestInfo.paymentMethod} will be reviewed.`
+      );
+      setGuestInfo({
+        name: "",
+        email: "",
+        phone: "",
+        paymentMethod: "chapa",
+        paymentEvidence: null,
+      });
+    } catch (error) {
+      setSuccessMessage("❌ " + error.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
     if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(""), 3000);
+      const timer = setTimeout(() => setSuccessMessage(""), 5000);
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
@@ -75,7 +159,6 @@ export default function ReservationPage() {
               alt={listing.title}
               className="rounded-lg w-full h-80 object-cover shadow"
             />
-
             <div>
               <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">
                 {listing.title}
@@ -96,8 +179,6 @@ export default function ReservationPage() {
               </p>
             </div>
 
-            {/* Amenities */}
-            {/* Amenities */}
             <div>
               <h2 className="text-xl font-semibold mt-6 mb-3 text-gray-900 dark:text-white">
                 Tourism Features
@@ -114,7 +195,6 @@ export default function ReservationPage() {
               </ul>
             </div>
 
-            {/* Map */}
             <div>
               <h2 className="text-xl font-semibold mt-6 mb-3 text-gray-900 dark:text-white">
                 Location
@@ -127,7 +207,7 @@ export default function ReservationPage() {
                 className="w-full h-48 rounded-lg shadow"
                 allowFullScreen
                 loading="lazy"
-              ></iframe>
+              />
             </div>
           </section>
 
@@ -169,48 +249,38 @@ export default function ReservationPage() {
               </div>
 
               {/* Guest Info */}
-              <div>
-                <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={guestInfo.name}
-                  onChange={handleChange}
-                  placeholder="John Doe"
-                  required
-                  className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={guestInfo.email}
-                  onChange={handleChange}
-                  placeholder="john@example.com"
-                  required
-                  className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={guestInfo.phone}
-                  onChange={handleChange}
-                  placeholder="+251 9XX XXX XXX"
-                  required
-                  className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                />
-              </div>
+              {["name", "email", "phone"].map((field) => (
+                <div key={field}>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">
+                    {field === "name"
+                      ? "Full Name"
+                      : field === "email"
+                      ? "Email Address"
+                      : "Phone Number"}
+                  </label>
+                  <input
+                    type={
+                      field === "email"
+                        ? "email"
+                        : field === "phone"
+                        ? "tel"
+                        : "text"
+                    }
+                    name={field}
+                    value={guestInfo[field]}
+                    onChange={handleChange}
+                    placeholder={
+                      field === "name"
+                        ? "John Doe"
+                        : field === "email"
+                        ? "john@example.com"
+                        : "+251 9XX XXX XXX"
+                    }
+                    required
+                    className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  />
+                </div>
+              ))}
 
               {/* Payment Methods */}
               <fieldset className="border border-gray-300 dark:border-gray-600 rounded-md p-4 max-h-48 overflow-auto">
@@ -219,21 +289,13 @@ export default function ReservationPage() {
                 </legend>
                 {[
                   { value: "chapa", label: "Chapa" },
-                  { value: "sentimpay", label: "SentiMPay" },
-                  { value: "cbe", label: "Commercial Bank of Ethiopia (CBE)" },
-                  { value: "abyssinia", label: "Abyssinia Bank" },
-                  { value: "awash", label: "Awash Bank" },
+                  { value: "cbe-birr", label: "CBE Birr" },
                   { value: "telebirr", label: "Tele Birr" },
                   { value: "mpesa", label: "M-Pesa" },
-                  { value: "soon", label: "Soon (coming)", disabled: true },
-                ].map(({ value, label, disabled }) => (
+                ].map(({ value, label }) => (
                   <label
                     key={value}
-                    className={`flex items-center gap-3 mb-2 cursor-pointer ${
-                      disabled
-                        ? "cursor-not-allowed text-gray-400 dark:text-gray-500"
-                        : ""
-                    }`}
+                    className="flex items-center gap-3 mb-2 cursor-pointer"
                   >
                     <input
                       type="radio"
@@ -241,7 +303,6 @@ export default function ReservationPage() {
                       value={value}
                       checked={guestInfo.paymentMethod === value}
                       onChange={handleChange}
-                      disabled={disabled}
                       className="form-radio text-blue-600"
                       required
                     />
@@ -250,7 +311,24 @@ export default function ReservationPage() {
                 ))}
               </fieldset>
 
-              {/* Price Summary */}
+              {/* Upload evidence */}
+              {["telebirr", "cbe-birr", "mpesa"].includes(
+                guestInfo.paymentMethod
+              ) && (
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">
+                    Upload Payment Proof
+                  </label>
+                  <input
+                    type="file"
+                    onChange={handleChange}
+                    className="w-full border rounded p-2"
+                    accept="image/*"
+                  />
+                </div>
+              )}
+
+              {/* Price summary */}
               <div className="border-t border-gray-300 dark:border-gray-600 pt-4 mt-4">
                 <div className="flex justify-between font-semibold text-gray-900 dark:text-white mb-2">
                   <span>
@@ -267,13 +345,13 @@ export default function ReservationPage() {
 
               <button
                 type="submit"
+                disabled={loading}
                 className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-md transition duration-200"
               >
-                Confirm Reservation
+                {loading ? "Processing..." : "Confirm Reservation"}
               </button>
             </form>
 
-            {/* Help Section */}
             <div className="mt-6 text-sm text-gray-600 dark:text-gray-300 text-center">
               <p>Need help with your booking?</p>
               <p>
@@ -299,7 +377,6 @@ export default function ReservationPage() {
         </div>
       </main>
 
-      {/* ✅ Added Footer */}
       <Footer />
     </>
   );

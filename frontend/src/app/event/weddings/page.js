@@ -1,9 +1,8 @@
 "use client";
-import { Heart, CheckCircle } from "lucide-react";
+import { Heart, CheckCircle, XCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export default function WeddingsPage() {
-  // Service options based on marriage type
   const serviceOptions = {
     Religion: [
       "Church / Mosque Venue",
@@ -34,31 +33,46 @@ export default function WeddingsPage() {
     ],
   };
 
+  const paymentMethods = [
+    { name: "Chapa", logo: "/chapa.png" },
+    { name: "Telebirr", logo: "/telebirr.png" },
+    { name: "CBE Bank", logo: "/cbebirr.png" },
+  ];
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
     date: "",
     guests: "",
     marriageType: "",
     specialRequests: "",
     selectedServices: [],
+    paymentMethod: "",
+    paymentEvidence: null,
   });
 
   const [availableServices, setAvailableServices] = useState([]);
   const [errors, setErrors] = useState({});
-  const [successMessage, setSuccessMessage] = useState("");
+  const [status, setStatus] = useState({ text: "", type: "" });
+  const [loading, setLoading] = useState(false);
+  const [totalAmount, setTotalAmount] = useState(0);
 
-  // Update available services when marriage type changes
   useEffect(() => {
     if (formData.marriageType) {
       setAvailableServices(serviceOptions[formData.marriageType]);
-      setFormData((prev) => ({ ...prev, selectedServices: [] })); // reset selected
+      setFormData((prev) => ({ ...prev, selectedServices: [] }));
     }
   }, [formData.marriageType]);
 
+  useEffect(() => {
+    const pricePerService = 1000;
+    setTotalAmount(formData.selectedServices.length * pricePerService);
+  }, [formData.selectedServices]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" }); // clear error as user types
+    setErrors({ ...errors, [e.target.name]: "" });
   };
 
   const handleServiceToggle = (service) => {
@@ -73,45 +87,107 @@ export default function WeddingsPage() {
     });
   };
 
+  const handleFileChange = (e) => {
+    setFormData({ ...formData, paymentEvidence: e.target.files[0] });
+  };
+
   const validateForm = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = "Full name is required";
     if (!formData.email.trim()) newErrors.email = "Email is required";
+    if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
     if (!formData.date.trim()) newErrors.date = "Date is required";
     if (!formData.guests.trim())
       newErrors.guests = "Number of guests is required";
     if (!formData.marriageType.trim())
       newErrors.marriageType = "Marriage type is required";
+    if (!formData.paymentMethod.trim())
+      newErrors.paymentMethod = "Payment method is required";
+    if (
+      ["Telebirr", "CBE Bank"].includes(formData.paymentMethod) &&
+      !formData.paymentEvidence
+    )
+      newErrors.paymentEvidence = "Please upload payment evidence";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setStatus({ text: "", type: "" });
     if (!validateForm()) return;
 
-    setSuccessMessage(`🎉 Wedding booking submitted for ${formData.name}!`);
+    setLoading(true);
+    try {
+      const formPayload = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === "selectedServices")
+          formPayload.append(key, JSON.stringify(value));
+        else if (value) formPayload.append(key, value);
+      });
+      formPayload.append("totalAmount", totalAmount);
 
-    // Auto-hide success message after 3s
-    setTimeout(() => setSuccessMessage(""), 3000);
+      const res = await fetch("http://localhost:10000/weddings", {
+        method: "POST",
+        body: formPayload,
+      });
 
-    // Reset form
-    setFormData({
-      name: "",
-      email: "",
-      date: "",
-      guests: "",
-      marriageType: "",
-      specialRequests: "",
-      selectedServices: [],
-    });
-    setAvailableServices([]);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Booking failed");
+
+      const bookingId = data.booking._id;
+
+      if (formData.paymentMethod === "Chapa") {
+        const payRes = await fetch(
+          "http://localhost:10000/weddings/pay/chapa",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              amount: totalAmount,
+              currency: "ETB",
+              email: formData.email,
+              fullName: formData.name,
+              bookingId,
+            }),
+          }
+        );
+        const payData = await payRes.json();
+        if (payData.checkout_url) {
+          window.location.href = payData.checkout_url;
+          return;
+        } else throw new Error("Failed to start Chapa payment");
+      }
+
+      setStatus({
+        text: `✅ Booking submitted! Your payment of ${totalAmount} ETB via ${formData.paymentMethod} is pending admin verification.`,
+        type: "success",
+      });
+
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        date: "",
+        guests: "",
+        marriageType: "",
+        specialRequests: "",
+        selectedServices: [],
+        paymentMethod: "",
+        paymentEvidence: null,
+      });
+      setAvailableServices([]);
+      setTotalAmount(0);
+    } catch (err) {
+      setStatus({ text: `❌ ${err.message}`, type: "error" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* Hero */}
       <header className="bg-gradient-to-r from-pink-500 to-purple-600 text-white py-16 text-center px-4">
         <Heart className="w-12 h-12 mx-auto mb-4" />
         <h1 className="text-4xl font-bold">Weddings</h1>
@@ -120,99 +196,88 @@ export default function WeddingsPage() {
         </p>
       </header>
 
-      {/* Registration Form */}
       <section className="bg-white py-12 px-4 max-w-3xl mx-auto shadow-lg rounded-xl mt-8">
         <h2 className="text-2xl font-bold text-center mb-6">
           Book Your Wedding
         </h2>
+
+        {status.text && (
+          <div
+            className={`flex items-center gap-2 p-3 rounded-lg text-sm mb-4 ${
+              status.type === "success"
+                ? "bg-green-100 text-green-700 border border-green-300"
+                : "bg-red-100 text-red-700 border border-red-300"
+            }`}
+          >
+            {status.type === "success" ? (
+              <CheckCircle className="w-5 h-5" />
+            ) : (
+              <XCircle className="w-5 h-5" />
+            )}
+            {status.text}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Personal Details */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <input
-                type="text"
-                name="name"
-                placeholder="Full Name"
-                value={formData.name}
-                onChange={handleChange}
-                className={`w-full border rounded px-4 py-2 ${
-                  errors.name ? "border-red-500" : ""
-                }`}
-              />
-              {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name}</p>
-              )}
-            </div>
-            <div>
-              <input
-                type="email"
-                name="email"
-                placeholder="Email Address"
-                value={formData.email}
-                onChange={handleChange}
-                className={`w-full border rounded px-4 py-2 ${
-                  errors.email ? "border-red-500" : ""
-                }`}
-              />
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-              )}
-            </div>
+            <input
+              type="text"
+              name="name"
+              placeholder="Full Name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full border rounded px-4 py-2 text-black"
+            />
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full border rounded px-4 py-2 text-black"
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <input
-                type="date"
-                name="date"
-                value={formData.date}
-                onChange={handleChange}
-                className={`w-full border rounded px-4 py-2 ${
-                  errors.date ? "border-red-500" : ""
-                }`}
-              />
-              {errors.date && (
-                <p className="text-red-500 text-sm mt-1">{errors.date}</p>
-              )}
-            </div>
-            <div>
-              <input
-                type="number"
-                name="guests"
-                placeholder="Number of Guests"
-                value={formData.guests}
-                onChange={handleChange}
-                className={`w-full border rounded px-4 py-2 ${
-                  errors.guests ? "border-red-500" : ""
-                }`}
-              />
-              {errors.guests && (
-                <p className="text-red-500 text-sm mt-1">{errors.guests}</p>
-              )}
-            </div>
+            <input
+              type="text"
+              name="phone"
+              placeholder="Phone Number"
+              value={formData.phone}
+              onChange={handleChange}
+              className="w-full border rounded px-4 py-2 text-black"
+            />
+            <input
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              className="w-full border rounded px-4 py-2 text-black"
+            />
           </div>
 
-          {/* Marriage Type */}
-          <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <input
+              type="number"
+              name="guests"
+              placeholder="Number of Guests"
+              value={formData.guests}
+              onChange={handleChange}
+              className="w-full border rounded px-4 py-2 text-black"
+            />
             <select
               name="marriageType"
               value={formData.marriageType}
               onChange={handleChange}
-              className={`w-full border rounded px-4 py-2 ${
-                errors.marriageType ? "border-red-500" : ""
-              }`}
+              className="w-full border rounded px-4 py-2 text-black"
             >
               <option value="">Select Type of Marriage</option>
               <option value="Religion">Religion</option>
               <option value="Modern">Modern</option>
               <option value="Traditional">Traditional</option>
             </select>
-            {errors.marriageType && (
-              <p className="text-red-500 text-sm mt-1">{errors.marriageType}</p>
-            )}
           </div>
 
-          {/* Dynamic Service Selection */}
           {formData.marriageType && (
             <div>
               <h3 className="font-semibold mb-2">
@@ -230,36 +295,77 @@ export default function WeddingsPage() {
                       onChange={() => handleServiceToggle(service)}
                       className="accent-pink-600"
                     />
-                    <span className="text-sm sm:text-base">{service}</span>
+                    <span className="text-black">{service}</span>
                   </label>
                 ))}
               </div>
+              <p className="mt-2 font-semibold text-lg text-gray-700">
+                Total Price: {totalAmount} ETB
+              </p>
             </div>
           )}
 
-          {/* Special Requests */}
+          {/* Payment Method & Upload */}
+          <div className="mt-4">
+            <h3 className="font-semibold mb-2">Select Payment Method</h3>
+            <div className="flex gap-4 flex-wrap">
+              {paymentMethods.map((method) => (
+                <label
+                  key={method.name}
+                  className={`flex items-center gap-2 p-2 border rounded-lg cursor-pointer transition ${
+                    formData.paymentMethod === method.name
+                      ? "border-pink-600 bg-pink-50"
+                      : "border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value={method.name}
+                    checked={formData.paymentMethod === method.name}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        paymentMethod: e.target.value,
+                      })
+                    }
+                    className="hidden"
+                  />
+                  <img
+                    src={method.logo}
+                    alt={method.name}
+                    className="w-10 h-10"
+                  />
+                  <span className="text-sm sm:text-base">{method.name}</span>
+                </label>
+              ))}
+            </div>
+            {["Telebirr", "CBE Bank"].includes(formData.paymentMethod) && (
+              <div className="mt-3">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="w-full border rounded px-4 py-2"
+                />
+              </div>
+            )}
+          </div>
+
           <textarea
             name="specialRequests"
             placeholder="Special Requests"
             value={formData.specialRequests}
             onChange={handleChange}
-            className="w-full border rounded px-4 py-2 min-h-[100px]"
+            className="w-full border rounded px-4 py-2 min-h-[100px] text-black"
           />
 
-          {/* Success Message */}
-          {successMessage && (
-            <div className="flex items-center space-x-2 bg-green-100 text-green-700 px-4 py-3 rounded-lg shadow">
-              <CheckCircle className="w-5 h-5" />
-              <p>{successMessage}</p>
-            </div>
-          )}
-
-          {/* Submit */}
           <button
             type="submit"
+            disabled={loading}
             className="bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 transition w-full sm:w-auto font-semibold"
           >
-            Submit Booking
+            {loading ? "Processing..." : "Submit Booking"}
           </button>
         </form>
       </section>

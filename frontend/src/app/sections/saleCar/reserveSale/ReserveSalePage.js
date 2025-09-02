@@ -2,8 +2,7 @@
 export const dynamic = "force-dynamic";
 
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect, useMemo } from "react";
-//import listings from "../../../../components/listingsData";
+import { useState, useEffect } from "react";
 import Footer from "../../../../components/Footer";
 import carlisting from "../../../../components/listingCar";
 
@@ -16,19 +15,14 @@ export default function ReservationPage() {
     name: "",
     email: "",
     phone: "",
-    paymentMethod: "chapa",
+    paymentMethod: "bank_transfer",
   });
 
-  const [checkIn, setCheckIn] = useState(
-    new Date().toISOString().split("T")[0]
-  );
-  const [checkOut, setCheckOut] = useState(
-    new Date(Date.now() + 2 * 86400000).toISOString().split("T")[0]
-  );
-
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Extract ID from URL and find listing
+  // Extract ID from URL
   useEffect(() => {
     if (searchParams) {
       const paramId = parseInt(searchParams.get("id"), 10);
@@ -38,43 +32,56 @@ export default function ReservationPage() {
     }
   }, [searchParams]);
 
-  // Auto-hide success message
+  // Auto-hide messages
   useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(""), 3000);
+    if (successMessage || errorMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage("");
+        setErrorMessage("");
+      }, 4000);
       return () => clearTimeout(timer);
     }
-  }, [successMessage]);
+  }, [successMessage, errorMessage]);
 
-  // Compute days and price safely
-  const { daysDiff, totalPrice } = useMemo(() => {
-    if (!listing) return { daysDiff: 0, totalPrice: 0 };
-    const diff = Math.max(
-      1,
-      Math.ceil(
-        (new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)
-      )
-    );
-    const pricePerNight = parseInt(listing.price.split(" ")[0], 10);
-    return { daysDiff: diff, totalPrice: pricePerNight * diff };
-  }, [listing, checkIn, checkOut]);
-
-  // --- Handle form actions ---
   const handleChange = (e) => {
     const { name, value } = e.target;
     setGuestInfo((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  // --- Submit reservation to backend ---
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!listing) return; // guard
+    if (!listing) return;
 
-    setSuccessMessage(
-      `Successfully reserved ${listing.title} from ${checkIn} to ${checkOut}. Total: ${totalPrice} birr.`
-    );
+    setLoading(true);
+    try {
+      const response = await fetch(
+        "http://localhost:10000/carsale/reservations",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            carId: listing.id,
+            carTitle: listing.title,
+            ...guestInfo,
+            carPrice: listing.price,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Reservation failed");
+
+      setSuccessMessage(
+        `Successfully reserved ${listing.title}. Car Price: ${listing.price} birr.`
+      );
+    } catch (error) {
+      setErrorMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // --- If listing not found, render fallback ---
   if (!listing) {
     return (
       <>
@@ -86,13 +93,18 @@ export default function ReservationPage() {
     );
   }
 
-  // --- Normal UI ---
   return (
     <>
       <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 flex justify-center relative">
-        {successMessage && (
-          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded shadow-lg text-sm sm:text-base z-50">
-            {successMessage}
+        {(successMessage || errorMessage) && (
+          <div
+            className={`fixed top-4 left-1/2 transform -translate-x-1/2 px-4 sm:px-6 py-2 sm:py-3 rounded shadow-lg text-sm sm:text-base z-50 ${
+              successMessage
+                ? "bg-green-600 text-white"
+                : "bg-red-600 text-white"
+            }`}
+          >
+            {successMessage || errorMessage}
           </div>
         )}
 
@@ -124,7 +136,6 @@ export default function ReservationPage() {
               </p>
             </div>
 
-            {/* Features */}
             <div>
               <h2 className="text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-2 sm:mb-3 text-gray-900 dark:text-white">
                 Car Features
@@ -139,7 +150,6 @@ export default function ReservationPage() {
               </ul>
             </div>
 
-            {/* Map */}
             <div>
               <h2 className="text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-2 sm:mb-3 text-gray-900 dark:text-white">
                 Location
@@ -152,7 +162,7 @@ export default function ReservationPage() {
                 className="w-full h-40 sm:h-48 rounded-lg shadow"
                 allowFullScreen
                 loading="lazy"
-              ></iframe>
+              />
             </div>
           </section>
 
@@ -165,32 +175,6 @@ export default function ReservationPage() {
               <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-4 text-gray-900 dark:text-white">
                 Your Reservation
               </h2>
-
-              {/* Dates */}
-              {["checkIn", "checkOut"].map((field) => (
-                <div key={field}>
-                  <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm sm:text-base font-medium">
-                    {field === "checkIn" ? "Check-in" : "Check-out"}
-                  </label>
-                  <input
-                    type="date"
-                    name={field}
-                    value={field === "checkIn" ? checkIn : checkOut}
-                    onChange={(e) =>
-                      field === "checkIn"
-                        ? setCheckIn(e.target.value)
-                        : setCheckOut(e.target.value)
-                    }
-                    required
-                    className="w-full p-2 sm:p-3 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm sm:text-base"
-                    min={
-                      field === "checkIn"
-                        ? new Date().toISOString().split("T")[0]
-                        : checkIn
-                    }
-                  />
-                </div>
-              ))}
 
               {/* Guest Info */}
               {["name", "email", "phone"].map((field) => (
@@ -232,22 +216,12 @@ export default function ReservationPage() {
                   Payment Method
                 </legend>
                 {[
-                  { value: "chapa", label: "Chapa" },
-                  { value: "sentimpay", label: "SentiMPay" },
-                  { value: "cbe", label: "Commercial Bank of Ethiopia (CBE)" },
-                  { value: "abyssinia", label: "Abyssinia Bank" },
-                  { value: "awash", label: "Awash Bank" },
-                  { value: "telebirr", label: "Tele Birr" },
-                  { value: "mpesa", label: "M-Pesa" },
-                  { value: "soon", label: "Soon (coming)", disabled: true },
-                ].map(({ value, label, disabled }) => (
+                  { value: "bank_transfer", label: "Bank Transfer" },
+                  { value: "cash_cheque", label: "Cash / Cheque" },
+                ].map(({ value, label }) => (
                   <label
                     key={value}
-                    className={`flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2 ${
-                      disabled
-                        ? "cursor-not-allowed text-gray-400 dark:text-gray-500"
-                        : "cursor-pointer"
-                    }`}
+                    className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2 cursor-pointer"
                   >
                     <input
                       type="radio"
@@ -255,7 +229,6 @@ export default function ReservationPage() {
                       value={value}
                       checked={guestInfo.paymentMethod === value}
                       onChange={handleChange}
-                      disabled={disabled}
                       className="form-radio text-blue-600"
                       required
                     />
@@ -264,26 +237,19 @@ export default function ReservationPage() {
                 ))}
               </fieldset>
 
-              {/* Price Summary */}
+              {/* Price */}
               <div className="border-t border-gray-300 dark:border-gray-600 pt-3 sm:pt-4 mt-3 sm:mt-4">
-                <div className="flex justify-between font-semibold text-gray-900 dark:text-white mb-1 sm:mb-2 text-sm sm:text-base">
-                  <span>
-                    {daysDiff} {daysDiff === 1 ? "night" : "nights"} ×{" "}
-                    {listing.price}
-                  </span>
-                  <span>{totalPrice} birr</span>
-                </div>
-                <div className="flex justify-between font-bold text-green-700 dark:text-green-400 text-base sm:text-lg">
-                  <span>Total</span>
-                  <span>{totalPrice} birr</span>
+                <div className="font-bold text-green-700 dark:text-green-400 text-base sm:text-lg text-center">
+                  Car Price = {listing.price} birr
                 </div>
               </div>
 
               <button
                 type="submit"
+                disabled={loading}
                 className="mt-4 sm:mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 rounded-md transition duration-200 text-sm sm:text-base"
               >
-                Confirm Reservation
+                {loading ? "Processing..." : "Confirm Reservation"}
               </button>
             </form>
 
@@ -312,7 +278,6 @@ export default function ReservationPage() {
           </aside>
         </div>
       </main>
-
       <Footer />
     </>
   );

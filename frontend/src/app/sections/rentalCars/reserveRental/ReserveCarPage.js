@@ -1,21 +1,21 @@
 "use client";
-export const dynamic = "force-dynamic";
 
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import listings from "../../../../components/listingsData";
 import Footer from "../../../../components/Footer";
 
 export default function ReservationPage() {
-  const searchParams = useSearchParams();
-  const [id, setId] = useState(null);
-  const [listing, setListing] = useState(null);
+  const params = useSearchParams();
+  const id = parseInt(params.get("id"), 10);
+  const listing = listings.find((item) => item.id === id);
 
   const [guestInfo, setGuestInfo] = useState({
     name: "",
     email: "",
     phone: "",
     paymentMethod: "chapa",
+    paymentEvidence: null,
   });
 
   const [checkIn, setCheckIn] = useState(
@@ -24,126 +24,189 @@ export default function ReservationPage() {
   const [checkOut, setCheckOut] = useState(
     new Date(Date.now() + 2 * 86400000).toISOString().split("T")[0]
   );
-
   const [successMessage, setSuccessMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Extract ID from URL and find listing
-  useEffect(() => {
-    if (searchParams) {
-      const paramId = parseInt(searchParams.get("id"), 10);
-      setId(paramId);
-      const foundListing = listings.find((item) => item.id === paramId);
-      setListing(foundListing || null);
-    }
-  }, [searchParams]);
-
-  // Auto-hide success message
-  useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(""), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
-
-  // Compute days and price safely
-  const { daysDiff, totalPrice } = useMemo(() => {
-    if (!listing) return { daysDiff: 0, totalPrice: 0 };
-    const diff = Math.max(
-      1,
-      Math.ceil(
-        (new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)
-      )
-    );
-    const pricePerNight = parseInt(listing.price.split(" ")[0], 10);
-    return { daysDiff: diff, totalPrice: pricePerNight * diff };
-  }, [listing, checkIn, checkOut]);
-
-  // --- Handle form actions ---
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setGuestInfo((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!listing) return; // guard
-
-    setSuccessMessage(
-      `Successfully reserved ${listing.title} from ${checkIn} to ${checkOut}. Total: ${totalPrice} birr.`
-    );
-  };
-
-  // --- If listing not found, render fallback ---
   if (!listing) {
     return (
-      <>
-        <main className="flex items-center justify-center min-h-screen p-4">
-          <p className="text-lg sm:text-xl text-red-600">Listing not found.</p>
-        </main>
-        <Footer />
-      </>
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <p className="text-xl text-red-600">Listing not found.</p>
+      </div>
     );
   }
 
-  // --- Normal UI ---
+  const daysDiff = Math.max(
+    1,
+    Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24))
+  );
+  const pricePerNight = parseInt(listing.price.split(" ")[0], 10);
+  const totalPrice = pricePerNight * daysDiff;
+
+  function handleChange(e) {
+    const { name, value, files } = e.target;
+    if (files) {
+      setGuestInfo((prev) => ({ ...prev, paymentEvidence: files[0] }));
+    } else {
+      setGuestInfo((prev) => ({ ...prev, [name]: value }));
+    }
+  }
+
+  function validateForm() {
+    if (!guestInfo.name || !guestInfo.email || !guestInfo.phone)
+      return "Please fill in name, email, and phone.";
+    if (!checkIn || !checkOut)
+      return "Please select check-in and check-out dates.";
+    if (!guestInfo.paymentMethod) return "Please select a payment method.";
+    if (
+      ["telebirr", "cbe-birr", "mpesa"].includes(guestInfo.paymentMethod) &&
+      !guestInfo.paymentEvidence
+    )
+      return "Please upload payment evidence for the selected method.";
+    return null;
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setSuccessMessage("");
+    const err = validateForm();
+    if (err) return setSuccessMessage("❌ " + err);
+
+    setLoading(true);
+    try {
+      // Create reservation
+      const formData = new FormData();
+      formData.append("listingId", listing.id);
+      formData.append("listingTitle", listing.title);
+      formData.append("name", guestInfo.name);
+      formData.append("email", guestInfo.email);
+      formData.append("phone", guestInfo.phone);
+      formData.append("checkIn", checkIn);
+      formData.append("checkOut", checkOut);
+      formData.append("nights", daysDiff);
+      formData.append("amount", totalPrice);
+      formData.append("paymentMethod", guestInfo.paymentMethod);
+      if (guestInfo.paymentEvidence)
+        formData.append("paymentEvidence", guestInfo.paymentEvidence);
+
+      const createRes = await fetch(
+        "http://localhost:10000/rentalCars/reservations",
+        { method: "POST", body: formData }
+      );
+      const createData = await createRes.json();
+      if (!createRes.ok)
+        throw new Error(createData?.error || "Failed to create reservation");
+
+      const reservationId = createData?.reservation?._id;
+
+      // Chapa Payment
+      if (guestInfo.paymentMethod === "chapa") {
+        const payRes = await fetch(
+          "http://localhost:10000/bookings/pay/chapa",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              amount: totalPrice,
+              currency: "ETB",
+              email: guestInfo.email,
+              fullName: guestInfo.name,
+              bookingId: reservationId,
+            }),
+          }
+        );
+        const payData = await payRes.json();
+        const redirectUrl = payData?.checkout_url || payData?.checkoutUrl;
+        if (redirectUrl) return (window.location.href = redirectUrl);
+        throw new Error("Failed to start Chapa payment.");
+      }
+
+      // Non-Chapa Payment: show success
+      setSuccessMessage(
+        `✅ Reservation submitted! Payment of ${totalPrice} birr via ${guestInfo.paymentMethod} will be reviewed.`
+      );
+
+      // Reset form after 5s but keep dark/light theme intact
+      setTimeout(() => {
+        setGuestInfo({
+          name: "",
+          email: "",
+          phone: "",
+          paymentMethod: "chapa",
+          paymentEvidence: null,
+        });
+      }, 5000);
+    } catch (error) {
+      setSuccessMessage("❌ " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Auto hide success messages
+  useEffect(() => {
+    if (!successMessage) return;
+    const timer = setTimeout(() => setSuccessMessage(""), 5000);
+    return () => clearTimeout(timer);
+  }, [successMessage]);
+
   return (
     <>
-      <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 flex justify-center relative">
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 flex justify-center relative">
         {successMessage && (
-          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded shadow-lg text-sm sm:text-base z-50">
+          <div
+            className="fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded shadow-lg z-50 text-sm sm:text-base
+            bg-green-600 text-white"
+          >
             {successMessage}
           </div>
         )}
 
-        <div className="max-w-6xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 p-4 sm:p-6">
-          {/* Left: Listing Info */}
-          <section className="md:col-span-2 flex flex-col gap-4 sm:gap-6">
+        <div className="max-w-6xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg grid grid-cols-1 md:grid-cols-3 gap-8 p-6">
+          {/* Listing Info */}
+          <section className="md:col-span-2 flex flex-col gap-6">
             <img
               src={listing.img}
               alt={listing.title}
-              className="rounded-lg w-full h-56 sm:h-80 object-cover shadow"
+              className="rounded-lg w-full h-80 object-cover shadow"
             />
             <div>
-              <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-white">
+              <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">
                 {listing.title}
               </h1>
               <p className="text-blue-600 dark:text-blue-400 text-sm mt-1">
                 {listing.location}
               </p>
               <div className="flex items-center mt-2 space-x-2">
-                <span className="text-yellow-400 font-semibold text-sm sm:text-base">
+                <span className="text-yellow-400 font-semibold">
                   {listing.rating} ★
                 </span>
-                <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
+                <span className="text-gray-500 dark:text-gray-400 text-sm">
                   Guest Favorite
                 </span>
               </div>
-              <p className="mt-3 sm:mt-4 text-gray-700 dark:text-gray-300 text-sm sm:text-base leading-relaxed">
+              <p className="mt-4 text-gray-700 dark:text-gray-300">
                 {listing.description}
               </p>
             </div>
-
-            {/* Features */}
             {/* Features */}
             <div>
-              <h2 className="text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-2 sm:mb-3 text-gray-900 dark:text-white">
-                Rental Car Features
+              <h2 className="text-xl font-semibold mt-6 mb-3 text-gray-900 dark:text-white">
+                Tourism Features
               </h2>
-              <ul className="grid grid-cols-2 gap-2 text-gray-700 dark:text-gray-300 text-sm sm:text-base">
-                <li>✔ Unlimited Mileage</li>
-                <li>✔ Air Conditioning</li>
-                <li>✔ Automatic Transmission</li>
-                <li>✔ GPS Navigation Available</li>
-                <li>✔ Child Seat on Request</li>
-                <li>✔ Comprehensive Insurance</li>
-                <li>✔ Roadside Assistance</li>
-                <li>✔ Free Cancellation</li>
+              <ul className="grid grid-cols-2 gap-2 text-gray-700 dark:text-gray-300">
+                <li>✔ Guided Tours</li>
+                <li>✔ Historical Site Access</li>
+                <li>✔ Cultural Experiences</li>
+                <li>✔ Transportation Included</li>
+                <li>✔ Local Cuisine Tasting</li>
+                <li>✔ Professional Tour Guide</li>
+                <li>✔ Group & Private Options</li>
+                <li>✔ Safety & Security</li>
               </ul>
             </div>
-
             {/* Map */}
             <div>
-              <h2 className="text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-2 sm:mb-3 text-gray-900 dark:text-white">
+              <h2 className="text-xl font-semibold mt-6 mb-3 text-gray-900 dark:text-white">
                 Location
               </h2>
               <iframe
@@ -151,27 +214,24 @@ export default function ReservationPage() {
                 src={`https://www.google.com/maps?q=${encodeURIComponent(
                   listing.location
                 )}&output=embed`}
-                className="w-full h-40 sm:h-48 rounded-lg shadow"
+                className="w-full h-48 rounded-lg shadow"
                 allowFullScreen
                 loading="lazy"
-              ></iframe>
+              />
             </div>
           </section>
 
-          {/* Right: Reservation Form */}
-          <aside className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 sm:p-6 flex flex-col justify-between shadow-lg">
-            <form
-              onSubmit={handleSubmit}
-              className="flex flex-col gap-3 sm:gap-4"
-            >
-              <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-4 text-gray-900 dark:text-white">
+          {/* Reservation Form */}
+          <aside className="bg-gray-100 dark:bg-gray-700 rounded-lg p-6 flex flex-col justify-between shadow-lg">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
                 Your Reservation
               </h2>
 
               {/* Dates */}
               {["checkIn", "checkOut"].map((field) => (
                 <div key={field}>
-                  <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm sm:text-base font-medium">
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">
                     {field === "checkIn" ? "Check-in" : "Check-out"}
                   </label>
                   <input
@@ -184,7 +244,7 @@ export default function ReservationPage() {
                         : setCheckOut(e.target.value)
                     }
                     required
-                    className="w-full p-2 sm:p-3 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm sm:text-base"
+                    className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     min={
                       field === "checkIn"
                         ? new Date().toISOString().split("T")[0]
@@ -197,7 +257,7 @@ export default function ReservationPage() {
               {/* Guest Info */}
               {["name", "email", "phone"].map((field) => (
                 <div key={field}>
-                  <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm sm:text-base font-medium capitalize">
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">
                     {field === "name"
                       ? "Full Name"
                       : field === "email"
@@ -223,33 +283,25 @@ export default function ReservationPage() {
                         : "+251 9XX XXX XXX"
                     }
                     required
-                    className="w-full p-2 sm:p-3 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm sm:text-base"
+                    className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   />
                 </div>
               ))}
 
-              {/* Payment Method */}
-              <fieldset className="border border-gray-300 dark:border-gray-600 rounded-md p-3 sm:p-4 max-h-40 sm:max-h-48 overflow-auto">
-                <legend className="text-gray-700 dark:text-gray-300 font-medium text-sm sm:text-base mb-1 sm:mb-2">
+              {/* Payment Methods */}
+              <fieldset className="border border-gray-300 dark:border-gray-600 rounded-md p-4 max-h-48 overflow-auto">
+                <legend className="text-gray-700 dark:text-gray-300 font-medium mb-2">
                   Payment Method
                 </legend>
                 {[
                   { value: "chapa", label: "Chapa" },
-                  { value: "sentimpay", label: "SentiMPay" },
-                  { value: "cbe", label: "Commercial Bank of Ethiopia (CBE)" },
-                  { value: "abyssinia", label: "Abyssinia Bank" },
-                  { value: "awash", label: "Awash Bank" },
+                  { value: "cbe-birr", label: "CBE Birr" },
                   { value: "telebirr", label: "Tele Birr" },
                   { value: "mpesa", label: "M-Pesa" },
-                  { value: "soon", label: "Soon (coming)", disabled: true },
-                ].map(({ value, label, disabled }) => (
+                ].map(({ value, label }) => (
                   <label
                     key={value}
-                    className={`flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2 ${
-                      disabled
-                        ? "cursor-not-allowed text-gray-400 dark:text-gray-500"
-                        : "cursor-pointer"
-                    }`}
+                    className="flex items-center gap-3 mb-2 cursor-pointer"
                   >
                     <input
                       type="radio"
@@ -257,25 +309,41 @@ export default function ReservationPage() {
                       value={value}
                       checked={guestInfo.paymentMethod === value}
                       onChange={handleChange}
-                      disabled={disabled}
                       className="form-radio text-blue-600"
                       required
                     />
-                    <span className="text-sm sm:text-base">{label}</span>
+                    <span>{label}</span>
                   </label>
                 ))}
               </fieldset>
 
-              {/* Price Summary */}
-              <div className="border-t border-gray-300 dark:border-gray-600 pt-3 sm:pt-4 mt-3 sm:mt-4">
-                <div className="flex justify-between font-semibold text-gray-900 dark:text-white mb-1 sm:mb-2 text-sm sm:text-base">
+              {/* Upload evidence if needed */}
+              {["telebirr", "cbe-birr", "mpesa"].includes(
+                guestInfo.paymentMethod
+              ) && (
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">
+                    Upload Payment Proof
+                  </label>
+                  <input
+                    type="file"
+                    onChange={handleChange}
+                    className="w-full border rounded p-2"
+                    accept="image/*"
+                  />
+                </div>
+              )}
+
+              {/* Price summary */}
+              <div className="border-t border-gray-300 dark:border-gray-600 pt-4 mt-4">
+                <div className="flex justify-between font-semibold text-gray-900 dark:text-white mb-2">
                   <span>
                     {daysDiff} {daysDiff === 1 ? "night" : "nights"} ×{" "}
                     {listing.price}
                   </span>
                   <span>{totalPrice} birr</span>
                 </div>
-                <div className="flex justify-between font-bold text-green-700 dark:text-green-400 text-base sm:text-lg">
+                <div className="flex justify-between font-bold text-lg text-green-700 dark:text-green-400">
                   <span>Total</span>
                   <span>{totalPrice} birr</span>
                 </div>
@@ -283,14 +351,14 @@ export default function ReservationPage() {
 
               <button
                 type="submit"
-                className="mt-4 sm:mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 rounded-md transition duration-200 text-sm sm:text-base"
+                disabled={loading}
+                className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-md transition duration-200"
               >
-                Confirm Reservation
+                {loading ? "Processing..." : "Confirm Reservation"}
               </button>
             </form>
 
-            {/* Help Section */}
-            <div className="mt-4 sm:mt-6 text-xs sm:text-sm text-gray-600 dark:text-gray-300 text-center">
+            <div className="mt-6 text-sm text-gray-600 dark:text-gray-300 text-center">
               <p>Need help with your booking?</p>
               <p>
                 Call us at{" "}

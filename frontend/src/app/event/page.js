@@ -193,7 +193,7 @@ export default function EventServices() {
         </p>
         <Link href={"/event/quote"}>
           <button className="bg-white text-blue-700 px-8 py-3 rounded-lg font-bold hover:bg-gray-100 transition">
-            Get a Quote
+            Get a Service
           </button>
         </Link>
       </section>

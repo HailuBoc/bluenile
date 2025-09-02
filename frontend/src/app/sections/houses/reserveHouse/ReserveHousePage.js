@@ -3,72 +3,110 @@
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import listings from "../../../../components/listingsData";
-import Footer from "../../../../components/Footer"; // ✅ Import Footer
+import Footer from "../../../../components/Footer";
 
-export default function ReservationPage() {
+export default function HouseSalePage() {
   const params = useSearchParams();
   const id = parseInt(params.get("id"), 10);
   const listing = listings.find((item) => item.id === id);
 
-  const [guestInfo, setGuestInfo] = useState({
+  const [buyerInfo, setBuyerInfo] = useState({
     name: "",
     email: "",
     phone: "",
-    paymentMethod: "chapa",
+    paymentMethod: "bank-transfer",
   });
-  const [checkIn, setCheckIn] = useState(
-    new Date().toISOString().split("T")[0]
-  );
-  const [checkOut, setCheckOut] = useState(
-    new Date(Date.now() + 2 * 86400000).toISOString().split("T")[0]
-  );
+  const [offerPrice, setOfferPrice] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   if (!listing) {
     return (
       <div className="flex items-center justify-center min-h-screen p-4">
-        <p className="text-xl text-red-600">Listing not found.</p>
+        <p className="text-xl text-red-600">House not found.</p>
       </div>
     );
   }
 
-  const daysDiff = Math.max(
-    1,
-    Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24))
-  );
-  const pricePerNight = parseInt(listing.price.split(" ")[0], 10);
-  const totalPrice = pricePerNight * daysDiff;
-
   function handleChange(e) {
     const { name, value } = e.target;
-    setGuestInfo((prev) => ({ ...prev, [name]: value }));
+    setBuyerInfo((prev) => ({ ...prev, [name]: value }));
   }
 
-  function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSuccessMessage(
-      `Successfully reserved ${listing.title} from ${checkIn} to ${checkOut}. Total: ${totalPrice} birr.`
-    );
-  }
+
+    const payload = {
+      listingId: listing.id,
+      listingTitle: listing.title,
+      ...buyerInfo,
+      offerPrice,
+    };
+
+    try {
+      const res = await fetch("http://localhost:10000/houses/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("❌ Server did not return JSON: " + text);
+      }
+
+      if (!res.ok) {
+        throw new Error(data.error || data.message || "Submission failed");
+      }
+
+      setSuccessMessage("✅ Interest submitted successfully!");
+      setErrorMessage("");
+
+      // Reset form after submission
+      setBuyerInfo({
+        name: "",
+        email: "",
+        phone: "",
+        paymentMethod: "bank-transfer",
+      });
+      setOfferPrice("");
+    } catch (err) {
+      console.error(err);
+      setErrorMessage(err.message);
+      setSuccessMessage("");
+    }
+  };
 
   useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(""), 3000);
+    if (successMessage || errorMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage("");
+        setErrorMessage("");
+      }, 4000);
       return () => clearTimeout(timer);
     }
-  }, [successMessage]);
+  }, [successMessage, errorMessage]);
 
   return (
     <>
       <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 flex justify-center relative">
+        {/* Floating Messages */}
         {successMessage && (
           <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded shadow-lg z-50">
             {successMessage}
           </div>
         )}
+        {errorMessage && (
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded shadow-lg z-50">
+            {errorMessage}
+          </div>
+        )}
 
         <div className="max-w-6xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg grid grid-cols-1 md:grid-cols-3 gap-8 p-6">
-          {/* Left: Listing Info */}
+          {/* Left: House Info */}
           <section className="md:col-span-2 flex flex-col gap-6">
             <img
               src={listing.img}
@@ -88,7 +126,7 @@ export default function ReservationPage() {
                   {listing.rating} ★
                 </span>
                 <span className="text-gray-500 dark:text-gray-400 text-sm">
-                  Guest Favorite
+                  Popular Listing
                 </span>
               </div>
               <p className="mt-4 text-gray-700 dark:text-gray-300">
@@ -96,8 +134,7 @@ export default function ReservationPage() {
               </p>
             </div>
 
-            {/* Amenities */}
-            {/* Amenities */}
+            {/* Property Details */}
             <div>
               <h2 className="text-xl font-semibold mt-6 mb-3 text-gray-900 dark:text-white">
                 Property Details
@@ -131,44 +168,14 @@ export default function ReservationPage() {
             </div>
           </section>
 
-          {/* Right: Reservation Form */}
+          {/* Right: Buyer Form */}
           <aside className="bg-gray-100 dark:bg-gray-700 rounded-lg p-6 flex flex-col justify-between shadow-lg">
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-                Your Reservation
+                Express Interest
               </h2>
 
-              {/* Dates */}
-              <div>
-                <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">
-                  Check-in
-                </label>
-                <input
-                  type="date"
-                  name="checkIn"
-                  value={checkIn}
-                  onChange={(e) => setCheckIn(e.target.value)}
-                  required
-                  className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                  min={new Date().toISOString().split("T")[0]}
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">
-                  Check-out
-                </label>
-                <input
-                  type="date"
-                  name="checkOut"
-                  value={checkOut}
-                  onChange={(e) => setCheckOut(e.target.value)}
-                  required
-                  className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                  min={checkIn}
-                />
-              </div>
-
-              {/* Guest Info */}
+              {/* Buyer Info */}
               <div>
                 <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">
                   Full Name
@@ -176,7 +183,7 @@ export default function ReservationPage() {
                 <input
                   type="text"
                   name="name"
-                  value={guestInfo.name}
+                  value={buyerInfo.name}
                   onChange={handleChange}
                   placeholder="John Doe"
                   required
@@ -190,7 +197,7 @@ export default function ReservationPage() {
                 <input
                   type="email"
                   name="email"
-                  value={guestInfo.email}
+                  value={buyerInfo.email}
                   onChange={handleChange}
                   placeholder="john@example.com"
                   required
@@ -204,9 +211,24 @@ export default function ReservationPage() {
                 <input
                   type="tel"
                   name="phone"
-                  value={guestInfo.phone}
+                  value={buyerInfo.phone}
                   onChange={handleChange}
                   placeholder="+251 9XX XXX XXX"
+                  required
+                  className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                />
+              </div>
+
+              {/* Offer Price */}
+              <div>
+                <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">
+                  Your Offer (ETB)
+                </label>
+                <input
+                  type="number"
+                  value={offerPrice}
+                  onChange={(e) => setOfferPrice(e.target.value)}
+                  placeholder={listing.price}
                   required
                   className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 />
@@ -218,30 +240,19 @@ export default function ReservationPage() {
                   Payment Method
                 </legend>
                 {[
-                  { value: "chapa", label: "Chapa" },
-                  { value: "sentimpay", label: "SentiMPay" },
-                  { value: "cbe", label: "Commercial Bank of Ethiopia (CBE)" },
-                  { value: "abyssinia", label: "Abyssinia Bank" },
-                  { value: "awash", label: "Awash Bank" },
-                  { value: "telebirr", label: "Tele Birr" },
-                  { value: "mpesa", label: "M-Pesa" },
-                  { value: "soon", label: "Soon (coming)", disabled: true },
-                ].map(({ value, label, disabled }) => (
+                  { value: "bank-transfer", label: "Bank Transfer" },
+                  { value: "cash", label: "Cheque" },
+                ].map(({ value, label }) => (
                   <label
                     key={value}
-                    className={`flex items-center gap-3 mb-2 cursor-pointer ${
-                      disabled
-                        ? "cursor-not-allowed text-gray-400 dark:text-gray-500"
-                        : ""
-                    }`}
+                    className="flex items-center gap-3 mb-2 cursor-pointer"
                   >
                     <input
                       type="radio"
                       name="paymentMethod"
                       value={value}
-                      checked={guestInfo.paymentMethod === value}
+                      checked={buyerInfo.paymentMethod === value}
                       onChange={handleChange}
-                      disabled={disabled}
                       className="form-radio text-blue-600"
                       required
                     />
@@ -250,32 +261,17 @@ export default function ReservationPage() {
                 ))}
               </fieldset>
 
-              {/* Price Summary */}
-              <div className="border-t border-gray-300 dark:border-gray-600 pt-4 mt-4">
-                <div className="flex justify-between font-semibold text-gray-900 dark:text-white mb-2">
-                  <span>
-                    {daysDiff} {daysDiff === 1 ? "night" : "nights"} ×{" "}
-                    {listing.price}
-                  </span>
-                  <span>{totalPrice} birr</span>
-                </div>
-                <div className="flex justify-between font-bold text-lg text-green-700 dark:text-green-400">
-                  <span>Total</span>
-                  <span>{totalPrice} birr</span>
-                </div>
-              </div>
-
               <button
                 type="submit"
                 className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-md transition duration-200"
               >
-                Confirm Reservation
+                Submit Interest
               </button>
             </form>
 
             {/* Help Section */}
             <div className="mt-6 text-sm text-gray-600 dark:text-gray-300 text-center">
-              <p>Need help with your booking?</p>
+              <p>Need help with this property?</p>
               <p>
                 Call us at{" "}
                 <a
@@ -299,7 +295,6 @@ export default function ReservationPage() {
         </div>
       </main>
 
-      {/* ✅ Added Footer */}
       <Footer />
     </>
   );

@@ -1,35 +1,52 @@
 "use client";
 import { Car, CheckCircle, XCircle } from "lucide-react";
-import { useState, useEffect } from "react";
-import { use } from "react"; // 👈 unwrap params
-import { fleet } from "../../../data/fleet"; // ✅ Import fleet
+import { useState, useEffect, use } from "react";
+import { fleet } from "../../../data/fleet";
 
 export default function TransportDetailPage({ params }) {
-  const { id } = use(params); // unwrap params safely
+  const unwrappedParams = use(params);
+  const { id } = unwrappedParams;
 
-  // Find the selected car
   const transport =
     fleet.find((item) => String(item.id) === String(id)) || fleet[0];
 
-  const services = [
-    "Chauffeur",
-    "Fuel Included",
-    "Air Conditioning",
-    "Wedding Decoration",
-    "Music System",
-    "Extra Hours",
+  const serviceOptions = {
+    Chauffeur: 500,
+    "Fuel Included": 800,
+    "Air Conditioning": 300,
+    "Wedding Decoration": 600,
+    "Music System": 400,
+    "Extra Hours": 700,
+  };
+
+  const paymentOptions = [
+    { name: "Chapa", logo: "/chapa.png" },
+    { name: "Telebirr", logo: "/telebirr.png" },
+    { name: "CBE Birr", logo: "/cbebirr.png" },
   ];
 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
     date: "",
     guests: "",
     specialRequests: "",
     selectedServices: [],
+    paymentMethod: "",
   });
 
   const [message, setMessage] = useState({ text: "", type: "" });
+  const [total, setTotal] = useState(transport.price || 0);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let sum = Number(transport.price) || 0;
+    formData.selectedServices.forEach((s) => {
+      sum += serviceOptions[s] || 0;
+    });
+    setTotal(sum);
+  }, [formData.selectedServices, transport.price]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -44,14 +61,15 @@ export default function TransportDetailPage({ params }) {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (
       !formData.name ||
       !formData.email ||
+      !formData.phone ||
       !formData.date ||
-      !formData.guests
+      !formData.guests ||
+      !formData.paymentMethod
     ) {
       setMessage({
         text: "❌ Please fill in all required fields.",
@@ -60,41 +78,63 @@ export default function TransportDetailPage({ params }) {
       return;
     }
 
-    setMessage({
-      text: `✅ Booking for "${transport.title}" submitted successfully! We’ll reach out to ${formData.email}.`,
-      type: "success",
-    });
+    setLoading(true);
+    setMessage({ text: "", type: "" });
 
-    setFormData({
-      name: "",
-      email: "",
-      date: "",
-      guests: "",
-      specialRequests: "",
-      selectedServices: [],
-    });
-  };
+    try {
+      const res = await fetch("http://localhost:10000/transports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          car: transport.title,
+          amount: total,
+        }),
+      });
 
-  useEffect(() => {
-    if (message.text) {
-      const timer = setTimeout(() => setMessage({ text: "", type: "" }), 4000);
-      return () => clearTimeout(timer);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to submit booking");
+
+      setMessage({
+        text: `✅ Booking submitted! Confirmation sent to your email.`,
+        type: "success",
+      });
+
+      if (formData.paymentMethod === "Chapa" && data.redirectUrl) {
+        window.location.href = data.redirectUrl;
+        return;
+      }
+
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        date: "",
+        guests: "",
+        specialRequests: "",
+        selectedServices: [],
+        paymentMethod: "",
+      });
+    } catch (err) {
+      setMessage({ text: `❌ ${err.message}`, type: "error" });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setMessage({ text: "", type: "" }), 5000);
     }
-  }, [message]);
+  };
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* Hero Section */}
       <header className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-16 text-center px-4">
         <Car className="w-12 h-12 mx-auto mb-4" />
         <h1 className="text-4xl font-bold">{transport.title}</h1>
         <p className="mt-3 text-lg max-w-2xl mx-auto">
           {transport.description}
         </p>
-        <p className="mt-2 font-semibold">{transport.price}</p>
+        <p className="mt-2 font-semibold">Base Price: {transport.price} Birr</p>
       </header>
 
-      {/* Booking Form */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
         <div className="bg-white shadow-lg rounded-lg p-8">
           <div className="text-center mb-8">
@@ -105,13 +145,29 @@ export default function TransportDetailPage({ params }) {
             </p>
           </div>
 
+          {message.text && (
+            <div
+              className={`flex items-center gap-2 p-3 rounded-lg text-sm mb-4 ${
+                message.type === "success"
+                  ? "bg-green-100 text-green-700 border border-green-300"
+                  : "bg-red-100 text-red-700 border border-red-300"
+              }`}
+            >
+              {message.type === "success" ? (
+                <CheckCircle className="w-5 h-5" />
+              ) : (
+                <XCircle className="w-5 h-5" />
+              )}
+              {message.text}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5 max-w-2xl mx-auto">
-            {/* Selected Car */}
             <input
               type="text"
               value={transport.title}
               readOnly
-              className="w-full border rounded px-4 py-2 bg-gray-100 font-semibold text-gray-700"
+              className="w-full border rounded px-4 py-2 bg-gray-100 font-semibold text-black"
             />
 
             <input
@@ -120,7 +176,7 @@ export default function TransportDetailPage({ params }) {
               placeholder="Full Name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full border rounded px-4 py-2"
+              className="w-full border rounded px-4 py-2 text-black"
               required
             />
             <input
@@ -129,7 +185,16 @@ export default function TransportDetailPage({ params }) {
               placeholder="Email Address"
               value={formData.email}
               onChange={handleChange}
-              className="w-full border rounded px-4 py-2"
+              className="w-full border rounded px-4 py-2 text-black"
+              required
+            />
+            <input
+              type="text"
+              name="phone"
+              placeholder="Phone Number"
+              value={formData.phone}
+              onChange={handleChange}
+              className="w-full border rounded px-4 py-2 text-black"
               required
             />
             <input
@@ -137,7 +202,7 @@ export default function TransportDetailPage({ params }) {
               name="date"
               value={formData.date}
               onChange={handleChange}
-              className="w-full border rounded px-4 py-2"
+              className="w-full border rounded px-4 py-2 text-black"
               required
             />
             <input
@@ -146,17 +211,16 @@ export default function TransportDetailPage({ params }) {
               placeholder="Number of Passengers"
               value={formData.guests}
               onChange={handleChange}
-              className="w-full border rounded px-4 py-2"
+              className="w-full border rounded px-4 py-2 text-black"
               required
             />
 
-            {/* Extra Services */}
             <div>
               <h3 className="font-semibold mb-2">Select Extra Services</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {services.map((service, i) => (
+                {Object.keys(serviceOptions).map((service) => (
                   <label
-                    key={i}
+                    key={service}
                     className="flex items-center space-x-2 border rounded px-3 py-2 cursor-pointer hover:bg-gray-50"
                   >
                     <input
@@ -165,43 +229,55 @@ export default function TransportDetailPage({ params }) {
                       onChange={() => handleServiceChange(service)}
                       className="accent-green-600"
                     />
-                    <span>{service}</span>
+                    <span className="text-black">
+                      {service} (+{serviceOptions[service]} Birr)
+                    </span>
                   </label>
                 ))}
               </div>
             </div>
 
-            <textarea
-              name="specialRequests"
-              placeholder="Special Requests"
-              value={formData.specialRequests}
-              onChange={handleChange}
-              className="w-full border rounded px-4 py-2"
-            />
-
-            {/* Messages */}
-            {message.text && (
-              <div
-                className={`flex items-center gap-2 p-3 rounded-lg text-sm ${
-                  message.type === "success"
-                    ? "bg-green-100 text-green-700 border border-green-300"
-                    : "bg-red-100 text-red-700 border border-red-300"
-                }`}
-              >
-                {message.type === "success" ? (
-                  <CheckCircle className="w-5 h-5" />
-                ) : (
-                  <XCircle className="w-5 h-5" />
-                )}
-                {message.text}
+            <div>
+              <h3 className="font-semibold mb-2">Select Payment Method</h3>
+              <div className="flex gap-4">
+                {paymentOptions.map((method) => (
+                  <label
+                    key={method.name}
+                    className={`flex items-center gap-2 p-2 border rounded-lg cursor-pointer ${
+                      formData.paymentMethod === method.name
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value={method.name}
+                      checked={formData.paymentMethod === method.name}
+                      onChange={handleChange}
+                      className="hidden"
+                    />
+                    <img
+                      src={method.logo}
+                      alt={method.name}
+                      className="w-10 h-10"
+                    />
+                    {method.name}
+                  </label>
+                ))}
               </div>
-            )}
+            </div>
+
+            <p className="text-lg font-bold text-center text-black">
+              Total: {total} Birr
+            </p>
 
             <button
               type="submit"
+              disabled={loading}
               className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition w-full sm:w-auto"
             >
-              Submit Booking
+              {loading ? "Processing..." : "Submit Booking"}
             </button>
           </form>
         </div>

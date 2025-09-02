@@ -24,7 +24,13 @@ export default function TourismPage() {
     date: "",
     extras: [],
     notes: "",
+    paymentMethod: "",
+    phone: "",
+    email: "",
+    paymentProof: null,
   });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(null); // { type: "success" | "error", text: string }
 
   // Regular tourism packages
   const tours = [
@@ -143,6 +149,89 @@ export default function TourismPage() {
     }));
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!formData.paymentMethod) {
+      setMessage({ type: "error", text: "⚠️ Please select a payment method!" });
+      return;
+    }
+    if (!formData.phone || !formData.email) {
+      setMessage({
+        type: "error",
+        text: "⚠️ Please provide your phone number and email!",
+      });
+      return;
+    }
+
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      const formPayload = new FormData();
+      formPayload.append("destination", formData.destination);
+      formPayload.append("date", formData.date);
+      formPayload.append("extras", JSON.stringify(formData.extras));
+      formPayload.append("notes", formData.notes);
+      formPayload.append("paymentMethod", formData.paymentMethod);
+      formPayload.append("phone", formData.phone);
+      formPayload.append("email", formData.email);
+
+      // Only append file if exists (for telebirr or cbe_birr)
+      if (
+        (formData.paymentMethod === "telebirr" ||
+          formData.paymentMethod === "cbe_birr") &&
+        formData.paymentProof
+      ) {
+        formPayload.append("paymentProof", formData.paymentProof);
+      }
+
+      const res = await fetch("http://localhost:10000/vip-bookings", {
+        method: "POST",
+        body: formPayload,
+      });
+
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error(
+          "Unexpected server response. Expected JSON, got text/HTML:\n" + text
+        );
+      }
+
+      if (!res.ok)
+        throw new Error(data.error || data.message || "Request failed");
+
+      if (formData.paymentMethod === "chapa" && data.paymentUrl) {
+        // Redirect to Chapa
+        window.location.href = data.paymentUrl;
+      } else {
+        setMessage({
+          type: "success",
+          text: "🎉 " + (data.message || "Booking submitted successfully."),
+        });
+      }
+
+      // Reset form
+      setFormData({
+        destination: "",
+        date: "",
+        extras: [],
+        notes: "",
+        paymentMethod: "",
+        phone: "",
+        email: "",
+        paymentProof: null,
+      });
+    } catch (err) {
+      setMessage({ type: "error", text: "❌ " + err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Hero */}
@@ -180,11 +269,10 @@ export default function TourismPage() {
         </button>
       </div>
 
-      {/* Content Sections */}
+      {/* Content */}
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 md:py-12">
         {activeTab === "regular" && (
           <div>
-            {/* Search */}
             <div className="max-w-md mx-auto mb-6 md:mb-8 flex items-center bg-white rounded-lg shadow px-3">
               <Search className="w-5 h-5 text-gray-400" />
               <input
@@ -196,7 +284,6 @@ export default function TourismPage() {
               />
             </div>
 
-            {/* Regular Packages */}
             {filteredTours.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                 {filteredTours.map((tour, idx) => (
@@ -228,7 +315,7 @@ export default function TourismPage() {
 
         {activeTab === "vip" && (
           <div>
-            {/* VIP Packages */}
+            {/* VIP Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-12">
               {vipTours.map((tour, idx) => (
                 <div
@@ -270,15 +357,29 @@ export default function TourismPage() {
               ))}
             </div>
 
-            {/* VIP Inquiry Form */}
+            {/* VIP Form */}
             <div className="bg-white shadow-lg rounded-2xl p-6 md:p-8">
               <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">
                 VIP Tour Customization Form
               </h3>
-              <form className="space-y-4">
+
+              {/* Inline success/error message */}
+              {message && (
+                <div
+                  className={`mb-4 p-3 rounded-lg text-sm font-medium ${
+                    message.type === "success"
+                      ? "bg-green-100 text-green-700 border border-green-300"
+                      : "bg-red-100 text-red-700 border border-red-300"
+                  }`}
+                >
+                  {message.text}
+                </div>
+              )}
+
+              <form className="space-y-4" onSubmit={handleSubmit}>
                 {/* Destination */}
                 <div>
-                  <label className="block font-semibold mb-1 text-sm">
+                  <label className="block font-semibold mb-1 text-sm text-gray-800">
                     Choose Destination
                   </label>
                   <select
@@ -286,7 +387,7 @@ export default function TourismPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, destination: e.target.value })
                     }
-                    className="w-full border rounded-lg px-3 py-2"
+                    className="w-full border border-gray-400 text-black rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
                   >
                     <option value="">-- Select a place --</option>
                     <option value="lalibela">Lalibela</option>
@@ -300,7 +401,7 @@ export default function TourismPage() {
 
                 {/* Travel Date */}
                 <div>
-                  <label className="block font-semibold mb-1 text-sm">
+                  <label className="block font-semibold mb-1 text-sm text-gray-800">
                     Travel Date
                   </label>
                   <input
@@ -309,21 +410,56 @@ export default function TourismPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, date: e.target.value })
                     }
-                    className="w-full border rounded-lg px-3 py-2"
+                    className="w-full border border-gray-400 text-black rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  />
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="block font-semibold mb-1 text-sm text-gray-800">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
+                    className="w-full border border-gray-400 text-black rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    placeholder="Enter your phone number"
+                    required
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block font-semibold mb-1 text-sm text-gray-800">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                    className="w-full border border-gray-400 text-black rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    placeholder="Enter your email"
+                    required
                   />
                 </div>
 
                 {/* VIP Extras */}
                 <div>
-                  <label className="block font-semibold mb-1 text-sm">
+                  <label className="block font-semibold mb-1 text-sm text-gray-800">
                     Select VIP Extras
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-black">
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
                         checked={formData.extras.includes("private_car")}
                         onChange={() => handleCheckboxChange("private_car")}
+                        className="accent-yellow-600"
                       />
                       <Car className="w-4 h-4" /> Private Car / SUV
                     </label>
@@ -332,6 +468,7 @@ export default function TourismPage() {
                         type="checkbox"
                         checked={formData.extras.includes("airplane")}
                         onChange={() => handleCheckboxChange("airplane")}
+                        className="accent-yellow-600"
                       />
                       <Plane className="w-4 h-4" /> Airplane Ride
                     </label>
@@ -340,6 +477,7 @@ export default function TourismPage() {
                         type="checkbox"
                         checked={formData.extras.includes("personal_guide")}
                         onChange={() => handleCheckboxChange("personal_guide")}
+                        className="accent-yellow-600"
                       />
                       <User className="w-4 h-4" /> Personal Guide
                     </label>
@@ -348,6 +486,7 @@ export default function TourismPage() {
                         type="checkbox"
                         checked={formData.extras.includes("luxury_lodge")}
                         onChange={() => handleCheckboxChange("luxury_lodge")}
+                        className="accent-yellow-600"
                       />
                       <BedDouble className="w-4 h-4" /> Luxury Lodge Stay
                     </label>
@@ -356,7 +495,7 @@ export default function TourismPage() {
 
                 {/* Notes */}
                 <div>
-                  <label className="block font-semibold mb-1 text-sm">
+                  <label className="block font-semibold mb-1 text-sm text-gray-800">
                     Additional Notes / Requests
                   </label>
                   <textarea
@@ -365,24 +504,68 @@ export default function TourismPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, notes: e.target.value })
                     }
-                    className="w-full border rounded-lg px-3 py-2"
+                    className="w-full border border-gray-400 text-black rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
                     placeholder="Enter special requests here..."
                   />
                 </div>
 
+                {/* Payment Method */}
+                <div>
+                  <label className="block font-semibold mb-1 text-sm text-gray-800">
+                    Payment Method
+                  </label>
+                  <select
+                    value={formData.paymentMethod}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        paymentMethod: e.target.value,
+                      })
+                    }
+                    className="w-full border border-gray-400 text-black rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  >
+                    <option value="">-- Select Payment --</option>
+                    <option value="chapa">Chapa</option>
+                    <option value="telebirr">Telebirr</option>
+                    <option value="cbe_birr">CBE Birr</option>
+                  </select>
+                </div>
+
+                {/* Upload Payment Proof if Telebirr or CBE */}
+                {(formData.paymentMethod === "telebirr" ||
+                  formData.paymentMethod === "cbe_birr") && (
+                  <div>
+                    <label className="block font-semibold mb-1 mt-3 text-sm text-gray-800">
+                      Upload Payment Proof
+                    </label>
+                    <input
+                      type="file"
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          paymentProof: e.target.files[0],
+                        })
+                      }
+                      className="w-full text-sm"
+                    />
+                  </div>
+                )}
+
+                {/* Submit Button with spacing */}
                 <button
                   type="submit"
-                  className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-2 rounded-lg font-semibold shadow-md transition"
+                  disabled={loading}
+                  className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-2 rounded-lg font-semibold shadow-md transition mb-8"
                 >
-                  Submit VIP Request
+                  {loading ? "Submitting..." : "Submit VIP Request"}
                 </button>
               </form>
+
+              {/* Footer Section */}
             </div>
           </div>
         )}
       </div>
-
-      {/* Call to Action */}
       <section className="bg-green-700 text-white py-10 md:py-12">
         <div className="max-w-4xl mx-auto text-center px-4 md:px-6">
           <h2 className="text-2xl md:text-3xl font-bold mb-3">
@@ -392,14 +575,13 @@ export default function TourismPage() {
             Choose your ideal package and let us guide you through Ethiopia’s
             breathtaking landscapes and rich history.
           </p>
-          <Link href={"/Booktour"}>
+          <Link href={"/tourism/Booktour"}>
             <button className="bg-white text-green-700 font-bold py-2 md:py-3 px-6 md:px-8 rounded-lg shadow hover:bg-gray-100 transition text-sm md:text-base">
               Book Now
             </button>
           </Link>
         </div>
       </section>
-
       {/* Footer */}
       <footer className="bg-gray-800 text-gray-300 py-5 md:py-6 text-center text-xs md:text-sm">
         &copy; {new Date().getFullYear()} Explore Ethiopia Tours. All rights

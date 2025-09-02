@@ -1,136 +1,254 @@
 "use client";
 import { GraduationCap, CheckCircle, XCircle } from "lucide-react";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
 export default function GraduationsPage() {
-  const services = [
-    "Hall",
-    "Photography & Videography",
-    "Catering",
-    "Decoration",
-    "DJ",
-    "Car Service",
-    "Guest Management",
+  const serviceOptions = [
+    { name: "Hall", price: 5000 },
+    { name: "Photography & Videography", price: 4000 },
+    { name: "Catering", price: 300 }, // per guest
+    { name: "Decoration", price: 2500 },
+    { name: "DJ", price: 2000 },
+    { name: "Car Service", price: 1500 },
+    { name: "Guest Management", price: 1000 },
+  ];
+
+  const paymentMethods = [
+    { name: "Chapa", logo: "/chapa.png" },
+    { name: "Telebirr", logo: "/telebirr.png" },
+    { name: "CBE Birr", logo: "/cbe.png" },
   ];
 
   const [formData, setFormData] = useState({
     name: "",
+    phone: "",
     email: "",
     date: "",
     guests: "",
-    specialRequests: "",
     selectedServices: [],
+    specialRequests: "",
+    paymentMethod: "",
+    paymentEvidence: null,
   });
 
-  const [message, setMessage] = useState({ text: "", type: "" });
+  const [status, setStatus] = useState({ text: "", type: "" });
+  const [loading, setLoading] = useState(false);
+  const [totalAmount, setTotalAmount] = useState(0);
 
-  const handleChange = (e) => {
+  // Calculate total
+  useEffect(() => {
+    const servicesTotal = formData.selectedServices.reduce((acc, sName) => {
+      const service = serviceOptions.find((s) => s.name === sName);
+      if (!service) return acc;
+      if (service.name === "Catering") {
+        return acc + (parseInt(formData.guests) || 0) * service.price;
+      }
+      return acc + service.price;
+    }, 0);
+    setTotalAmount(servicesTotal);
+  }, [formData.selectedServices, formData.guests]);
+
+  const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
-  const handleServiceChange = (service) => {
-    setFormData((prev) => {
-      const selected = prev.selectedServices.includes(service)
+  const handleFileChange = (e) =>
+    setFormData({ ...formData, paymentEvidence: e.target.files[0] });
+
+  const toggleService = (service) => {
+    setFormData((prev) => ({
+      ...prev,
+      selectedServices: prev.selectedServices.includes(service)
         ? prev.selectedServices.filter((s) => s !== service)
-        : [...prev.selectedServices, service];
-      return { ...prev, selectedServices: selected };
-    });
+        : [...prev.selectedServices, service],
+    }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    // Validate
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.name) errors.name = "Full name is required";
+    if (!formData.phone) errors.phone = "Phone number is required";
+    if (!formData.email) errors.email = "Email is required";
+    if (!formData.date) errors.date = "Date is required";
+    if (!formData.guests) errors.guests = "Number of guests is required";
+    if (!formData.selectedServices.length)
+      errors.services = "Select at least one service";
+    if (!formData.paymentMethod)
+      errors.paymentMethod = "Payment method is required";
     if (
-      !formData.name ||
-      !formData.email ||
-      !formData.date ||
-      !formData.guests
+      (formData.paymentMethod === "Telebirr" ||
+        formData.paymentMethod === "CBE Birr") &&
+      !formData.paymentEvidence
     ) {
-      setMessage({
-        text: "❌ Please fill in all required fields.",
-        type: "error",
-      });
+      errors.paymentEvidence = "Please upload payment evidence";
+    }
+    return errors;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setStatus({ text: "❌ Please fill all required fields.", type: "error" });
       return;
     }
 
-    setMessage({
-      text: `🎓 Graduation booking submitted successfully! We’ll reach out to ${formData.email}.`,
-      type: "success",
-    });
+    setLoading(true);
+    setStatus({ text: "", type: "" });
 
-    // Reset form after submission
-    setFormData({
-      name: "",
-      email: "",
-      date: "",
-      guests: "",
-      specialRequests: "",
-      selectedServices: [],
-    });
-  };
+    try {
+      if (formData.paymentMethod === "Chapa") {
+        // 1️⃣ Save booking first
+        const payload = new FormData();
+        Object.entries(formData).forEach(([key, value]) => {
+          if (key === "selectedServices") {
+            payload.append(key, JSON.stringify(value));
+          } else if (value) {
+            payload.append(key, value);
+          }
+        });
+        payload.append("totalAmount", totalAmount);
 
-  // Auto-hide messages after 4s
-  useEffect(() => {
-    if (message.text) {
-      const timer = setTimeout(() => setMessage({ text: "", type: "" }), 4000);
-      return () => clearTimeout(timer);
+        const res = await fetch("http://localhost:10000/graduations", {
+          method: "POST",
+          body: payload,
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Booking failed");
+
+        const bookingId = data.booking._id;
+
+        // 2️⃣ Initialize Chapa payment (send full details like GeneralEventsPage)
+        const payRes = await fetch(
+          "http://localhost:10000/bookings/pay/chapa",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              amount: totalAmount,
+              currency: "ETB",
+              email: formData.email,
+              fullName: formData.name,
+              bookingId,
+            }),
+          }
+        );
+
+        const payData = await payRes.json();
+        if (payData?.checkout_url) {
+          window.location.href = payData.checkout_url; // redirect to Chapa
+          return;
+        } else {
+          throw new Error("❌ Failed to start Chapa payment");
+        }
+      } else {
+        // Telebirr / CBE Birr: submit with payment evidence
+        const form = new FormData();
+        Object.entries(formData).forEach(([key, value]) => {
+          if (key === "selectedServices")
+            form.append(key, JSON.stringify(value));
+          else if (value) form.append(key, value);
+        });
+        form.append("totalAmount", totalAmount);
+
+        const res = await fetch("http://localhost:10000/graduations", {
+          method: "POST",
+          body: form,
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Booking failed");
+
+        setStatus({
+          text: "✅ Booking submitted! Please upload payment receipt.",
+          type: "success",
+        });
+      }
+
+      // Reset form
+      setFormData({
+        name: "",
+        phone: "",
+        email: "",
+        date: "",
+        guests: "",
+        selectedServices: [],
+        specialRequests: "",
+        paymentMethod: "",
+        paymentEvidence: null,
+      });
+      setTotalAmount(0);
+    } catch (err) {
+      setStatus({ text: `❌ ${err.message}`, type: "error" });
+    } finally {
+      setLoading(false);
     }
-  }, [message]);
+  };
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* Hero */}
       <header className="bg-gradient-to-r from-green-500 to-emerald-600 text-white py-16 text-center px-4">
         <GraduationCap className="w-12 h-12 mx-auto mb-4" />
         <h1 className="text-4xl font-bold">Graduations</h1>
-        <p className="mt-3 text-lg max-w-xl mx-auto">
-          Celebrate your academic success in style with our graduation packages.
+        <p className="mt-2 text-lg">
+          Plan and book your graduation event with ease 🎓
         </p>
       </header>
 
-      {/* Services */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
-        <h2 className="text-2xl font-bold mb-6">Our Graduation Services</h2>
-        <ul className="list-disc list-inside space-y-2 text-gray-700">
-          {services.map((service, i) => (
-            <li key={i}>{service}</li>
-          ))}
-        </ul>
-      </section>
-
-      {/* Registration Form */}
-      <section className="bg-white py-12 px-4 sm:px-6 max-w-3xl mx-auto shadow-lg rounded-lg mt-8">
+      <section className="bg-white py-12 px-4 max-w-3xl mx-auto shadow-lg rounded-xl -mt-8">
         <h2 className="text-2xl font-bold text-center mb-6">
-          Book Your Graduation Celebration
+          Book Your Graduation
         </h2>
+
+        {status.text && (
+          <div
+            className={`flex items-center gap-2 p-3 rounded-lg text-sm mb-4 ${
+              status.type === "success"
+                ? "bg-green-100 text-green-700 border border-green-300"
+                : "bg-red-100 text-red-700 border border-red-300"
+            }`}
+          >
+            {status.type === "success" ? (
+              <CheckCircle className="w-5 h-5" />
+            ) : (
+              <XCircle className="w-5 h-5" />
+            )}
+            {status.text}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Personal Info */}
           <input
             type="text"
             name="name"
             placeholder="Full Name"
             value={formData.name}
             onChange={handleChange}
-            className="w-full border rounded px-4 py-2"
-            required
+            className="w-full p-3 border rounded-lg text-black"
+          />
+          <input
+            type="text"
+            name="phone"
+            placeholder="Phone Number"
+            value={formData.phone}
+            onChange={handleChange}
+            className="w-full p-3 border rounded-lg text-black"
           />
           <input
             type="email"
             name="email"
-            placeholder="Email Address"
+            placeholder="Email"
             value={formData.email}
             onChange={handleChange}
-            className="w-full border rounded px-4 py-2"
-            required
+            className="w-full p-3 border rounded-lg text-black"
           />
           <input
             type="date"
             name="date"
             value={formData.date}
             onChange={handleChange}
-            className="w-full border rounded px-4 py-2"
-            required
+            className="w-full p-3 border rounded-lg text-black"
           />
           <input
             type="number"
@@ -138,64 +256,92 @@ export default function GraduationsPage() {
             placeholder="Number of Guests"
             value={formData.guests}
             onChange={handleChange}
-            className="w-full border rounded px-4 py-2"
-            required
+            className="w-full p-3 border rounded-lg text-black"
           />
 
-          {/* Services Selection */}
+          <div className="space-y-2">
+            <p className="font-medium">Select Services:</p>
+            {serviceOptions.map((service) => (
+              <label
+                key={service.name}
+                className="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={formData.selectedServices.includes(service.name)}
+                  onChange={() => toggleService(service.name)}
+                />
+                {service.name} —{" "}
+                {service.name === "Catering"
+                  ? `${service.price} ETB / guest`
+                  : `${service.price} ETB`}
+              </label>
+            ))}
+          </div>
+
+          {totalAmount > 0 && (
+            <div className="p-4 bg-yellow-100 border border-yellow-300 rounded-lg text-black font-semibold">
+              💰 Total Payment: {totalAmount} ETB
+            </div>
+          )}
+
           <div>
-            <h3 className="font-semibold mb-2">Select Services</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {services.map((service, i) => (
+            <p className="font-medium mb-2">Select Payment Method:</p>
+            <div className="flex gap-4">
+              {paymentMethods.map((method) => (
                 <label
-                  key={i}
-                  className="flex items-center space-x-2 border rounded px-3 py-2 cursor-pointer hover:bg-gray-50"
+                  key={method.name}
+                  className={`flex items-center gap-2 p-2 border rounded-lg cursor-pointer ${
+                    formData.paymentMethod === method.name
+                      ? "border-green-500 bg-green-50"
+                      : "border-gray-300"
+                  }`}
                 >
                   <input
-                    type="checkbox"
-                    checked={formData.selectedServices.includes(service)}
-                    onChange={() => handleServiceChange(service)}
-                    className="accent-green-600"
+                    type="radio"
+                    name="paymentMethod"
+                    value={method.name}
+                    checked={formData.paymentMethod === method.name}
+                    onChange={handleChange}
+                    className="hidden"
                   />
-                  <span>{service}</span>
+                  <Image
+                    src={method.logo}
+                    alt={method.name}
+                    width={40}
+                    height={40}
+                  />
+                  {method.name}
                 </label>
               ))}
             </div>
           </div>
 
-          {/* Special Requests */}
-          <textarea
-            name="specialRequests"
-            placeholder="Special Requests"
-            value={formData.specialRequests}
-            onChange={handleChange}
-            className="w-full border rounded px-4 py-2"
-          />
-
-          {/* Success / Error Message */}
-          {message.text && (
-            <div
-              className={`flex items-center gap-2 p-3 rounded-lg text-sm ${
-                message.type === "success"
-                  ? "bg-green-100 text-green-700 border border-green-300"
-                  : "bg-red-100 text-red-700 border border-red-300"
-              }`}
-            >
-              {message.type === "success" ? (
-                <CheckCircle className="w-5 h-5" />
-              ) : (
-                <XCircle className="w-5 h-5" />
-              )}
-              {message.text}
-            </div>
+          {(formData.paymentMethod === "Telebirr" ||
+            formData.paymentMethod === "CBE Birr") && (
+            <input
+              type="file"
+              name="paymentEvidence"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="w-full p-2 border rounded-lg"
+            />
           )}
 
-          {/* Submit */}
+          <textarea
+            name="specialRequests"
+            placeholder="Special Requests (Optional)"
+            value={formData.specialRequests}
+            onChange={handleChange}
+            className="w-full p-3 border rounded-lg text-black"
+          />
+
           <button
             type="submit"
-            className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition w-full sm:w-auto"
+            disabled={loading}
+            className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition disabled:opacity-50"
           >
-            Submit Booking
+            {loading ? "Processing..." : "Submit Booking"}
           </button>
         </form>
       </section>

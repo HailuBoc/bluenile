@@ -91,9 +91,11 @@ export default function Sales() {
               <p className="text-yellow-600 font-semibold text-center mt-3">
                 {item.price}
               </p>
-              <button className="mt-4 w-full bg-yellow-500 text-white py-2 sm:py-3 rounded-lg hover:bg-yellow-600 transition">
-                Contact Seller
-              </button>
+              <Link href={`/sales/${index}`}>
+                <button className="mt-4 w-full bg-yellow-500 text-white py-2 sm:py-3 rounded-lg hover:bg-yellow-600 transition">
+                  Buy Now
+                </button>
+              </Link>
             </motion.div>
           ))}
         </div>

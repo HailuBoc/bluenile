@@ -62,7 +62,7 @@ export default function Navbar() {
                 </button>
               </Link>
               <a
-                href="/login"
+                href="/auth/login"
                 className="px-4 py-2 border border-white rounded-md text-white hover:bg-white hover:text-blue-900 transition"
               >
                 Sign in
@@ -85,7 +85,6 @@ export default function Navbar() {
           </div>
 
           {/* Services Section */}
-
           <nav className="w-full">
             {(() => {
               const services = [
@@ -120,15 +119,25 @@ export default function Navbar() {
 
               return (
                 <>
-                  {/* Mobile: 2 rows (2 + 3) */}
+                  {/* Mobile layout: 2 + 2 + 1 */}
                   <div className="sm:hidden w-full">
+                    {/* First row: 2 items */}
                     <div className="grid grid-cols-2 gap-3 px-2">
                       {services.slice(0, 2).map((s) => (
                         <Tile key={s.label} {...s} />
                       ))}
                     </div>
-                    <div className="grid grid-cols-3 gap-3 px-2 mt-3">
-                      {services.slice(2).map((s) => (
+
+                    {/* Second row: 2 items */}
+                    <div className="grid grid-cols-2 gap-3 px-2 mt-3">
+                      {services.slice(2, 4).map((s) => (
+                        <Tile key={s.label} {...s} />
+                      ))}
+                    </div>
+
+                    {/* Third row: Tourism only, centered horizontally */}
+                    <div className="flex justify-center mt-3 px-2 gap-3">
+                      {services.slice(4).map((s) => (
                         <Tile key={s.label} {...s} />
                       ))}
                     </div>
@@ -149,35 +158,83 @@ export default function Navbar() {
           <div className="w-full max-w-6xl">
             <div className="flex flex-col sm:flex-row items-stretch border justify-center text-center rounded-xl sm:rounded-full shadow-lg p-3 sm:px-8 sm:py-3 bg-white/90 dark:bg-gray-800/90 dark:border-gray-600 gap-y-3 sm:gap-y-0">
               {[
-                { label: "Services", type: "text" },
-                { label: "Property Rental & Bookings", type: "text" },
-                { label: "Events", type: "text" },
-                { label: "Transport service", type: "text" },
-                { label: "Sales", type: "text" },
-              ].map((field, i) => (
-                <div
-                  key={i}
-                  className={`flex flex-col px-3 sm:px-5 ${
-                    i < 4 ? "sm:border-r dark:border-gray-600" : ""
-                  }`}
-                >
-                  <label className="text-xs text-gray-500 dark:text-gray-400 font-semibold">
-                    {field.label}
-                  </label>
-                  <div className="flex items-center">
-                    <input
-                      type={field.type}
-                      placeholder={field.placeholder}
-                      className="bg-transparent outline-none text-sm text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 flex-1"
-                    />
-                    {i === 4 && (
-                      <button className="text-blue-600 hover:text-blue-700 p-1 flex items-center justify-center">
-                        <Search className="h-5 w-5" />
-                      </button>
-                    )}
+                { label: "Services", href: "/services" },
+                {
+                  label: "Property Rental & Bookings",
+                  href: "/propertyrental",
+                },
+                { label: "Events", href: "/event" },
+                { label: "Transport service", href: "/transport" },
+                { label: "Sales", href: "/sales" },
+              ].map((field, i) => {
+                const [query, setQuery] = useState(""); // track input value per field
+
+                return (
+                  <div
+                    key={i}
+                    className={`flex flex-col px-3 sm:px-5 ${
+                      i < 4 ? "sm:border-r dark:border-gray-600" : ""
+                    }`}
+                  >
+                    <label className="text-xs text-gray-500 dark:text-gray-400 font-semibold">
+                      {field.label}
+                    </label>
+                    <div className="flex items-center">
+                      <input
+                        type="text"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        className="bg-transparent outline-none text-sm text-gray-700 dark:text-white flex-1"
+                        id={`search-${field.label
+                          .toLowerCase()
+                          .replace(/\s+/g, "-")}`}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
+
+              {/* === Single Search Button at the end === */}
+              <div className="flex items-center justify-center px-3">
+                <button
+                  onClick={() => {
+                    const fields = [
+                      { label: "Services", href: "/services" },
+                      {
+                        label: "Property Rental & Bookings",
+                        href: "/propertyrental",
+                      },
+                      { label: "Events", href: "/event" },
+                      { label: "Transport service", href: "/transport" },
+                      { label: "Sales", href: "/sales" },
+                    ];
+
+                    let targetHref = "/services";
+                    let queryParam = "";
+
+                    for (const field of fields) {
+                      const input = document.getElementById(
+                        `search-${field.label
+                          .toLowerCase()
+                          .replace(/\s+/g, "-")}`
+                      );
+                      if (input && input.value.trim() !== "") {
+                        targetHref = field.href;
+                        queryParam = input.value.trim();
+                        break;
+                      }
+                    }
+
+                    const url = queryParam
+                      ? `${targetHref}?q=${encodeURIComponent(queryParam)}`
+                      : targetHref;
+                    window.location.href = url;
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-3 py-2 rounded-full text-sm transition duration-200"
+                >
+                  <Search />
+                </button>
+              </div>
             </div>
           </div>
         </div>

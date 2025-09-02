@@ -15,27 +15,27 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="hover:underline">
+                <a href="/auth/login" className="hover:underline">
                   How Blue Nile PLC works
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:underline">
+                <a href="/auth/login" className="hover:underline">
                   Newsroom
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:underline">
+                <a href="/auth/login" className="hover:underline">
                   Investors
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:underline">
+                <a href="/auth/login" className="hover:underline">
                   Blue Nile Plus
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:underline">
+                <a href="/auth/login" className="hover:underline">
                   Blue Nile Luxe
                 </a>
               </li>
@@ -49,27 +49,27 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="hover:underline">
+                <a href="/auth/login" className="hover:underline">
                   Accessibility
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:underline">
+                <a href="/auth/login" className="hover:underline">
                   This is not a real site
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:underline">
+                <a href="/auth/login" className="hover:underline">
                   It’s a demo
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:underline">
+                <a href="/auth/login" className="hover:underline">
                   Built with Next.js
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:underline">
+                <a href="/auth/login" className="hover:underline">
                   Tailwind CSS
                 </a>
               </li>
@@ -83,22 +83,22 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="hover:underline">
+                <a href="/auth/login" className="hover:underline">
                   Become a Host
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:underline">
+                <a href="/auth/login" className="hover:underline">
                   Blue Nile for Work
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:underline">
+                <a href="/auth/login" className="hover:underline">
                   Host resources
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:underline">
+                <a href="/auth/login" className="hover:underline">
                   Community Center
                 </a>
               </li>
@@ -112,22 +112,22 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="hover:underline">
+                <a href="/auth/login" className="hover:underline">
                   Help Center
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:underline">
+                <a href="/auth/login" className="hover:underline">
                   Cancellation options
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:underline">
+                <a href="/auth/login" className="hover:underline">
                   Neighborhood Support
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:underline">
+                <a href="/auth/login" className="hover:underline">
                   Trust & Safety
                 </a>
               </li>
