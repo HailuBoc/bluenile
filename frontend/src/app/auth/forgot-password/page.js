@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function ForgotPassword() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
@@ -20,12 +22,12 @@ export default function ForgotPassword() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      if (!res.ok) throw new Error(data.error || data.message);
 
-      setMessage({
-        type: "success",
-        text: "✅ Reset link sent to your email.",
-      });
+      setMessage({ type: "success", text: "✅ OTP sent to your email." });
+
+      setTimeout(() => router.push("/auth/OTPVerification"), 1500);
+      localStorage.setItem("resetEmail", email);
     } catch (err) {
       setMessage({ type: "error", text: `❌ ${err.message}` });
     } finally {
@@ -65,7 +67,7 @@ export default function ForgotPassword() {
               loading ? "bg-gray-600 cursor-not-allowed" : "bg-blue-600"
             }`}
           >
-            {loading ? "Sending..." : "Send Reset Link"}
+            {loading ? "Sending..." : "Send OTP"}
           </button>
         </form>
       </div>

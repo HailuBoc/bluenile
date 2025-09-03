@@ -1,23 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function ResetPassword() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token");
-
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
+  const email = localStorage.getItem("resetEmail") || "";
+
   useEffect(() => {
-    if (!token) {
-      setMessage({ type: "error", text: "❌ Invalid or missing token." });
-    }
-  }, [token]);
+    if (!email) router.push("/auth/forgot-password");
+  }, [email, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,18 +30,16 @@ export default function ResetPassword() {
       const res = await fetch("http://localhost:10000/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      if (!res.ok) throw new Error(data.error || data.message);
 
-      setMessage({
-        type: "success",
-        text: "✅ Password reset successful! Redirecting...",
-      });
+      setMessage({ type: "success", text: "✅ Password reset successful!" });
+      localStorage.removeItem("resetEmail");
 
-      setTimeout(() => router.push("/auth/signin"), 1500);
+      setTimeout(() => router.push("/auth/login"), 1500);
     } catch (err) {
       setMessage({ type: "error", text: `❌ ${err.message}` });
     } finally {
