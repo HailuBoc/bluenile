@@ -1,124 +1,157 @@
 "use client";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import ProductCard from "./ProductCard";
-import listings from "./listingsData";
 import HousesCard from "./HousesCard";
-import CarSalecard from "./CarSalecard";
-import carlisting from "./listingCar";
 import CarsCard from "./CarsCard";
+import CarSalecard from "./CarSalecard";
 
 export default function ProductsSection() {
-  const firstGroup = listings.slice(0, 6); // Popular Stays
-  const secondGroup = listings.slice(6, 12); // Cars for Rental
-  const thirdGroup = listings.slice(12, 18); // Tourism Sites
-  const fourthGroup = listings.slice(18, 24); // Houses for Sale
-  const fifthGroup = carlisting.slice(0, 6); // Cars for Sale ✅ new
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchProperties = async () => {
+    try {
+      const res = await axios.get("http://localhost:10000/admin/properties");
+      const data = Array.isArray(res.data)
+        ? res.data
+        : res.data?.properties || [];
+
+      const formattedData = data.map((item) => {
+        const baseUrl = "http://localhost:10000";
+        let firstImage =
+          Array.isArray(item.imageUrl) && item.imageUrl.length > 0
+            ? item.imageUrl[0]
+            : typeof item.imageUrl === "string"
+            ? item.imageUrl
+            : null;
+
+        const imageSrc = firstImage
+          ? firstImage.startsWith("http")
+            ? firstImage
+            : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
+          : null;
+
+        return { ...item, imageUrl: imageSrc };
+      });
+
+      setProperties(formattedData);
+      setError(null);
+    } catch (err) {
+      console.error("❌ Error fetching properties:", err);
+      setProperties([]);
+      setError("Unable to fetch properties. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProperties();
+    const interval = setInterval(() => {
+      fetchProperties();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (loading)
+    return <p className="text-center mt-10">Loading properties...</p>;
+  if (error) return <p className="text-center text-red-600">{error}</p>;
+
+  const popularStays = properties.filter(
+    (p) =>
+      ["apartment", "villa", "guesthouse"].includes(
+        p.serviceType?.toLowerCase()
+      ) && p.status === "approved"
+  );
+
+  const carsForRent = properties.filter(
+    (p) =>
+      p.serviceType?.toLowerCase() === "car" &&
+      p.listingType === "rent" &&
+      p.status === "approved"
+  );
+
+  const tourismSites = properties.filter(
+    (p) => p.serviceType?.toLowerCase() === "tourism" && p.status === "approved"
+  );
+
+  const housesForSale = properties.filter(
+    (p) =>
+      p.serviceType?.toLowerCase() === "house" &&
+      p.listingType === "sale" &&
+      p.status === "approved"
+  );
+
+  const carsForSale = properties.filter(
+    (p) =>
+      p.serviceType?.toLowerCase() === "car" &&
+      p.listingType === "sale" &&
+      p.status === "approved"
+  );
+
+  const renderHorizontalScroll = (items, CardComponent) => (
+    <div className="relative overflow-hidden">
+      <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth hide-scrollbar py-2">
+        {items.map((listing) => (
+          <div
+            key={listing._id}
+            className="snap-start flex-shrink-0 w-60 relative"
+          >
+            <CardComponent {...listing} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <section className="px-4 sm:px-6 pt-6 pb-24 bg-gray-100 dark:bg-gray-900">
-      {/* 🌟 Popular Stays */}
-      <div className="mb-10">
-        <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
-          🌟 Popular Stays
-        </h2>
-        <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
-          {firstGroup.map((listing, index) => (
-            <ProductCard key={index} {...listing} />
-          ))}
+      {popularStays.length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
+            🌟 Popular Stays
+          </h2>
+          {renderHorizontalScroll(popularStays, ProductCard)}
         </div>
-        <div className="sm:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory py-2 -mx-4 px-4 scrollbar-hide">
-          {firstGroup.map((listing, index) => (
-            <div key={index} className="snap-start flex-shrink-0 w-72">
-              <ProductCard {...listing} />
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
-      {/* 🔍 Cars for Rental */}
-      <div className="mb-10">
-        <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
-          🔍 Cars for Rental
-        </h2>
-        <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
-          {secondGroup.map((listing, index) => (
-            <CarsCard key={index + 6} {...listing} />
-          ))}
+      {carsForRent.length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
+            🔍 Cars for Rental
+          </h2>
+          {renderHorizontalScroll(carsForRent, CarsCard)}
         </div>
-        <div className="sm:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory py-2 -mx-4 px-4 scrollbar-hide">
-          {secondGroup.map((listing, index) => (
-            <div key={index + 6} className="snap-start flex-shrink-0 w-72">
-              <CarsCard {...listing} />
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
-      {/* 🏞️ Tourism Sites */}
-      <div className="mb-10">
-        <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
-          🏞️ Tourism Sites in Ethiopia
-        </h2>
-        <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
-          {thirdGroup.map((listing, index) => (
-            <ProductCard key={index + 12} {...listing} />
-          ))}
+      {tourismSites.length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
+            🏞️ Tourism Sites in Ethiopia
+          </h2>
+          {renderHorizontalScroll(tourismSites, ProductCard)}
         </div>
-        <div className="sm:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory py-2 -mx-4 px-4 scrollbar-hide">
-          {thirdGroup.map((listing, index) => (
-            <div key={index + 12} className="snap-start flex-shrink-0 w-72">
-              <ProductCard {...listing} />
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
-      {/* 🏠 Houses for Sale */}
-      <div className="mb-10">
-        <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
-          🏠 Houses for Sale
-        </h2>
-        <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
-          {fourthGroup.map((listing, index) => (
-            <HousesCard key={index + 18} {...listing} />
-          ))}
+      {housesForSale.length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
+            🏠 Houses for Sale
+          </h2>
+          {renderHorizontalScroll(housesForSale, HousesCard)}
         </div>
-        <div className="sm:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory py-2 -mx-4 px-4 scrollbar-hide">
-          {fourthGroup.map((listing, index) => (
-            <div key={index + 18} className="snap-start flex-shrink-0 w-72">
-              <HousesCard {...listing} />
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
-      {/* 🚗 Cars for Sale */}
-      <div>
-        <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
-          🚗 Cars for Sale
-        </h2>
-        <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
-          {fifthGroup.map((carlisting, index) => (
-            <CarSalecard key={index + 24} {...carlisting} />
-          ))}
+      {carsForSale.length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
+            🚗 Cars for Sale
+          </h2>
+          {renderHorizontalScroll(carsForSale, CarSalecard)}
         </div>
-        <div className="sm:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory py-2 -mx-4 px-4 scrollbar-hide">
-          {fifthGroup.map((carlisting, index) => (
-            <div key={index + 24} className="snap-start flex-shrink-0 w-72">
-              <CarSalecard {...carlisting} />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <style jsx>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
+      )}
     </section>
   );
 }

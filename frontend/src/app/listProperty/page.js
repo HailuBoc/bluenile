@@ -1,11 +1,14 @@
 "use client";
 import React, { useState } from "react";
+import axios from "axios";
 
 export default function ListPropertyPage() {
   const [listingType, setListingType] = useState("");
-  const [propertyName, setPropertyName] = useState("");
+  const [serviceType, setServiceType] = useState("");
   const [formData, setFormData] = useState({});
   const [facilities, setFacilities] = useState([]);
+  const [image, setImage] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -18,316 +21,248 @@ export default function ListPropertyPage() {
     "Garden",
   ];
 
-  // ✅ Handle input changes
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+  const tourismFeatures = [
+    "Guided Tour",
+    "Local Transport",
+    "Meals Included",
+    "Adventure Activities",
+  ];
 
-    if (type === "checkbox") {
-      setFacilities((prev) =>
-        checked ? [...prev, name] : prev.filter((f) => f !== name)
+  const carFeatures = [
+    "Airbags",
+    "GPS",
+    "Sunroof",
+    "Bluetooth",
+    "ABS Brakes",
+    "Leather Seats",
+  ];
+
+  const handleChange = (e) => {
+    const { name, value, type, checked, files } = e.target;
+    if (type === "checkbox")
+      setFacilities(
+        checked ? [...facilities, name] : facilities.filter((f) => f !== name)
       );
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+    else if (type === "file") {
+      const file = files[0];
+      setImage(file);
+      setPreviewUrl(file ? URL.createObjectURL(file) : null);
+    } else setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ✅ Submit form
+  const resetForm = () => {
+    setFormData({});
+    setFacilities([]);
+    setListingType("");
+    setServiceType("");
+    setImage(null);
+    setPreviewUrl(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const propertyData = {
-      listingType,
-      propertyName,
-      ...formData,
-      facilities,
-    };
+    if (
+      !listingType ||
+      !serviceType ||
+      !formData.address ||
+      !formData.price ||
+      !formData.userEmail ||
+      !formData.propertyName
+    ) {
+      setErrorMessage("❌ Please fill all required fields.");
+      return;
+    }
 
     try {
-      const res = await fetch("http://localhost:10000/properties", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(propertyData),
-      });
+      const data = new FormData();
+      data.append("listingType", listingType);
+      data.append("serviceType", serviceType); // ✅ fixed
+      data.append("propertyName", formData.propertyName); // ✅ fixed
+      data.append("userEmail", formData.userEmail);
+      data.append("address", formData.address);
+      data.append("price", formData.price);
+      data.append("facilities", JSON.stringify(facilities));
+      if (formData.description)
+        data.append("description", formData.description);
+      if (image) data.append("image", image);
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to post property");
-      }
+      const res = await axios.post(
+        "http://localhost:10000/admin/properties",
+        data,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
 
-      setSuccessMessage("✅ Your property has been posted successfully!");
+      if (res.status !== 201) throw new Error("Failed to submit listing");
+
+      setSuccessMessage(
+        "✅ Your listing has been submitted and is awaiting admin approval!"
+      );
       setErrorMessage("");
-      // Reset form
-      setFormData({});
-      setFacilities([]);
-      setListingType("");
-      setPropertyName("");
+      resetForm();
       setTimeout(() => setSuccessMessage(""), 4000);
     } catch (err) {
       console.error(err);
-      setErrorMessage("❌ " + err.message);
+      setErrorMessage("❌ " + (err.response?.data?.error || err.message));
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col items-center">
-      {/* Header */}
-      <header className="w-full bg-blue-950 py-4 text-white">
-        <div className="max-w-6xl mx-auto px-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">List Your Property</h1>
-          <button className="bg-white text-blue-700 px-4 py-2 rounded hover:bg-gray-100">
-            Help
-          </button>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-10">
-        {/* Left: Form */}
-        <div className="bg-gray-800 p-8 rounded-2xl shadow text-white">
-          <h2 className="text-xl font-semibold mb-6">
-            Tell us about your property
-          </h2>
-
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Listing Purpose */}
-            {/* User Email */}
-            <div>
-              <label className="block mb-2 font-medium">Your Email</label>
-              <input
-                type="email"
-                name="userEmail"
-                placeholder="Enter your email"
-                value={formData.userEmail || ""}
-                onChange={handleChange}
-                className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white mb-4"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block mb-2 font-medium">Listing Purpose</label>
-              <select
-                className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white"
-                value={listingType}
-                onChange={(e) => setListingType(e.target.value)}
-              >
-                <option value="">Select Purpose</option>
-                <option value="rent">For Rent</option>
-                <option value="sale">For Sale</option>
-                <option value="lease">For Lease</option>
-                <option value="auction">For Auction</option>
-              </select>
-            </div>
-
-            {/* Property Type & Address */}
-            <div>
-              <label className="block mb-2 font-medium">Property Type</label>
-              <select
-                className="w-full border border-gray-500 bg-gray-900 text-gray-300 rounded p-3 mb-4"
-                value={propertyName}
-                onChange={(e) => setPropertyName(e.target.value)}
-              >
-                <option value="">Select Property</option>
-                <option value="apartment">Apartment</option>
-                <option value="house">House</option>
-                <option value="villa">Villa</option>
-                <option value="guesthouse">Guesthouse</option>
-                <option value="car">Car</option>
-                <option value="land">Land</option>
-                <option value="office">Office Space</option>
-                <option value="shop">Shop</option>
-              </select>
-
-              <input
-                type="text"
-                name="address"
-                placeholder="Address / Location"
-                value={formData.address || ""}
-                onChange={handleChange}
-                className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white mb-4"
-              />
-            </div>
-
-            {/* Conditional Fields for Rooms */}
-            {["apartment", "house", "villa", "guesthouse"].includes(
-              propertyName
-            ) && (
-              <>
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">Rooms</h3>
-                  <input
-                    type="number"
-                    name="bedrooms"
-                    placeholder="Number of Bedrooms"
-                    value={formData.bedrooms || ""}
-                    onChange={handleChange}
-                    className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white mb-3"
-                  />
-                  <input
-                    type="number"
-                    name="bathrooms"
-                    placeholder="Number of Bathrooms"
-                    value={formData.bathrooms || ""}
-                    onChange={handleChange}
-                    className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white"
-                  />
-                </div>
-
-                {/* Facilities */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">Facilities</h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    {facilityOptions.map((facility, i) => (
-                      <label key={i} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          name={facility}
-                          checked={facilities.includes(facility)}
-                          onChange={handleChange}
-                          className="accent-blue-600"
-                        />
-                        <span>{facility}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* Additional conditional fields for Car, Land, Rent Term, Pricing */}
-            {/* You can keep your existing input structure here */}
-            {propertyName === "car" && (
-              <>
-                <input
-                  type="text"
-                  name="carModel"
-                  placeholder="Car Model"
-                  value={formData.carModel || ""}
-                  onChange={handleChange}
-                  className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white mb-3"
-                />
-                <input
-                  type="number"
-                  name="year"
-                  placeholder="Year"
-                  value={formData.year || ""}
-                  onChange={handleChange}
-                  className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white mb-3"
-                />
-                <input
-                  type="number"
-                  name="mileage"
-                  placeholder="Mileage (km)"
-                  value={formData.mileage || ""}
-                  onChange={handleChange}
-                  className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white mb-3"
-                />
-                <select
-                  name="fuelType"
-                  value={formData.fuelType || ""}
-                  onChange={handleChange}
-                  className="w-full border border-gray-500 bg-gray-900 text-gray-300 rounded p-3"
-                >
-                  <option value="" disabled>
-                    Fuel Type
-                  </option>
-                  <option>Petrol</option>
-                  <option>Diesel</option>
-                  <option>Electric</option>
-                  <option>Hybrid</option>
-                </select>
-              </>
-            )}
-
-            {propertyName === "land" && (
-              <input
-                type="number"
-                name="landSize"
-                placeholder="Land Size (sq. meters)"
-                value={formData.landSize || ""}
-                onChange={handleChange}
-                className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white"
-              />
-            )}
-
-            {listingType === "rent" && (
-              <select
-                name="rentTerm"
-                value={formData.rentTerm || ""}
-                onChange={handleChange}
-                className="w-full border border-gray-500 bg-gray-900 text-gray-300 rounded p-3"
-              >
-                <option value="" disabled>
-                  Rent Term
-                </option>
-                <option>Daily</option>
-                <option>Weekly</option>
-                <option>Monthly</option>
-                <option>Yearly</option>
-              </select>
-            )}
-
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Pricing</h3>
-              <input
-                type="number"
-                name="price"
-                placeholder={
-                  listingType === "sale" ? "Sale Price (BIRR)" : "Price (Birr)"
-                }
-                value={formData.price || ""}
-                onChange={handleChange}
-                className="w-full border border-gray-500 bg-gray-900 rounded p-3 text-white"
-              />
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className="w-full py-3 bg-green-600 text-white rounded hover:bg-green-700"
-            >
-              Post Property
-            </button>
-
-            {/* Success / Error Messages */}
-            {successMessage && (
-              <p className="mt-4 text-green-400 font-semibold text-center">
-                {successMessage}
-              </p>
-            )}
-            {errorMessage && (
-              <p className="mt-4 text-red-400 font-semibold text-center">
-                {errorMessage}
-              </p>
-            )}
-          </form>
+    <div className="min-h-screen bg-gray-950 flex flex-col items-center p-6">
+      <h1 className="text-3xl font-bold text-white mb-6">List Your Service</h1>
+      <form
+        className="bg-gray-800 p-8 rounded-2xl shadow text-white w-full max-w-4xl space-y-6"
+        onSubmit={handleSubmit}
+      >
+        {/* Email */}
+        <div>
+          <label className="block mb-2 font-medium">Your Email</label>
+          <input
+            type="email"
+            name="userEmail"
+            value={formData.userEmail || ""}
+            onChange={handleChange}
+            className="w-full border border-gray-500 bg-gray-900 rounded p-3 mb-3"
+            required
+          />
         </div>
 
-        {/* Right Side Info */}
-        <aside className="bg-gray-100 p-8 rounded-2xl shadow text-gray-900 flex flex-col justify-between">
-          <div>
-            <h3 className="text-lg text-blue-950 font-semibold mb-4">
-              Why list with us?
-            </h3>
-            <ul className="space-y-3">
-              <li>✔ Reach millions of guests worldwide</li>
-              <li>✔ Secure and reliable payments</li>
-              <li>✔ Easy-to-use property management tools</li>
-              <li>✔ 24/7 customer support</li>
-            </ul>
+        {/* Property Name */}
+        <div>
+          <label className="block mb-2 font-medium">Property Name</label>
+          <input
+            type="text"
+            name="propertyName"
+            value={formData.propertyName || ""}
+            onChange={handleChange}
+            className="w-full border border-gray-500 bg-gray-900 rounded p-3 mb-3"
+            required
+          />
+        </div>
+
+        {/* Listing Purpose */}
+        <div>
+          <label className="block mb-2 font-medium">Listing Purpose</label>
+          <select
+            value={listingType}
+            onChange={(e) => setListingType(e.target.value)}
+            className="w-full border border-gray-500 bg-gray-900 rounded p-3 mb-3"
+            required
+          >
+            <option value="">Select Purpose</option>
+            <option value="rent">For Rent</option>
+            <option value="sale">For Sale</option>
+            <option value="tourism">Tourism Service</option>
+          </select>
+        </div>
+
+        {/* Service Type */}
+        <div>
+          <label className="block mb-2 font-medium">Service Type</label>
+          <select
+            value={serviceType}
+            onChange={(e) => setServiceType(e.target.value)}
+            className="w-full border border-gray-500 bg-gray-900 rounded p-3 mb-3"
+            required
+          >
+            <option value="">Select Service Type</option>
+            <option value="apartment">Apartment</option>
+            <option value="house">House</option>
+            <option value="villa">Villa</option>
+            <option value="guesthouse">Guesthouse</option>
+            <option value="car">Car</option>
+            <option value="tourism">Tourism Site</option>
+          </select>
+        </div>
+
+        {/* Address */}
+        <div>
+          <input
+            type="text"
+            name="address"
+            placeholder="Address / Location"
+            value={formData.address || ""}
+            onChange={handleChange}
+            className="w-full border border-gray-500 bg-gray-900 rounded p-3 mb-3"
+            required
+          />
+        </div>
+
+        {/* Price */}
+        <div>
+          <input
+            type="number"
+            name="price"
+            placeholder="Price (BIRR)"
+            value={formData.price || ""}
+            onChange={handleChange}
+            className="w-full border border-gray-500 bg-gray-900 rounded p-3 mb-3"
+            required
+          />
+        </div>
+
+        {/* Image */}
+        <div>
+          <label className="block mb-2 font-medium">Property Image</label>
+          <input type="file" accept="image/*" onChange={handleChange} />
+          {previewUrl && (
+            <div className="mt-3">
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="max-h-48 rounded"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Facilities / Tourism / Car Features */}
+        <div>
+          <h3 className="text-lg font-semibold mb-3">
+            {serviceType === "tourism"
+              ? "Tourism Features"
+              : serviceType === "car"
+              ? "Car Features"
+              : "Facilities"}
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            {(serviceType === "tourism"
+              ? tourismFeatures
+              : serviceType === "car"
+              ? carFeatures
+              : facilityOptions
+            ).map((f, i) => (
+              <label key={i} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  name={f}
+                  checked={facilities.includes(f)}
+                  onChange={handleChange}
+                  className="accent-blue-600"
+                />
+                <span>{f}</span>
+              </label>
+            ))}
           </div>
-          <div className="mt-8 flex justify-center">
-            <img
-              src="/oppp.jpg"
-              alt="Promo"
-              className="rounded-xl shadow-md w-11/12 lg:w-3/4"
-            />
-          </div>
-        </aside>
-      </main>
+        </div>
+
+        <button
+          type="submit"
+          className="w-full py-3 bg-green-600 text-white rounded hover:bg-green-700"
+        >
+          Submit Listing
+        </button>
+
+        {successMessage && (
+          <p className="mt-4 text-green-400 font-semibold text-center">
+            {successMessage}
+          </p>
+        )}
+        {errorMessage && (
+          <p className="mt-4 text-red-400 font-semibold text-center">
+            {errorMessage}
+          </p>
+        )}
+      </form>
     </div>
   );
 }

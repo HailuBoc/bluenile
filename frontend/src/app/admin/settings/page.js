@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const [authorized, setAuthorized] = useState(false); // <-- Only render if authorized
   const [settings, setSettings] = useState({
     basePrice: 500,
     vipFee: 300,
@@ -14,11 +17,41 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // Fetch current settings on load
+  // ----------------------------
+  // Check authentication
+  // ----------------------------
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/admin/login");
+      return;
+    }
+
+    const verifyToken = async () => {
+      try {
+        await axios.get("http://localhost:10000/admin/verify-token", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setAuthorized(true); // token valid, allow rendering
+      } catch (err) {
+        localStorage.removeItem("token");
+        router.push("/admin/login");
+      }
+    };
+
+    verifyToken();
+  }, [router]);
+
+  // ----------------------------
+  // Fetch current settings
+  // ----------------------------
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await axios.get("http://localhost:10000/admin/settings");
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://localhost:10000/admin/settings", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (res.data.settings) {
           setSettings(res.data.settings);
         }
@@ -27,8 +60,9 @@ export default function SettingsPage() {
         setMessage("Error fetching settings.");
       }
     };
-    fetchSettings();
-  }, []);
+
+    if (authorized) fetchSettings();
+  }, [authorized]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,7 +75,10 @@ export default function SettingsPage() {
     setMessage("");
 
     try {
-      await axios.post("http://localhost:10000/admin/settings", settings);
+      const token = localStorage.getItem("token");
+      await axios.post("http://localhost:10000/admin/settings", settings, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setMessage("Settings updated successfully!");
     } catch (err) {
       console.error(err);
@@ -50,6 +87,13 @@ export default function SettingsPage() {
       setLoading(false);
     }
   };
+
+  if (!authorized)
+    return (
+      <p className="text-center mt-10 text-gray-700">
+        Checking admin access...
+      </p>
+    );
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">

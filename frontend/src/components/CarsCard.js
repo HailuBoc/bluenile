@@ -1,35 +1,46 @@
 "use client";
 
 import Link from "next/link";
-import { Heart, Star } from "lucide-react";
+import { Heart, Star, MapPin } from "lucide-react";
 import { useState } from "react";
 
 export default function CarsCard({
-  id,
-  img,
-  title,
-  location,
+  _id,
+  imageUrl, // can be string, array, or undefined
+  img, // fallback demo
+  propertyName,
+  address,
   price,
-  rating,
+  rating = 4.5,
   guestFavorite,
-  initialLikes = 0, // new prop
+  initialLikes = 0,
 }) {
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(initialLikes);
 
   const toggleLike = (e) => {
-    e.preventDefault(); // prevent Link navigation
-    if (liked) {
-      setLikes((prev) => prev - 1);
-    } else {
-      setLikes((prev) => prev + 1);
-    }
+    e.preventDefault();
+    setLikes((prev) => (liked ? prev - 1 : prev + 1));
     setLiked(!liked);
   };
 
+  const baseUrl = "http://localhost:10000";
+  const firstImage =
+    Array.isArray(imageUrl) && imageUrl.length > 0
+      ? imageUrl[0]
+      : typeof imageUrl === "string"
+      ? imageUrl
+      : null;
+
+  const imageSrc = firstImage
+    ? firstImage.startsWith("http")
+      ? firstImage
+      : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
+    : img || "/placeholder-car.jpg";
+
   return (
     <Link
-      href={`/sections/rentalCars?id=${id}`}
+      href={`/sections/houses?id=${_id}`}
       className="block transform scale-90 sm:scale-100"
     >
       <div className="relative bg-white dark:bg-gray-800 text-gray-800 dark:text-white rounded-xl shadow hover:shadow-lg transition-all overflow-hidden group cursor-pointer">
@@ -39,7 +50,6 @@ export default function CarsCard({
           </div>
         )}
 
-        {/* Like button */}
         <button
           onClick={toggleLike}
           className="absolute top-2 right-2 p-2 bg-white dark:bg-gray-900 rounded-full z-10 shadow-sm flex items-center gap-1"
@@ -50,33 +60,30 @@ export default function CarsCard({
               liked ? "text-red-500 fill-red-500" : "text-gray-500"
             }`}
           />
-          {/* Like count badge */}
           <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
             {likes}
           </span>
         </button>
 
-        {/* Car image (same sizing as HousesCard) */}
         <img
-          src={img}
-          alt={title}
+          src={imageSrc}
+          alt={propertyName || "Car"}
           className="w-full h-32 sm:h-40 object-cover group-hover:scale-105 transition-transform"
         />
 
-        {/* Car details (aligned with HousesCard) */}
         <div className="p-3 sm:p-4">
           <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-300">
-            {location}
+            {address}
           </div>
           <div className="font-semibold text-sm sm:text-base truncate">
-            {title}
+            {propertyName}
           </div>
           <div className="flex items-center text-xs sm:text-sm mt-1">
             <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400" />
             <span className="ml-1">{rating}</span>
           </div>
           <div className="mt-1 sm:mt-2 font-bold text-sm sm:text-base">
-            {price}
+            {price} Br
           </div>
         </div>
       </div>

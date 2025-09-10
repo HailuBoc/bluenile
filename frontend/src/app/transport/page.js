@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Car, Bus, Briefcase, MapPin, Search } from "lucide-react";
 import { fleet } from "../../data/fleet"; // ✅ Import fleet from /data
 
@@ -11,7 +12,7 @@ export default function TransportServices() {
     date: "",
     guests: 1,
   });
-
+  const router = useRouter();
   const highlights = [
     {
       title: "Daily, Weekly & Monthly Rentals",
@@ -188,7 +189,10 @@ export default function TransportServices() {
             Reliable transport for business, leisure, and special events —
             anytime, anywhere.
           </p>
-          <button className="bg-white text-green-700 font-bold py-2 px-6 rounded-lg shadow hover:bg-gray-100 transition">
+          <button
+            onClick={() => router.push("/aboutus")}
+            className="bg-white text-green-700 font-bold py-2 px-6 rounded-lg shadow hover:bg-gray-100 transition"
+          >
             Get a Quote
           </button>
         </div>

@@ -3,21 +3,20 @@ import mongoose from "mongoose";
 const propertySchema = new mongoose.Schema(
   {
     listingType: { type: String, required: true },
+    serviceType: { type: String }, // optional, if needed
     propertyName: { type: String, required: true },
     address: { type: String, required: true },
     price: { type: Number, required: true },
-    userEmail: { type: String, required: true }, // added for user notifications
-
-    // Optional fields
-    bedrooms: Number,
-    bathrooms: Number,
-    facilities: [{ type: String }],
-    carModel: String,
-    year: Number,
-    mileage: Number,
-    fuelType: String,
-    landSize: Number,
-    rentTerm: String,
+    userEmail: { type: String, required: true },
+    facilities: { type: [String], default: [] },
+    description: { type: String },
+    imageUrl: { type: String },
+    status: {
+      type: String,
+      enum: ["unverified", "pending", "approved", "rejected"],
+      default: "unverified",
+    },
+    verificationToken: { type: String },
   },
   { timestamps: true }
 );

@@ -2,16 +2,32 @@ import mongoose from "mongoose";
 
 const houseInterestSchema = new mongoose.Schema(
   {
-    listingId: { type: String, required: true },
-    listingTitle: { type: String, required: true },
-    name: { type: String, required: true },
-    email: { type: String, required: true },
+    houseId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "House",
+      required: true,
+    },
+    houseTitle: { type: String, required: true },
+    name: { type: String, required: true, trim: true },
+    email: {
+      type: String,
+      required: true,
+      lowercase: true,
+      match: [/^\S+@\S+\.\S+$/, "Please provide a valid email"],
+    },
     phone: { type: String, required: true },
-    offerPrice: { type: Number, required: true },
-    paymentMethod: { type: String, required: true },
-    verificationFile: { type: String }, // optional
+    offerPrice: { type: Number, required: true, min: 0 },
+    paymentMethod: {
+      type: String,
+      required: true,
+      enum: ["cash", "installment", "bank-transfer"],
+    },
+    verificationFile: { type: String },
   },
   { timestamps: true }
 );
 
-export default mongoose.model("HouseInterest", houseInterestSchema);
+export const HouseInterest = mongoose.model(
+  "HouseInterest",
+  houseInterestSchema
+);

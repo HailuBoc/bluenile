@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 export default function AdminDashboard() {
+  const router = useRouter();
+  const [authorized, setAuthorized] = useState(false); // <-- Only render if authorized
   const [bookings, setBookings] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -20,11 +23,41 @@ export default function AdminDashboard() {
     date: "",
   });
 
+  // ----------------------------
+  // Check authentication
+  // ----------------------------
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/admin/login");
+      return;
+    }
+
+    const verifyToken = async () => {
+      try {
+        await axios.get("http://localhost:10000/admin/verify-token", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setAuthorized(true); // token valid, allow rendering
+      } catch (err) {
+        localStorage.removeItem("token");
+        router.push("/admin/login");
+      }
+    };
+
+    verifyToken();
+  }, [router]);
+
+  // ----------------------------
   // Fetch all bookings
+  // ----------------------------
   const fetchBookings = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:10000/admin/pending");
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://localhost:10000/admin", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setBookings(res.data.bookings);
       setFiltered(res.data.bookings);
 
@@ -38,20 +71,25 @@ export default function AdminDashboard() {
       setStats({ total, verified, pending, revenue });
     } catch (err) {
       console.error(err);
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        localStorage.removeItem("token");
+        router.push("/admin/login");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchBookings();
-  }, []);
+    if (authorized) fetchBookings();
+  }, [authorized]);
 
-  // Filter bookings whenever filter values change
+  // ----------------------------
+  // Filter bookings
+  // ----------------------------
   useEffect(() => {
     let temp = [...bookings];
 
-    // Filter by search (name or email)
     if (filters.search) {
       temp = temp.filter(
         (b) =>
@@ -60,12 +98,10 @@ export default function AdminDashboard() {
       );
     }
 
-    // Filter by payment method
     if (filters.paymentMethod) {
       temp = temp.filter((b) => b.paymentMethod === filters.paymentMethod);
     }
 
-    // Filter by tour date
     if (filters.date) {
       temp = temp.filter(
         (b) =>
@@ -77,18 +113,30 @@ export default function AdminDashboard() {
     setFiltered(temp);
   }, [filters, bookings]);
 
+  // ----------------------------
+  // Verify bookings
+  // ----------------------------
   const handleVerify = async (id, approved) => {
     try {
-      await axios.post(`http://localhost:10000/admin/verify/${id}`, {
-        verified: approved,
-      });
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `http://localhost:10000/admin/verify/${id}`,
+        { verified: approved },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       fetchBookings();
     } catch (err) {
       console.error(err);
     }
   };
 
-  if (loading) return <p className="text-center mt-10">Loading...</p>;
+  if (!authorized)
+    return (
+      <p className="text-center mt-10 text-gray-700">Checking access...</p>
+    );
+
+  if (loading)
+    return <p className="text-center mt-10 text-gray-700">Loading...</p>;
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">

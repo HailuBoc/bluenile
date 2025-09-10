@@ -103,7 +103,7 @@ export const createWedding = async (req, res) => {
         }</h2>
         <p>Dear ${name},</p>
         <p>Your wedding booking details:</p>
-        <ul>
+        <ul> 
           <li><strong>Phone:</strong> ${phone}</li>
           <li><strong>Date:</strong> ${date}</li>
           <li><strong>Guests:</strong> ${guests}</li>
