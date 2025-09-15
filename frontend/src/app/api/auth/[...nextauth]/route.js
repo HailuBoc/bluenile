@@ -4,7 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import GithubProvider from "next-auth/providers/github";
 import FacebookProvider from "next-auth/providers/facebook";
 
-export const authOptions = {
+const authOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -63,5 +63,6 @@ export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 };
 
+// ✅ Important: only export the handler as GET and POST
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
