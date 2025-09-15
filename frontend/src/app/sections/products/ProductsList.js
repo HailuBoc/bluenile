@@ -33,12 +33,12 @@ export default function ProductsPage() {
       try {
         setLoading(true);
         const res = await axios.get(
-          `http://localhost:10000/admin/properties/${idParam}`
+          `https://bluenile.onrender.com/admin/properties/${idParam}`
         );
         const product = res.data;
 
         // Handle backend image paths
-        const baseUrl = "http://localhost:10000";
+        const baseUrl = "https://bluenile.onrender.com";
         let firstImage =
           Array.isArray(product.imageUrl) && product.imageUrl.length > 0
             ? product.imageUrl[0]

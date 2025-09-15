@@ -82,7 +82,7 @@ export default function TransportDetailPage({ params }) {
     setMessage({ text: "", type: "" });
 
     try {
-      const res = await fetch("http://localhost:10000/transports", {
+      const res = await fetch("https://bluenile.onrender.com/transports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

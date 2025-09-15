@@ -27,13 +27,13 @@ export default function HouseSaleReservationPage() {
     async function fetchHouse() {
       try {
         const res = await fetch(
-          `http://localhost:10000/admin/properties/${id}`
+          `https://bluenile.onrender.com/admin/properties/${id}`
         );
         if (!res.ok)
           throw new Error(`Failed to fetch house (status ${res.status})`);
         const data = await res.json();
 
-        const baseUrl = "http://localhost:10000";
+        const baseUrl = "https://bluenile.onrender.com";
         let firstImage =
           Array.isArray(data.imageUrl) && data.imageUrl.length > 0
             ? data.imageUrl[0]
@@ -90,11 +90,14 @@ export default function HouseSaleReservationPage() {
         paymentMethod: guestInfo.paymentMethod,
       };
 
-      const res = await fetch("http://localhost:10000/houses/reservations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        "https://bluenile.onrender.com/houses/reservations",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
       const data = await res.json();
       if (!res.ok)

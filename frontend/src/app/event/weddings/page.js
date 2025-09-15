@@ -141,7 +141,7 @@ export default function WeddingsPage() {
       };
 
       // Always send JSON
-      const res = await fetch("http://localhost:10000/weddings", {
+      const res = await fetch("https://bluenile.onrender.com/weddings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -155,7 +155,7 @@ export default function WeddingsPage() {
       // Chapa payment
       if (formData.paymentMethod === "Chapa") {
         const payRes = await fetch(
-          "http://localhost:10000/weddings/pay/chapa",
+          "https://bluenile.onrender.com/weddings/pay/chapa",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

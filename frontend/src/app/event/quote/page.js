@@ -104,7 +104,7 @@ export default function GetQuotePage() {
     setFeedback({ type: "", text: "" });
 
     try {
-      const res = await fetch("http://localhost:10000/quotes", {
+      const res = await fetch("https://bluenile.onrender.com/quotes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, totalPrice }),

@@ -109,7 +109,7 @@ export default function GraduationsPage() {
         });
         payload.append("totalAmount", totalAmount);
 
-        const res = await fetch("http://localhost:10000/graduations", {
+        const res = await fetch("https://bluenile.onrender.com/graduations", {
           method: "POST",
           body: payload,
         });
@@ -121,7 +121,7 @@ export default function GraduationsPage() {
 
         // 2️⃣ Initialize Chapa payment (send full details like GeneralEventsPage)
         const payRes = await fetch(
-          "http://localhost:10000/bookings/pay/chapa",
+          "https://bluenile.onrender.com/bookings/pay/chapa",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -152,7 +152,7 @@ export default function GraduationsPage() {
         });
         form.append("totalAmount", totalAmount);
 
-        const res = await fetch("http://localhost:10000/graduations", {
+        const res = await fetch("https://bluenile.onrender.com/graduations", {
           method: "POST",
           body: form,
         });

@@ -23,7 +23,7 @@ export default function ProductCard({
 }) {
   const { liked, likes, toggleLike } = useLike(initialLikes, _id);
 
-  const baseUrl = "http://localhost:10000";
+  const baseUrl = "https://bluenile.onrender.com";
   const firstImage =
     Array.isArray(imageUrl) && imageUrl.length > 0
       ? imageUrl[0]

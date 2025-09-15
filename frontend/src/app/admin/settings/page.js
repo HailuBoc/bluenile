@@ -29,7 +29,7 @@ export default function SettingsPage() {
 
     const verifyToken = async () => {
       try {
-        await axios.get("http://localhost:10000/admin/verify-token", {
+        await axios.get("https://bluenile.onrender.com/admin/verify-token", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAuthorized(true); // token valid, allow rendering
@@ -49,9 +49,12 @@ export default function SettingsPage() {
     const fetchSettings = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:10000/admin/settings", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await axios.get(
+          "https://bluenile.onrender.com/admin/settings",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         if (res.data.settings) {
           setSettings(res.data.settings);
         }
@@ -76,9 +79,13 @@ export default function SettingsPage() {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.post("http://localhost:10000/admin/settings", settings, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.post(
+        "https://bluenile.onrender.com/admin/settings",
+        settings,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setMessage("Settings updated successfully!");
     } catch (err) {
       console.error(err);

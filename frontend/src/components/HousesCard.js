@@ -22,7 +22,7 @@ export default function HouseCard({
 }) {
   const { liked, likes, toggleLike } = useLike(0, _id);
 
-  const baseUrl = "http://localhost:10000";
+  const baseUrl = "https://bluenile.onrender.com";
   const firstImage =
     Array.isArray(imageUrl) && imageUrl.length > 0
       ? imageUrl[0]

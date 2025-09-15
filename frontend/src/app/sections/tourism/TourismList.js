@@ -33,12 +33,12 @@ export default function TourismPage() {
       try {
         setLoading(true);
         const res = await axios.get(
-          `http://localhost:10000/admin/properties/${idParam}`
+          `https://bluenile.onrender.com/admin/properties/${idParam}`
         );
         const tourism = res.data;
 
         // Handle backend image paths
-        const baseUrl = "http://localhost:10000";
+        const baseUrl = "https://bluenile.onrender.com";
         let firstImage =
           Array.isArray(tourism.imageUrl) && tourism.imageUrl.length > 0
             ? tourism.imageUrl[0]

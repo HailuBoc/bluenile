@@ -33,13 +33,13 @@ export default function CarRentalReservationPage() {
     async function fetchCar() {
       try {
         const res = await fetch(
-          `http://localhost:10000/admin/properties/${id}`
+          `https://bluenile.onrender.com/admin/properties/${id}`
         );
         if (!res.ok)
           throw new Error(`Failed to fetch car (status ${res.status})`);
         const data = await res.json();
 
-        const baseUrl = "http://localhost:10000";
+        const baseUrl = "https://bluenile.onrender.com";
         let firstImage =
           Array.isArray(data.imageUrl) && data.imageUrl.length > 0
             ? data.imageUrl[0]
@@ -148,7 +148,7 @@ export default function CarRentalReservationPage() {
       };
 
       const res = await fetch(
-        "http://localhost:10000/rentalCars/reservations",
+        "https://bluenile.onrender.com/rentalCars/reservations",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -164,7 +164,7 @@ export default function CarRentalReservationPage() {
 
       if (guestInfo.paymentMethod === "chapa") {
         const payRes = await fetch(
-          "http://localhost:10000/bookings/pay/chapa",
+          "https://bluenile.onrender.com/bookings/pay/chapa",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

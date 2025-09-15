@@ -111,7 +111,7 @@ export default function GeneralEventsPage() {
       payload.append("amount", amount);
 
       // Save booking
-      const res = await fetch("http://localhost:10000/general-events", {
+      const res = await fetch("https://bluenile.onrender.com/general-events", {
         method: "POST",
         body: payload,
       });
@@ -124,7 +124,7 @@ export default function GeneralEventsPage() {
       // Handle Chapa payment
       if (formData.paymentMethod === "Chapa") {
         const payRes = await fetch(
-          "http://localhost:10000/general-events/pay/chapa",
+          "https://bluenile.onrender.com/general-events/pay/chapa",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

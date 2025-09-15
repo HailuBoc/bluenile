@@ -90,7 +90,7 @@ export default function BookingForm({ property }) {
         payload.append("paymentEvidence", formData.paymentEvidence);
       }
 
-      const res = await fetch("http://localhost:10000/propertyrentals", {
+      const res = await fetch("https://bluenile.onrender.com/propertyrentals", {
         method: "POST",
         body: payload,
       });

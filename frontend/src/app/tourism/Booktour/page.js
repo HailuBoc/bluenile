@@ -68,14 +68,14 @@ export default function TourBooking() {
       }
 
       const res = await axios.post(
-        "http://localhost:10000/vip-bookings",
+        "https://bluenile.onrender.com/vip-bookings",
         data,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
 
       if (formData.paymentMethod === "Chapa") {
         const paymentRes = await axios.post(
-          "http://localhost:10000/bookings/pay/chapa",
+          "https://bluenile.onrender.com/bookings/pay/chapa",
           {
             amount: totalAmount,
             currency: "ETB",

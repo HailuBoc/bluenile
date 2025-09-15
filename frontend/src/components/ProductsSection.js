@@ -14,14 +14,16 @@ export default function ProductsSection() {
 
   const fetchProperties = async () => {
     try {
-      const res = await axios.get("http://localhost:10000/admin/properties");
+      const res = await axios.get(
+        "https://bluenile.onrender.com/admin/properties"
+      );
       const data = Array.isArray(res.data)
         ? res.data
         : res.data?.properties || [];
 
       // ✅ format images to include backend URL
       const formattedData = data.map((item) => {
-        const baseUrl = "http://localhost:10000";
+        const baseUrl = "https://bluenile.onrender.com";
         let firstImage =
           Array.isArray(item.imageUrl) && item.imageUrl.length > 0
             ? item.imageUrl[0]

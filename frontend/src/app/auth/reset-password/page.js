@@ -27,11 +27,14 @@ export default function ResetPassword() {
     setMessage({ type: "", text: "" });
 
     try {
-      const res = await fetch("http://localhost:10000/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const res = await fetch(
+        "https://bluenile.onrender.com/auth/reset-password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || data.message);

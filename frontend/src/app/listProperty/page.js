@@ -90,7 +90,7 @@ export default function ListPropertyPage() {
       if (image) data.append("image", image);
 
       const res = await axios.post(
-        "http://localhost:10000/admin/properties",
+        "https://bluenile.onrender.com/admin/properties",
         data,
         { headers: { "Content-Type": "multipart/form-data" } }
       );

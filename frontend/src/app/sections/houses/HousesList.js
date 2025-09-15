@@ -33,11 +33,11 @@ export default function HouseDetailPage() {
       try {
         setLoading(true);
         const res = await axios.get(
-          `http://localhost:10000/admin/properties/${idParam}`
+          `https://bluenile.onrender.com/admin/properties/${idParam}`
         );
         const house = res.data;
 
-        const baseUrl = "http://localhost:10000";
+        const baseUrl = "https://bluenile.onrender.com";
         let firstImage =
           Array.isArray(house.imageUrl) && house.imageUrl.length > 0
             ? house.imageUrl[0]

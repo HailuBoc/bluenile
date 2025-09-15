@@ -24,7 +24,7 @@ export default function AdminUsersPage() {
 
     const verifyToken = async () => {
       try {
-        await axios.get("http://localhost:10000/admin/verify-token", {
+        await axios.get("https://bluenile.onrender.com/admin/verify-token", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAuthorized(true); // token valid, allow rendering
@@ -44,7 +44,7 @@ export default function AdminUsersPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:10000/admin/users", {
+      const res = await axios.get("https://bluenile.onrender.com/admin/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(res.data.users);
@@ -83,7 +83,7 @@ export default function AdminUsersPage() {
     if (!confirm("Are you sure you want to delete this user?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:10000/admin/users/${id}`, {
+      await axios.delete(`https://bluenile.onrender.com/admin/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchUsers();

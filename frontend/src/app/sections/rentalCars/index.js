@@ -10,7 +10,7 @@ export default function CarsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const baseUrl = "http://localhost:10000";
+  const baseUrl = "https://bluenile.onrender.com";
 
   useEffect(() => {
     const fetchCars = async () => {

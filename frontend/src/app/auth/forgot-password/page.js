@@ -15,11 +15,14 @@ export default function ForgotPassword() {
     setMessage({ type: "", text: "" });
 
     try {
-      const res = await fetch("http://localhost:10000/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+      const res = await fetch(
+        "https://bluenile.onrender.com/auth/forgot-password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        }
+      );
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || data.message);

@@ -19,10 +19,13 @@ export default function AdminLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:10000/admin/login", {
-        email,
-        password,
-      });
+      const res = await axios.post(
+        "https://bluenile.onrender.com/admin/login",
+        {
+          email,
+          password,
+        }
+      );
 
       // Save JWT token in localStorage
       localStorage.setItem("token", res.data.token);

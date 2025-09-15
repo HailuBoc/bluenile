@@ -31,10 +31,10 @@ export default function ReservationPage() {
     const fetchCar = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:10000/admin/properties/${id}`
+          `https://bluenile.onrender.com/admin/properties/${id}`
         );
 
-        const baseUrl = "http://localhost:10000";
+        const baseUrl = "https://bluenile.onrender.com";
         const firstImage =
           Array.isArray(res.data.imageUrl) && res.data.imageUrl.length > 0
             ? res.data.imageUrl[0]
@@ -81,7 +81,7 @@ export default function ReservationPage() {
 
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:10000/sales", {
+      const response = await axios.post("https://bluenile.onrender.com/sales", {
         name: guestInfo.name,
         email: guestInfo.email,
         phone: guestInfo.phone,

@@ -110,7 +110,7 @@ export default function SalesPurchaseForm() {
       }
 
       // Step 1: Create booking
-      const bookingRes = await fetch("http://localhost:10000/sale", {
+      const bookingRes = await fetch("https://bluenile.onrender.com/sale", {
         method: "POST",
         body: formPayload,
       });
@@ -124,7 +124,7 @@ export default function SalesPurchaseForm() {
       // Step 2: Handle Chapa
       if (formData.paymentMethod === "Chapa") {
         const payRes = await fetch(
-          "http://localhost:10000/bookings/pay/chapa",
+          "https://bluenile.onrender.com/bookings/pay/chapa",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

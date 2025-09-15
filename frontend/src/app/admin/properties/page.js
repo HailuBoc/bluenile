@@ -52,7 +52,7 @@ export default function AdminPropertiesPage() {
 
     const verifyToken = async () => {
       try {
-        await axios.get("http://localhost:10000/admin/verify-token", {
+        await axios.get("https://bluenile.onrender.com/admin/verify-token", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAuthorized(true);
@@ -69,9 +69,12 @@ export default function AdminPropertiesPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:10000/admin/properties", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(
+        "https://bluenile.onrender.com/admin/properties",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       const data = Array.isArray(res.data)
         ? res.data
@@ -82,7 +85,7 @@ export default function AdminPropertiesPage() {
         imageUrl: item.imageUrl
           ? item.imageUrl.startsWith("http")
             ? item.imageUrl
-            : `http://localhost:10000${item.imageUrl}`
+            : `https://bluenile.onrender.com${item.imageUrl}`
           : null,
       }));
 
@@ -103,7 +106,7 @@ export default function AdminPropertiesPage() {
   const handleStatusChange = async (id, status) => {
     try {
       await axios.patch(
-        `http://localhost:10000/admin/properties/${id}/status`,
+        `https://bluenile.onrender.com/admin/properties/${id}/status`,
         { status }
       );
       setSuccessMessage(`✅ Property ${status}!`);
@@ -117,7 +120,9 @@ export default function AdminPropertiesPage() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:10000/admin/properties/${id}`);
+      await axios.delete(
+        `https://bluenile.onrender.com/admin/properties/${id}`
+      );
       setSuccessMessage("✅ Property deleted!");
       setDeleteConfirmId(null);
       fetchProperties();
@@ -205,7 +210,7 @@ export default function AdminPropertiesPage() {
 
       if (editingId) {
         const res = await axios.patch(
-          `http://localhost:10000/admin/properties/${editingId}`,
+          `https://bluenile.onrender.com/admin/properties/${editingId}`,
           data,
           {
             headers: {
@@ -225,7 +230,7 @@ export default function AdminPropertiesPage() {
                   imageUrl: res.data.property.imageUrl
                     ? res.data.property.imageUrl.startsWith("http")
                       ? res.data.property.imageUrl
-                      : `http://localhost:10000${res.data.property.imageUrl}`
+                      : `https://bluenile.onrender.com${res.data.property.imageUrl}`
                     : null,
                 }
               : p
@@ -235,7 +240,7 @@ export default function AdminPropertiesPage() {
         setSuccessMessage("✅ Property updated!");
       } else {
         const res = await axios.post(
-          "http://localhost:10000/admin/properties",
+          "https://bluenile.onrender.com/admin/properties",
           data,
           {
             headers: {
@@ -252,7 +257,7 @@ export default function AdminPropertiesPage() {
             imageUrl: res.data.property.imageUrl
               ? res.data.property.imageUrl.startsWith("http")
                 ? res.data.property.imageUrl
-                : `http://localhost:10000${res.data.property.imageUrl}`
+                : `https://bluenile.onrender.com${res.data.property.imageUrl}`
               : null,
           },
           ...prev,

@@ -48,11 +48,14 @@ export default function TransportBookingPage() {
 
     try {
       // Replace URL with your backend endpoint if needed
-      const res = await fetch("http://localhost:10000/transport/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      const res = await fetch(
+        "https://bluenile.onrender.com/transport/bookings",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        }
+      );
 
       const data = await res.json();
 

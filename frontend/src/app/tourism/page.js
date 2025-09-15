@@ -186,7 +186,7 @@ export default function TourismPage() {
         formPayload.append("paymentProof", formData.paymentProof);
       }
 
-      const res = await fetch("http://localhost:10000/vip-bookings", {
+      const res = await fetch("https://bluenile.onrender.com/vip-bookings", {
         method: "POST",
         body: formPayload,
       });

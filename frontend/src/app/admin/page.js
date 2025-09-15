@@ -35,7 +35,7 @@ export default function AdminDashboard() {
 
     const verifyToken = async () => {
       try {
-        await axios.get("http://localhost:10000/admin/verify-token", {
+        await axios.get("https://bluenile.onrender.com/admin/verify-token", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAuthorized(true); // token valid, allow rendering
@@ -55,7 +55,7 @@ export default function AdminDashboard() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:10000/admin", {
+      const res = await axios.get("https://bluenile.onrender.com/admin", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setBookings(res.data.bookings);
@@ -120,7 +120,7 @@ export default function AdminDashboard() {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        `http://localhost:10000/admin/verify/${id}`,
+        `https://bluenile.onrender.com/admin/verify/${id}`,
         { verified: approved },
         { headers: { Authorization: `Bearer ${token}` } }
       );

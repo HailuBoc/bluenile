@@ -92,7 +92,7 @@ export default function BirthdaysPage() {
         payload.append("paymentEvidence", formData.paymentEvidence);
       }
 
-      const res = await fetch("http://localhost:10000/birthdays", {
+      const res = await fetch("https://bluenile.onrender.com/birthdays", {
         method: "POST",
         body: payload,
       });

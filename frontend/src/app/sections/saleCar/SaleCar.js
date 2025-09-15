@@ -28,10 +28,10 @@ export default function CarsPage() {
     const fetchCar = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:10000/admin/properties/${idParam}`
+          `https://bluenile.onrender.com/admin/properties/${idParam}`
         );
 
-        const baseUrl = "http://localhost:10000";
+        const baseUrl = "https://bluenile.onrender.com";
         const firstImage =
           Array.isArray(res.data.imageUrl) && res.data.imageUrl.length > 0
             ? res.data.imageUrl[0]

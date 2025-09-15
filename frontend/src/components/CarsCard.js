@@ -27,7 +27,9 @@ export default function CarsCard({
   const toggleLike = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.put(`http://localhost:10000/cars/${_id}/like`);
+      const res = await axios.put(
+        `https://bluenile.onrender.com/cars/${_id}/like`
+      );
       setLikes(res.data.likes); // update likes count from backend
       setLiked(!liked);
     } catch (err) {
@@ -35,7 +37,7 @@ export default function CarsCard({
     }
   };
 
-  const baseUrl = "http://localhost:10000";
+  const baseUrl = "https://bluenile.onrender.com";
   const firstImage =
     Array.isArray(imageUrl) && imageUrl.length > 0
       ? imageUrl[0]

@@ -22,7 +22,7 @@ export default function AdminPaymentsPage() {
 
     const verifyToken = async () => {
       try {
-        await axios.get("http://localhost:10000/admin/verify-token", {
+        await axios.get("https://bluenile.onrender.com/admin/verify-token", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAuthorized(true);

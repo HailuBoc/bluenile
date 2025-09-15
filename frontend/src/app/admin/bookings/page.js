@@ -22,7 +22,7 @@ export default function AdminBookingsPage() {
 
     const verifyToken = async () => {
       try {
-        await axios.get("http://localhost:10000/admin/verify-token", {
+        await axios.get("https://bluenile.onrender.com/admin/verify-token", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAuthorized(true);
@@ -42,9 +42,12 @@ export default function AdminBookingsPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:10000/admin/bookings", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(
+        "https://bluenile.onrender.com/admin/bookings",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setBookings(res.data.bookings || []);
     } catch (err) {
       console.error("Error fetching bookings:", err);
@@ -68,7 +71,7 @@ export default function AdminBookingsPage() {
     if (!confirm("Are you sure you want to delete this booking?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:10000/admin/bookings/${id}`, {
+      await axios.delete(`https://bluenile.onrender.com/admin/bookings/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchBookings();
