@@ -8,7 +8,7 @@ import {
   Star as StarOutline,
   MapPin,
 } from "lucide-react";
-import { useLike } from "@/lib/useLike"; // make sure path is correct
+import { useLike } from "../../lib/useLike"; // make sure path is correct
 
 export default function ProductCard({
   _id,
