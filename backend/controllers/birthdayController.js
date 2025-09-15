@@ -1,5 +1,5 @@
 // controllers/birthdayController.js
-import BirthdayBooking from "../models/birthdayBooking";
+import BirthdayBooking from "../models/birthdayBooking.js";
 import { transporter } from "../config/email.js";
 import path from "path";
 import dotenv from "dotenv";
