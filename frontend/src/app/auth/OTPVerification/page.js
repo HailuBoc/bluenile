@@ -1,17 +1,22 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function OTPVerification() {
   const router = useRouter();
-  const email = localStorage.getItem("resetEmail") || "";
-
+  const [email, setEmail] = useState(""); // moved localStorage value here
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
   const inputRefs = useRef([]);
+
+  // ✅ Only access localStorage in useEffect (browser only)
+  useEffect(() => {
+    const storedEmail = localStorage.getItem("resetEmail") || "";
+    setEmail(storedEmail);
+  }, []);
 
   const handleChange = (e, index) => {
     const val = e.target.value;
@@ -20,14 +25,13 @@ export default function OTPVerification() {
       newOtp[index] = val;
       setOtp(newOtp);
 
-      // Move focus to next input
-      if (val && index < 5) inputRefs.current[index + 1].focus();
+      if (val && index < 5) inputRefs.current[index + 1]?.focus();
     }
   };
 
   const handleKeyDown = (e, index) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1].focus();
+      inputRefs.current[index - 1]?.focus();
     }
   };
 
