@@ -31,7 +31,8 @@ export default function ReserveTourismPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:10000";
+  const API_URL =
+    process.env.NEXT_PUBLIC_API_URL || "https://bluenile.onrender.com";
 
   // ✅ Fetch tourism details
   useEffect(() => {
