@@ -2,15 +2,16 @@ import mongoose from "mongoose";
 
 const houseSchema = new mongoose.Schema(
   {
-    propertyName: { type: String, required: true },
-    address: { type: String, required: true },
-    price: { type: Number, required: true },
+    houseTitle: { type: String, required: true }, // e.g. "Luxury Villa"
+    address: { type: String },
+    price: { type: Number },
+    imageUrl: [{ type: String }],
     rating: { type: Number, default: 4.5 },
-    description: { type: String, default: "" },
-    imageUrl: { type: [String], default: [] },
     guestFavorite: { type: Boolean, default: false },
+    likes: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
 
-export const House = mongoose.model("House", houseSchema);
+const House = mongoose.models.House || mongoose.model("House", houseSchema);
+export default House;

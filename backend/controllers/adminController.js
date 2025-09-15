@@ -13,168 +13,13 @@ dotenv.config();
 // =======================
 
 // Get all properties
-export const getAllProperties = async (req, res) => {
-  try {
-    const statusFilter = req.query.status;
-    const filter = statusFilter ? { status: statusFilter } : {};
-    const properties = await Property.find(filter).sort({ createdAt: -1 });
-    res.json(properties);
-  } catch (err) {
-    console.error("Error fetching properties:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-};
 
 // Create property (from ListPropertyPage or Admin form)
-export const createProperty = async (req, res) => {
-  try {
-    const {
-      listingType,
-      propertyName,
-      serviceType,
-      address,
-      price,
-      userEmail,
-      facilities,
-      description,
-      bedrooms,
-      bathrooms,
-      carModel,
-      year,
-      mileage,
-      fuelType,
-      landSize,
-      rentTerm,
-      autoApprove, // optional: "true" to auto-approve
-    } = req.body;
-
-    const facilitiesArr = facilities ? JSON.parse(facilities) : [];
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
-
-    const property = new Property({
-      listingType,
-      propertyName,
-      serviceType,
-      address,
-      price,
-      userEmail,
-      facilities: facilitiesArr,
-      description,
-      bedrooms,
-      bathrooms,
-      carModel,
-      year,
-      mileage,
-      fuelType,
-      landSize,
-      rentTerm,
-      imageUrl,
-      status: autoApprove === "true" ? "approved" : "pending", // pending by default
-    });
-
-    await property.save();
-
-    // Optional email to admin
-    if (transporter) {
-      const adminMailOptions = {
-        from: `"Property Admin" <${process.env.EMAIL_USER}>`,
-        to: process.env.ADMIN_EMAIL,
-        subject: `New Property Submitted - ${propertyName}`,
-        html: `
-          <h2>New Property Listing Submitted</h2>
-          <p><strong>Property:</strong> ${propertyName}</p>
-          <p><strong>Service Type:</strong> ${serviceType || "N/A"}</p>
-          <p><strong>Listing Type:</strong> ${listingType}</p>
-          <p><strong>Address:</strong> ${address}</p>
-          <p><strong>Price:</strong> ${price} birr</p>
-          ${
-            facilitiesArr.length
-              ? `<p><strong>Facilities:</strong> ${facilitiesArr.join(
-                  ", "
-                )}</p>`
-              : ""
-          }
-          ${
-            description
-              ? `<p><strong>Description:</strong> ${description}</p>`
-              : ""
-          }
-          ${imageUrl ? `<p><strong>Image Uploaded:</strong> Yes</p>` : ""}
-        `,
-      };
-      await transporter.sendMail(adminMailOptions);
-    }
-
-    res.status(201).json({
-      message:
-        autoApprove === "true"
-          ? "Property submitted and approved successfully"
-          : "Property submitted successfully and is pending approval",
-      property,
-    });
-  } catch (err) {
-    console.error("Error creating property:", err);
-    res.status(500).json({ error: "Server error", details: err.message });
-  }
-};
 
 // Update property status (approve/reject)
-export const updatePropertyStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    if (!["approved", "rejected"].includes(status)) {
-      return res.status(400).json({ error: "Invalid status value" });
-    }
-
-    const property = await Property.findById(id);
-    if (!property) return res.status(404).json({ error: "Property not found" });
-
-    property.status = status;
-    await property.save();
-
-    // Notify user if approved
-    if (transporter && status === "approved") {
-      const userMailOptions = {
-        from: `"Property Admin" <${process.env.EMAIL_USER}>`,
-        to: property.userEmail,
-        subject: `Your Property Listing Approved - ${property.propertyName}`,
-        html: `
-          <h2>Property Approved!</h2>
-          <p>Your property listing has been approved by the admin.</p>
-          <ul>
-            <li><strong>Property:</strong> ${property.propertyName}</li>
-            <li><strong>Listing Type:</strong> ${property.listingType}</li>
-            <li><strong>Address:</strong> ${property.address}</li>
-            <li><strong>Price:</strong> ${property.price} birr</li>
-          </ul>
-          <p>Thank you for using our platform.</p>
-        `,
-      };
-      await transporter.sendMail(userMailOptions);
-    }
-
-    res.json({ message: `Property has been ${status} successfully`, property });
-  } catch (err) {
-    console.error("Error updating property status:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-};
 
 // Delete property
-export const deleteProperty = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const property = await Property.findByIdAndDelete(id);
-    if (!property) return res.status(404).json({ error: "Property not found" });
 
-    res.json({ message: "Property deleted successfully" });
-  } catch (err) {
-    console.error("Error deleting property:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-};
 export const loginAdmin = async (req, res) => {
   const { email, password } = req.body;
 
@@ -289,6 +134,189 @@ export const getApprovedProperties = async (req, res) => {
     res.json(properties);
   } catch (err) {
     console.error("Error fetching approved properties:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+export const getPropertyById = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
+    if (!property) {
+      return res.status(404).json({ message: "Property not found" });
+    }
+    res.json(property);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching property" });
+  }
+};
+
+// Get all properties
+export const getAllProperties = async (req, res) => {
+  try {
+    const statusFilter = req.query.status;
+    const filter = statusFilter ? { status: statusFilter } : {};
+    const properties = await Property.find(filter).sort({ createdAt: -1 });
+    res.json(properties);
+  } catch (err) {
+    console.error("Error fetching properties:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+// Create property
+export const createProperty = async (req, res) => {
+  try {
+    const {
+      listingType,
+      propertyName,
+      serviceType,
+      address,
+      price,
+      userEmail,
+      facilities,
+      description,
+      bedrooms,
+      bathrooms,
+      carModel,
+      year,
+      mileage,
+      fuelType,
+      landSize,
+      rentTerm,
+      rating, // ✅ from frontend
+      autoApprove,
+    } = req.body;
+
+    const facilitiesArr = facilities ? JSON.parse(facilities) : [];
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+    const property = new Property({
+      listingType,
+      propertyName,
+      serviceType,
+      address,
+      price,
+      userEmail,
+      facilities: facilitiesArr,
+      description,
+      bedrooms,
+      bathrooms,
+      carModel,
+      year,
+      mileage,
+      fuelType,
+      landSize,
+      rentTerm,
+      rating: rating ? Number(rating) : 0, // ✅ persist rating
+      imageUrl,
+      status: autoApprove === "true" ? "approved" : "pending",
+    });
+
+    await property.save();
+
+    res.status(201).json({
+      message:
+        autoApprove === "true"
+          ? "Property submitted and approved successfully"
+          : "Property submitted successfully and is pending approval",
+      property,
+    });
+  } catch (err) {
+    console.error("Error creating property:", err);
+    res.status(500).json({ error: "Server error", details: err.message });
+  }
+};
+
+// Update property status (approve/reject)
+export const updatePropertyStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!["approved", "rejected"].includes(status))
+      return res.status(400).json({ error: "Invalid status value" });
+
+    const property = await Property.findById(id);
+    if (!property) return res.status(404).json({ error: "Property not found" });
+
+    // ✅ Only change status, rating remains unchanged (like propertyName)
+    property.status = status;
+    await property.save();
+
+    res.json({ message: `Property has been ${status} successfully`, property });
+  } catch (err) {
+    console.error("Error updating property status:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+// Update property (edit)
+export const updateProperty = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const property = await Property.findById(id);
+    if (!property) return res.status(404).json({ error: "Property not found" });
+
+    const {
+      listingType,
+      propertyName,
+      serviceType,
+      address,
+      price,
+      userEmail,
+      facilities,
+      description,
+      bedrooms,
+      bathrooms,
+      carModel,
+      year,
+      mileage,
+      fuelType,
+      landSize,
+      rentTerm,
+      rating, // ✅ rating update allowed
+    } = req.body;
+
+    if (listingType) property.listingType = listingType;
+    if (propertyName) property.propertyName = propertyName;
+    if (serviceType) property.serviceType = serviceType;
+    if (address) property.address = address;
+    if (price) property.price = price;
+    if (userEmail) property.userEmail = userEmail;
+    if (facilities) property.facilities = JSON.parse(facilities);
+    if (description) property.description = description;
+    if (bedrooms) property.bedrooms = bedrooms;
+    if (bathrooms) property.bathrooms = bathrooms;
+    if (carModel) property.carModel = carModel;
+    if (year) property.year = year;
+    if (mileage) property.mileage = mileage;
+    if (fuelType) property.fuelType = fuelType;
+    if (landSize) property.landSize = landSize;
+    if (rentTerm) property.rentTerm = rentTerm;
+    if (rating !== undefined) property.rating = Number(rating); // ✅ persist like propertyName
+
+    if (req.file) {
+      property.imageUrl = `/uploads/${req.file.filename}`;
+    }
+
+    await property.save();
+
+    res.json({ message: "Property updated successfully", property });
+  } catch (err) {
+    console.error("Error updating property:", err);
+    res.status(500).json({ error: "Server error", details: err.message });
+  }
+};
+
+// Delete property
+export const deleteProperty = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const property = await Property.findByIdAndDelete(id);
+    if (!property) return res.status(404).json({ error: "Property not found" });
+    res.json({ message: "Property deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting property:", err);
     res.status(500).json({ error: "Server error" });
   }
 };

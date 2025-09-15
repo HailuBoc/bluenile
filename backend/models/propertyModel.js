@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const propertySchema = new mongoose.Schema(
   {
     listingType: { type: String, required: true },
-    serviceType: { type: String }, // optional, if needed
+    serviceType: { type: String },
     propertyName: { type: String, required: true },
     address: { type: String, required: true },
     price: { type: Number, required: true },
@@ -11,6 +11,10 @@ const propertySchema = new mongoose.Schema(
     facilities: { type: [String], default: [] },
     description: { type: String },
     imageUrl: { type: String },
+
+    // ✅ New rating field
+    rating: { type: Number, default: 0, min: 0, max: 5 },
+
     status: {
       type: String,
       enum: ["unverified", "pending", "approved", "rejected"],

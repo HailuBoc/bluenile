@@ -1,13 +1,12 @@
 import Graduation from "../models/GraduationBooking.js";
 import fs from "fs";
 import path from "path";
-import fetch from "node-fetch";
-import { transporter } from "../config/email.js"; // Make sure transporter is set
+import { transporter } from "../config/email.js";
 
 // Create a new graduation booking
 export const createGraduation = async (req, res) => {
   try {
-    const {
+    let {
       name,
       phone,
       email,
@@ -18,6 +17,15 @@ export const createGraduation = async (req, res) => {
       paymentMethod,
       totalAmount,
     } = req.body;
+
+    // Parse selectedServices if it comes as a string
+    if (typeof selectedServices === "string") {
+      try {
+        selectedServices = JSON.parse(selectedServices);
+      } catch {
+        selectedServices = [];
+      }
+    }
 
     // Validate required fields
     if (
@@ -32,43 +40,39 @@ export const createGraduation = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Parse selectedServices
-    let services = [];
-    try {
-      services = JSON.parse(selectedServices);
-    } catch {
-      services = [];
+    // Handle optional paymentEvidence file
+    let paymentEvidencePath = "";
+    if (req.file) {
+      const uploadDir = path.join(process.cwd(), "uploads");
+      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+
+      const uploadPath = path.join(
+        uploadDir,
+        Date.now() + "-" + req.file.originalname
+      );
+      await fs.promises.rename(req.file.path, uploadPath);
+      paymentEvidencePath = uploadPath;
     }
 
-    // Handle file upload
-    let paymentEvidence = null;
-    if (req.files && req.files.paymentEvidence) {
-      const file = req.files.paymentEvidence;
-      const uploadPath = path.join("uploads", Date.now() + "-" + file.name);
-      await file.mv(uploadPath);
-      paymentEvidence = uploadPath;
-    }
-
-    // Create graduation booking
+    // Create booking
     const graduation = await Graduation.create({
       name,
       phone,
       email,
-      date,
-      guests,
-      selectedServices: services,
-      specialRequests,
+      date: new Date(date),
+      guests: Number(guests),
+      selectedServices,
+      specialRequests: specialRequests || "",
       paymentMethod,
-      totalAmount,
-      paymentEvidence,
+      totalAmount: Number(totalAmount),
+      paymentEvidence: paymentEvidencePath,
       status: paymentMethod === "Chapa" ? "paid" : "pending",
     });
 
-    // Email notifications
-    const adminEmail = process.env.ADMIN_EMAIL;
+    // Send emails
     const adminMailOptions = {
       from: `"Graduation Booking" <${process.env.EMAIL_USER}>`,
-      to: adminEmail,
+      to: process.env.ADMIN_EMAIL,
       subject: `New Graduation Booking - ${name}`,
       html: `
         <h2>New Graduation Booking</h2>
@@ -77,13 +81,15 @@ export const createGraduation = async (req, res) => {
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Date:</strong> ${date}</p>
         <p><strong>Guests:</strong> ${guests}</p>
-        <p><strong>Selected Services:</strong> ${services.join(", ")}</p>
+        <p><strong>Selected Services:</strong> ${selectedServices.join(
+          ", "
+        )}</p>
         <p><strong>Total Amount:</strong> ${totalAmount} ETB</p>
         <p><strong>Payment Method:</strong> ${paymentMethod}</p>
         <p><strong>Status:</strong> ${graduation.status}</p>
         ${
-          paymentEvidence
-            ? `<p><strong>Payment Evidence:</strong> <a href="${paymentEvidence}">View File</a></p>`
+          paymentEvidencePath
+            ? `<p><strong>Payment Evidence:</strong> <a href="${paymentEvidencePath}">View File</a></p>`
             : ""
         }
       `,
@@ -102,12 +108,14 @@ export const createGraduation = async (req, res) => {
           <li><strong>Phone:</strong> ${phone}</li>
           <li><strong>Date:</strong> ${date}</li>
           <li><strong>Guests:</strong> ${guests}</li>
-          <li><strong>Selected Services:</strong> ${services.join(", ")}</li>
+          <li><strong>Selected Services:</strong> ${selectedServices.join(
+            ", "
+          )}</li>
           <li><strong>Total Amount:</strong> ${totalAmount} ETB</li>
           <li><strong>Payment Method:</strong> ${paymentMethod}</li>
           <li><strong>Status:</strong> ${graduation.status}</li>
           ${
-            paymentEvidence
+            paymentEvidencePath
               ? "<li><strong>Payment Evidence:</strong> uploaded</li>"
               : ""
           }
@@ -133,72 +141,5 @@ export const createGraduation = async (req, res) => {
     return res
       .status(500)
       .json({ error: "Server error while creating booking" });
-  }
-};
-
-// Initialize Chapa payment
-export const initChapaPayment = async (req, res) => {
-  try {
-    const { amount, currency, email, fullName, bookingId } = req.body;
-
-    if (!amount || !email || !fullName || !bookingId)
-      return res.status(400).json({ error: "Missing required fields" });
-
-    const [first_name, ...last] = fullName.split(" ");
-    const last_name = last.join(" ") || "Customer";
-
-    const payload = {
-      amount: amount.toString(),
-      currency: currency || "ETB",
-      email,
-      first_name,
-      last_name,
-      tx_ref: `booking_${bookingId}`,
-      callback_url: "http://localhost:3000/graduations",
-    };
-
-    const response = await fetch(
-      "https://api.chapa.co/v1/transaction/initialize",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}`,
-        },
-        body: JSON.stringify(payload),
-      }
-    );
-
-    const text = await response.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      return res
-        .status(500)
-        .json({ error: "Invalid response from Chapa", raw: text });
-    }
-
-    if (data.status === "success") {
-      return res.json({ checkout_url: data.data.checkout_url });
-    } else {
-      return res
-        .status(400)
-        .json({ error: data.message || "Chapa initialization failed" });
-    }
-  } catch (err) {
-    console.error("Chapa error:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-};
-
-// Get all graduation bookings (admin)
-export const getGraduationBookings = async (req, res) => {
-  try {
-    const bookings = await Graduation.find({});
-    res.json({ status: "success", bookings });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error fetching bookings" });
   }
 };

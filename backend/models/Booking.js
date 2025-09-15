@@ -13,6 +13,9 @@ const bookingSchema = new mongoose.Schema(
     numberOfGuests: { type: Number, required: true },
     specialRequests: { type: String },
     paymentMethod: { type: String, required: true },
+    paymentEvidence: { type: String }, // path to uploaded file
+    amount: { type: Number, required: true },
+    paymentStatus: { type: String, required: true },
   },
   { timestamps: true }
 );

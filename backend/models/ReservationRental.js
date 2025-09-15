@@ -1,4 +1,3 @@
-// models/ReservationRental.js
 import mongoose from "mongoose";
 
 const reservationSchema = new mongoose.Schema(
@@ -19,6 +18,7 @@ const reservationSchema = new mongoose.Schema(
       required: true,
     },
     paymentEvidence: { type: String },
+    specialRequests: { type: String },
   },
   { timestamps: true }
 );

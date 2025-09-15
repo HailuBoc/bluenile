@@ -1,13 +1,12 @@
-import GeneralEventBooking from "../models/generalEventBooking.js";
+import GeneralEvent from "../models/GeneralEventBooking.js";
 import fs from "fs";
 import path from "path";
-import fetch from "node-fetch";
-import { transporter } from "../config/email.js"; // Make sure transporter is configured
+import { transporter } from "../config/email.js";
 
 // Create a new general event booking
-export const createGeneralEventBooking = async (req, res) => {
+export const createGeneralEvent = async (req, res) => {
   try {
-    const {
+    let {
       name,
       phone,
       email,
@@ -19,6 +18,15 @@ export const createGeneralEventBooking = async (req, res) => {
       amount,
     } = req.body;
 
+    // Parse services if it's a string (from FormData)
+    if (typeof services === "string") {
+      try {
+        services = JSON.parse(services);
+      } catch {
+        services = [];
+      }
+    }
+
     // Validate required fields
     if (
       !name ||
@@ -29,46 +37,42 @@ export const createGeneralEventBooking = async (req, res) => {
       !paymentMethod ||
       !amount
     ) {
-      return res.status(400).json({ error: "Missing required fields" });
+      return res.status(400).json({ message: "Missing required fields" });
     }
 
-    // Parse services
-    let serviceList = [];
-    try {
-      serviceList = services ? JSON.parse(services) : [];
-    } catch {
-      serviceList = [];
+    // Handle file upload
+    let paymentEvidencePath = "";
+    if (req.file) {
+      const uploadDir = path.join(process.cwd(), "uploads");
+      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+
+      const uploadPath = path.join(
+        uploadDir,
+        Date.now() + "-" + req.file.originalname
+      );
+      await fs.promises.rename(req.file.path, uploadPath);
+      paymentEvidencePath = uploadPath;
     }
 
-    // Handle file upload (Telebirr / CBE)
-    let paymentEvidence = null;
-    if (req.files?.paymentEvidence) {
-      const file = req.files.paymentEvidence;
-      const uploadPath = path.join("uploads", Date.now() + "-" + file.name);
-      await file.mv(uploadPath);
-      paymentEvidence = uploadPath;
-    }
-
-    // Create booking
-    const booking = await GeneralEventBooking.create({
+    // Save booking
+    const booking = await GeneralEvent.create({
       name,
       phone,
       email,
-      date,
-      guests,
-      services: serviceList,
-      specialRequests,
+      date: new Date(date),
+      guests: Number(guests),
+      services,
+      specialRequests: specialRequests || "",
       paymentMethod,
-      paymentEvidence,
-      amount,
+      amount: Number(amount),
+      paymentEvidence: paymentEvidencePath,
       status: paymentMethod === "Chapa" ? "paid" : "pending",
     });
 
-    // Email notifications
-    const adminEmail = process.env.ADMIN_EMAIL;
+    // Send emails
     const adminMailOptions = {
       from: `"General Event Booking" <${process.env.EMAIL_USER}>`,
-      to: adminEmail,
+      to: process.env.ADMIN_EMAIL,
       subject: `New General Event Booking - ${name}`,
       html: `
         <h2>New General Event Booking</h2>
@@ -77,13 +81,13 @@ export const createGeneralEventBooking = async (req, res) => {
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Date:</strong> ${date}</p>
         <p><strong>Guests:</strong> ${guests}</p>
-        <p><strong>Services:</strong> ${serviceList.join(", ")}</p>
-        <p><strong>Total Amount:</strong> ${amount} ETB</p>
+        <p><strong>Services:</strong> ${services.join(", ")}</p>
+        <p><strong>Amount:</strong> ${amount} ETB</p>
         <p><strong>Payment Method:</strong> ${paymentMethod}</p>
         <p><strong>Status:</strong> ${booking.status}</p>
         ${
-          paymentEvidence
-            ? `<p><strong>Payment Evidence:</strong> <a href="${paymentEvidence}">View File</a></p>`
+          paymentEvidencePath
+            ? `<p><strong>Payment Evidence:</strong> <a href="${paymentEvidencePath}">View</a></p>`
             : ""
         }
       `,
@@ -92,7 +96,7 @@ export const createGeneralEventBooking = async (req, res) => {
     const userMailOptions = {
       from: `"General Event Booking" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: `Your General Event Booking - ${name}`,
+      subject: `Your Booking - ${name}`,
       html: `
         <h2>Booking ${booking.status === "paid" ? "Confirmed" : "Pending"}</h2>
         <p>Dear ${name},</p>
@@ -100,19 +104,19 @@ export const createGeneralEventBooking = async (req, res) => {
           <li><strong>Phone:</strong> ${phone}</li>
           <li><strong>Date:</strong> ${date}</li>
           <li><strong>Guests:</strong> ${guests}</li>
-          <li><strong>Services:</strong> ${serviceList.join(", ")}</li>
-          <li><strong>Total Amount:</strong> ${amount} ETB</li>
+          <li><strong>Services:</strong> ${services.join(", ")}</li>
+          <li><strong>Amount:</strong> ${amount} ETB</li>
           <li><strong>Payment Method:</strong> ${paymentMethod}</li>
           <li><strong>Status:</strong> ${booking.status}</li>
           ${
-            paymentEvidence
+            paymentEvidencePath
               ? "<li><strong>Payment Evidence:</strong> uploaded</li>"
               : ""
           }
         </ul>
         <p>${
           booking.status === "pending"
-            ? "Your payment is pending. Admin will verify your evidence."
+            ? "Please upload payment evidence if not using Chapa."
             : "Your payment is completed and booking is confirmed!"
         }</p>
         <hr/>
@@ -125,88 +129,11 @@ export const createGeneralEventBooking = async (req, res) => {
       transporter.sendMail(userMailOptions),
     ]);
 
-    res.status(201).json({ status: "success", booking });
+    return res.status(201).json({ status: "success", booking });
   } catch (err) {
     console.error("General event booking error:", err);
-    res.status(500).json({ error: "Server error while creating booking" });
-  }
-};
-
-// Initialize Chapa payment
-export const initChapaPayment = async (req, res) => {
-  try {
-    const { amount, currency, email, fullName, bookingId } = req.body;
-
-    if (!amount || !email || !fullName || !bookingId)
-      return res.status(400).json({ error: "Missing required fields" });
-
-    const [first_name, ...last] = fullName.split(" ");
-    const last_name = last.join(" ") || "Customer";
-
-    const payload = {
-      amount: amount.toString(),
-      currency: currency || "ETB",
-      email,
-      first_name,
-      last_name,
-      tx_ref: `booking_${bookingId}`,
-      callback_url: "http://localhost:3000/general-events",
-    };
-
-    const response = await fetch(
-      "https://api.chapa.co/v1/transaction/initialize",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}`,
-        },
-        body: JSON.stringify(payload),
-      }
-    );
-
-    const text = await response.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      return res
-        .status(500)
-        .json({ error: "Invalid response from Chapa", raw: text });
-    }
-
-    if (data.status === "success") {
-      return res.json({ checkout_url: data.data.checkout_url });
-    } else {
-      return res
-        .status(400)
-        .json({ error: data.message || "Chapa initialization failed" });
-    }
-  } catch (err) {
-    console.error("Chapa error:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-};
-
-// Get all general event bookings (admin)
-export const getGeneralEventBookings = async (req, res) => {
-  try {
-    const bookings = await GeneralEventBooking.find({});
-    res.json({ status: "success", bookings });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error fetching bookings" });
-  }
-};
-
-// Get booking by ID
-export const getGeneralEventBookingById = async (req, res) => {
-  try {
-    const booking = await GeneralEventBooking.findById(req.params.id);
-    if (!booking) return res.status(404).json({ error: "Booking not found" });
-    res.json({ status: "success", booking });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error fetching booking" });
+    return res
+      .status(500)
+      .json({ message: "Server error while creating booking" });
   }
 };

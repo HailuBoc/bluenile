@@ -1,11 +1,12 @@
-// routes/adminRoutes.js
 import express from "express";
 import multer from "multer";
 import path from "path";
 import {
   getAllProperties,
+  getPropertyById,
   createProperty,
   updatePropertyStatus,
+  updateProperty, // <-- new controller
   deleteProperty,
   loginAdmin,
   verifyToken,
@@ -19,6 +20,7 @@ import {
   getApprovedProperties,
 } from "../controllers/adminController.js";
 import { adminAuth } from "../middleware/authMiddleware.js";
+
 const router = express.Router();
 
 // Multer storage
@@ -29,26 +31,28 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Routes
-router.get("/properties", getAllProperties); // Get all properties (optionally filter by status)
-router.post("/properties", upload.single("image"), createProperty); // Add new property
-router.patch("/properties/:id/status", updatePropertyStatus); // Approve/reject property
-router.delete("/properties/:id", deleteProperty); // Delete property
+// Property routes
+router.get("/properties", getAllProperties);
+router.get("/properties/:id", getPropertyById);
+router.post("/properties", upload.single("image"), createProperty);
+router.patch("/properties/:id/status", updatePropertyStatus);
+router.patch("/properties/:id", upload.single("image"), updateProperty); // <-- edit/update
+router.delete("/properties/:id", deleteProperty);
 router.get("/approved", getApprovedProperties);
-// Admin
 
+// Admin login & verify
 router.post("/login", loginAdmin);
 router.get("/verify-token", adminAuth, verifyToken);
-// bookings
 
+// Bookings
 router.get("/bookings", getAllBookings);
 router.delete("/bookings/:id", deleteBooking);
-// Users
 
+// Users
 router.get("/users", getAllUsers);
 router.delete("/users/:id", deleteUser);
-// Admin settings
 
+// Admin settings
 router.get("/settings", adminAuth, getSettings);
 router.put("/settings", adminAuth, updateSettings);
 

@@ -50,29 +50,29 @@ export default function TourBooking() {
     try {
       const data = new FormData();
 
-      // ✅ Correct field names matching backend
-      data.append("fullName", formData.fullName);
-      data.append("email", formData.email);
-      data.append("phone", formData.phone);
-      data.append("tourDate", formData.tourDate); // ✔ was 'date'
-      data.append("numberOfPeople", String(formData.numberOfPeople));
-      data.append("message", formData.message); // ✔ was 'notes'
-      data.append("vipService", formData.vipService ? "true" : "false");
-      data.append("paymentMethod", formData.paymentMethod);
+      // ✅ Correct field names to match backend
+      data.append("destination", "VIP Tour"); // fixed
+      data.append("date", formData.tourDate); // fixed
+      data.append("phone", formData.phone); // fixed
+      data.append("email", formData.email); // fixed
+      data.append("paymentMethod", formData.paymentMethod); // fixed
+      data.append("notes", formData.message); // fixed
+      data.append(
+        "extras",
+        JSON.stringify(formData.vipService ? ["VIP Service"] : [])
+      );
       data.append("totalAmount", String(totalAmount));
 
       if (formData.document) {
-        data.append("document", formData.document);
+        data.append("paymentProof", formData.document); // fixed
       }
 
-      // ✅ Send booking request
       const res = await axios.post(
         "http://localhost:10000/vip-bookings",
         data,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
 
-      // Chapa payment flow
       if (formData.paymentMethod === "Chapa") {
         const paymentRes = await axios.post(
           "http://localhost:10000/bookings/pay/chapa",
@@ -85,7 +85,7 @@ export default function TourBooking() {
           }
         );
 
-        if (paymentRes.data && paymentRes.data.checkout_url) {
+        if (paymentRes.data?.checkout_url) {
           window.location.href = paymentRes.data.checkout_url;
           return;
         } else {

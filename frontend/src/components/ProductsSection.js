@@ -5,6 +5,7 @@ import ProductCard from "./ProductCard";
 import HousesCard from "./HousesCard";
 import CarsCard from "./CarsCard";
 import CarSalecard from "./CarSalecard";
+import TourismCard from "./TourismCard";
 
 export default function ProductsSection() {
   const [properties, setProperties] = useState([]);
@@ -18,6 +19,7 @@ export default function ProductsSection() {
         ? res.data
         : res.data?.properties || [];
 
+      // ✅ format images to include backend URL
       const formattedData = data.map((item) => {
         const baseUrl = "http://localhost:10000";
         let firstImage =
@@ -59,6 +61,7 @@ export default function ProductsSection() {
     return <p className="text-center mt-10">Loading properties...</p>;
   if (error) return <p className="text-center text-red-600">{error}</p>;
 
+  // ✅ filter categories
   const popularStays = properties.filter(
     (p) =>
       ["apartment", "villa", "guesthouse"].includes(
@@ -91,6 +94,7 @@ export default function ProductsSection() {
       p.status === "approved"
   );
 
+  // ✅ reusable scroll UI
   const renderHorizontalScroll = (items, CardComponent) => (
     <div className="relative overflow-hidden">
       <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth hide-scrollbar py-2">
@@ -131,7 +135,7 @@ export default function ProductsSection() {
           <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
             🏞️ Tourism Sites in Ethiopia
           </h2>
-          {renderHorizontalScroll(tourismSites, ProductCard)}
+          {renderHorizontalScroll(tourismSites, TourismCard)}
         </div>
       )}
 

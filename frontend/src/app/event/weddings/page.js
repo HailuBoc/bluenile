@@ -49,11 +49,10 @@ export default function WeddingsPage() {
     specialRequests: "",
     selectedServices: [],
     paymentMethod: "",
-    paymentEvidence: null,
+    paymentEvidence: "", // just filename or text
   });
 
   const [availableServices, setAvailableServices] = useState([]);
-  const [errors, setErrors] = useState({});
   const [status, setStatus] = useState({ text: "", type: "" });
   const [loading, setLoading] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0);
@@ -72,7 +71,6 @@ export default function WeddingsPage() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" });
   };
 
   const handleServiceToggle = (service) => {
@@ -88,49 +86,65 @@ export default function WeddingsPage() {
   };
 
   const handleFileChange = (e) => {
-    setFormData({ ...formData, paymentEvidence: e.target.files[0] });
+    const file = e.target.files[0];
+    if (file) setFormData({ ...formData, paymentEvidence: file.name });
+    else setFormData({ ...formData, paymentEvidence: "" });
   };
 
   const validateForm = () => {
-    const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Full name is required";
-    if (!formData.email.trim()) newErrors.email = "Email is required";
-    if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
-    if (!formData.date.trim()) newErrors.date = "Date is required";
-    if (!formData.guests.trim())
-      newErrors.guests = "Number of guests is required";
-    if (!formData.marriageType.trim())
-      newErrors.marriageType = "Marriage type is required";
-    if (!formData.paymentMethod.trim())
-      newErrors.paymentMethod = "Payment method is required";
+    const errors = {};
+    if (!formData.name.trim()) errors.name = true;
+    if (!formData.email.trim()) errors.email = true;
+    if (!formData.phone.trim()) errors.phone = true;
+    if (!formData.date.trim()) errors.date = true;
+    if (!formData.guests.trim()) errors.guests = true;
+    if (!formData.marriageType.trim()) errors.marriageType = true;
+    if (!formData.paymentMethod.trim()) errors.paymentMethod = true;
+
     if (
       ["Telebirr", "CBE Bank"].includes(formData.paymentMethod) &&
-      !formData.paymentEvidence
-    )
-      newErrors.paymentEvidence = "Please upload payment evidence";
+      !formData.paymentEvidence.trim()
+    ) {
+      errors.paymentEvidence = true;
+    }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (Object.keys(errors).length > 0) {
+      setStatus({
+        text: "❌ Please fill in all required fields",
+        type: "error",
+      });
+      return false;
+    }
+
+    setStatus({ text: "", type: "" });
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatus({ text: "", type: "" });
     if (!validateForm()) return;
 
     setLoading(true);
     try {
-      const formPayload = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        if (key === "selectedServices")
-          formPayload.append(key, JSON.stringify(value));
-        else if (value) formPayload.append(key, value);
-      });
-      formPayload.append("totalAmount", totalAmount);
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        date: formData.date,
+        guests: Number(formData.guests),
+        marriageType: formData.marriageType,
+        selectedServices: formData.selectedServices,
+        specialRequests: formData.specialRequests,
+        paymentMethod: formData.paymentMethod,
+        paymentEvidence: formData.paymentEvidence || "",
+        totalAmount,
+      };
 
+      // Always send JSON
       const res = await fetch("http://localhost:10000/weddings", {
         method: "POST",
-        body: formPayload,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -138,6 +152,7 @@ export default function WeddingsPage() {
 
       const bookingId = data.booking._id;
 
+      // Chapa payment
       if (formData.paymentMethod === "Chapa") {
         const payRes = await fetch(
           "http://localhost:10000/weddings/pay/chapa",
@@ -153,11 +168,12 @@ export default function WeddingsPage() {
             }),
           }
         );
+
         const payData = await payRes.json();
         if (payData.checkout_url) {
           window.location.href = payData.checkout_url;
           return;
-        } else throw new Error("Failed to start Chapa payment");
+        } else throw new Error("❌ Failed to start Chapa payment");
       }
 
       setStatus({
@@ -175,7 +191,7 @@ export default function WeddingsPage() {
         specialRequests: "",
         selectedServices: [],
         paymentMethod: "",
-        paymentEvidence: null,
+        paymentEvidence: "",
       });
       setAvailableServices([]);
       setTotalAmount(0);
@@ -219,6 +235,7 @@ export default function WeddingsPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Name & Email */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <input
               type="text"
@@ -238,6 +255,7 @@ export default function WeddingsPage() {
             />
           </div>
 
+          {/* Phone & Date */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <input
               type="text"
@@ -256,6 +274,7 @@ export default function WeddingsPage() {
             />
           </div>
 
+          {/* Guests & Marriage Type */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <input
               type="number"
@@ -278,6 +297,7 @@ export default function WeddingsPage() {
             </select>
           </div>
 
+          {/* Services */}
           {formData.marriageType && (
             <div>
               <h3 className="font-semibold mb-2">
@@ -305,7 +325,7 @@ export default function WeddingsPage() {
             </div>
           )}
 
-          {/* Payment Method & Upload */}
+          {/* Payment */}
           <div className="mt-4">
             <h3 className="font-semibold mb-2">Select Payment Method</h3>
             <div className="flex gap-4 flex-wrap">
@@ -340,6 +360,7 @@ export default function WeddingsPage() {
                 </label>
               ))}
             </div>
+
             {["Telebirr", "CBE Bank"].includes(formData.paymentMethod) && (
               <div className="mt-3">
                 <input
@@ -352,6 +373,7 @@ export default function WeddingsPage() {
             )}
           </div>
 
+          {/* Special Requests */}
           <textarea
             name="specialRequests"
             placeholder="Special Requests"

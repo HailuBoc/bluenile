@@ -8,8 +8,11 @@ const saleBookingSchema = new mongoose.Schema(
     car: { type: String, required: true }, // the property/vehicle title
     amount: { type: Number, required: true },
     paymentMethod: { type: String, required: true },
-    paymentEvidence: { type: String }, // uploaded file path
-    specialRequests: { type: String },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "confirmed"],
+      default: "pending",
+    },
   },
   { timestamps: true }
 );

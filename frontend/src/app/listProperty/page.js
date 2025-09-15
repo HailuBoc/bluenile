@@ -47,7 +47,9 @@ export default function ListPropertyPage() {
       const file = files[0];
       setImage(file);
       setPreviewUrl(file ? URL.createObjectURL(file) : null);
-    } else setFormData((prev) => ({ ...prev, [name]: value }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const resetForm = () => {
@@ -76,12 +78,13 @@ export default function ListPropertyPage() {
     try {
       const data = new FormData();
       data.append("listingType", listingType);
-      data.append("serviceType", serviceType); // ✅ fixed
-      data.append("propertyName", formData.propertyName); // ✅ fixed
+      data.append("serviceType", serviceType);
+      data.append("propertyName", formData.propertyName);
       data.append("userEmail", formData.userEmail);
       data.append("address", formData.address);
       data.append("price", formData.price);
       data.append("facilities", JSON.stringify(facilities));
+      data.append("rating", formData.rating ?? 0); // ✅ include rating
       if (formData.description)
         data.append("description", formData.description);
       if (image) data.append("image", image);
@@ -197,6 +200,21 @@ export default function ListPropertyPage() {
             onChange={handleChange}
             className="w-full border border-gray-500 bg-gray-900 rounded p-3 mb-3"
             required
+          />
+        </div>
+
+        {/* Rating */}
+        <div>
+          <label className="block mb-2 font-medium">Rating (0-5)</label>
+          <input
+            type="number"
+            name="rating"
+            value={formData.rating || ""}
+            onChange={handleChange}
+            min={0}
+            max={5}
+            step={0.1}
+            className="w-full border border-gray-500 bg-gray-900 rounded p-3 mb-3"
           />
         </div>
 

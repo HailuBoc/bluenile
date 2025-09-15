@@ -1,17 +1,17 @@
 import express from "express";
-import {
-  createGeneralEventBooking,
-  initChapaPayment,
-  getGeneralEventBookings,
-  getGeneralEventBookingById,
-} from "../controllers/generalEventController.js";
+import multer from "multer";
+import { createGeneralEvent } from "../controllers/generalEventController.js";
 
 const router = express.Router();
 
-// Routes
-router.post("/", createGeneralEventBooking); // create booking
-router.post("/pay/chapa", initChapaPayment); // initialize Chapa payment
-router.get("/", getGeneralEventBookings); // get all bookings
-router.get("/:id", getGeneralEventBookingById); // get booking by ID
+// Multer storage for payment evidence
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, "uploads/"),
+  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
+});
+const upload = multer({ storage });
+
+// POST /general-events
+router.post("/", upload.single("paymentEvidence"), createGeneralEvent);
 
 export default router;

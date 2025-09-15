@@ -1,31 +1,49 @@
 import mongoose from "mongoose";
 
+/* ============================
+   Product Schema
+============================ */
+const productSchema = new mongoose.Schema(
+  {
+    propertyName: { type: String, required: true },
+    description: { type: String },
+    location: { type: String },
+    price: { type: Number, required: true },
+    rating: { type: Number, default: 4 },
+    img: { type: String },
+  },
+  { timestamps: true }
+);
+
+export const Product = mongoose.model("Product", productSchema);
+
+/* ============================
+   Reservation Schema
+============================ */
 const reservationSchema = new mongoose.Schema(
   {
-    // listing info
-    listingId: { type: Number, required: true },
-    listingTitle: { type: String, required: true },
-
-    // guest info (flattened like your Sale model)
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
     name: { type: String, required: true },
     phone: { type: String, required: true },
     email: { type: String, required: true },
 
-    // stay info
     checkIn: { type: Date, required: true },
     checkOut: { type: Date, required: true },
     nights: { type: Number, required: true },
 
-    // payment
-    amount: { type: Number, required: true }, // total price (ETB)
+    amount: { type: Number, required: true },
     paymentMethod: { type: String, required: true },
-    paymentEvidence: { type: String }, // uploaded file path (Telebirr/CBE/M-Pesa)
 
-    // optional: simple status (pending until file verified or chapa succeeds)
+    // Store uploaded file path or URL instead of the raw File object
+    paymentEvidence: { type: String, default: "" },
+
     status: { type: String, default: "pending" },
   },
   { timestamps: true }
 );
 
-const Reservation = mongoose.model("productReservation", reservationSchema);
-export default Reservation;
+export const Reservation = mongoose.model("Reservation", reservationSchema);

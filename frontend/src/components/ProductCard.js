@@ -1,28 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { Heart, Star } from "lucide-react";
-import { useState } from "react";
+import {
+  Heart,
+  Star,
+  StarHalf,
+  Star as StarOutline,
+  MapPin,
+} from "lucide-react";
+import { useLike } from "../../lib/useLike";
 
 export default function ProductCard({
   _id,
-  imageUrl, // string, array, or undefined
+  imageUrl,
   img,
   propertyName,
   address,
   price,
-  rating = 4.5,
+  rating = 0, // ⭐ dynamic rating
   guestFavorite,
   initialLikes = 0,
 }) {
-  const [liked, setLiked] = useState(false);
-  const [likes, setLikes] = useState(initialLikes);
-
-  const toggleLike = (e) => {
-    e.preventDefault();
-    setLikes((prev) => (liked ? prev - 1 : prev + 1));
-    setLiked(!liked);
-  };
+  const { liked, likes, toggleLike } = useLike(initialLikes, _id);
 
   const baseUrl = "http://localhost:10000";
   const firstImage =
@@ -38,6 +37,20 @@ export default function ProductCard({
       : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
     : img || "/placeholder-product.jpg";
 
+  // ⭐ Render stars visually
+  const renderStars = (rating) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      if (rating >= i)
+        stars.push(<Star key={i} className="h-4 w-4 text-yellow-400" />);
+      else if (rating >= i - 0.5)
+        stars.push(<StarHalf key={i} className="h-4 w-4 text-yellow-400" />);
+      else
+        stars.push(<StarOutline key={i} className="h-4 w-4 text-gray-400" />);
+    }
+    return stars;
+  };
+
   return (
     <Link
       href={`/sections/products?id=${_id}`}
@@ -51,16 +64,18 @@ export default function ProductCard({
         )}
 
         <button
-          onClick={toggleLike}
+          onClick={(e) => {
+            e.preventDefault();
+            toggleLike();
+          }}
           className="absolute top-2 right-2 p-2 bg-white dark:bg-gray-900 rounded-full z-10 shadow-sm flex items-center gap-1"
-          aria-label={liked ? "Unlike" : "Like"}
         >
           <Heart
             className={`h-5 w-5 transition-colors duration-200 ${
               liked ? "text-red-500 fill-red-500" : "text-gray-500"
             }`}
           />
-          <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
+          <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full">
             {likes}
           </span>
         </button>
@@ -72,17 +87,22 @@ export default function ProductCard({
         />
 
         <div className="p-3 sm:p-4">
-          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-300">
+          <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-gray-300">
+            <MapPin className="h-4 w-4 mr-1 text-gray-400" />
             {address || "No address"}
           </div>
-          {/* ✅ Show real property name */}
-          <div className="font-semibold text-sm sm:text-base truncate">
+          <div className="font-semibold text-sm sm:text-base truncate mt-1">
             {propertyName || "Unnamed Property"}
           </div>
-          <div className="flex items-center text-xs sm:text-sm mt-1">
-            <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400" />
-            <span className="ml-1">{rating}</span>
+
+          {/* ⭐ Visual star rating */}
+          <div className="flex items-center mt-2 space-x-1">
+            {renderStars(rating)}
+            <span className="text-xs text-gray-500 dark:text-gray-300 ml-1">
+              ({rating.toFixed(1)})
+            </span>
           </div>
+
           {price && (
             <div className="mt-1 sm:mt-2 font-bold text-sm sm:text-base">
               {price} Br

@@ -1,9 +1,15 @@
 import express from "express";
-import { createChapaPayment } from "../controllers/paymentController.js";
+import {
+  createChapaPayment,
+  verifyChapaPayment,
+} from "../controllers/paymentController.js";
 
 const router = express.Router();
 
-// POST /payments/chapa
+// POST: Initialize Chapa payment
 router.post("/chapa", createChapaPayment);
+
+// GET: Verify Chapa payment
+router.get("/chapa/verify/:bookingId", verifyChapaPayment);
 
 export default router;

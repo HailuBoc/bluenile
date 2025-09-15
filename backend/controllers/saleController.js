@@ -1,27 +1,14 @@
 import SaleBooking from "../models/Sale.js";
-import path from "path";
-import { transporter } from "../config/email.js"; // Make sure transporter is set up
+import { transporter } from "../config/email.js";
 
 export const createSale = async (req, res) => {
   try {
-    const { name, phone, email, car, amount, paymentMethod, specialRequests } =
-      req.body;
+    const { name, phone, email, car, amount, paymentMethod } = req.body;
 
-    // ✅ Validate required fields
     if (!name || !phone || !email || !car || !amount || !paymentMethod) {
-      return res.status(400).json({ error: "Missing required fields" });
+      return res.status(400).json({ message: "Missing required fields" });
     }
 
-    // ✅ Handle file upload (payment evidence)
-    let paymentEvidence = null;
-    if (req.files && req.files.paymentEvidence) {
-      const file = req.files.paymentEvidence;
-      const uploadPath = path.join("uploads", Date.now() + "-" + file.name);
-      await file.mv(uploadPath);
-      paymentEvidence = uploadPath;
-    }
-
-    // ✅ Save booking in MongoDB
     const sale = await SaleBooking.create({
       name,
       phone,
@@ -29,13 +16,12 @@ export const createSale = async (req, res) => {
       car,
       amount,
       paymentMethod,
-      specialRequests,
-      paymentEvidence,
-      paymentStatus: paymentMethod === "Chapa" ? "completed" : "pending",
+      paymentStatus:
+        paymentMethod === "bank_transfer" ? "pending" : "confirmed",
     });
 
-    // ✅ Prepare email notifications
-    const adminMailOptions = {
+    // --- Send emails (admin + client) ---
+    const adminMail = {
       from: `"Car Sale Booking" <${process.env.EMAIL_USER}>`,
       to: process.env.ADMIN_EMAIL,
       subject: `New Car Sale Booking - ${name}`,
@@ -47,62 +33,39 @@ export const createSale = async (req, res) => {
         <p><strong>Car:</strong> ${car}</p>
         <p><strong>Amount:</strong> ${amount} ETB</p>
         <p><strong>Payment Method:</strong> ${paymentMethod}</p>
-        <p><strong>Payment Status:</strong> ${sale.paymentStatus}</p>
-        ${
-          paymentEvidence
-            ? `<p><strong>Payment Evidence:</strong> <a href="${paymentEvidence}">View File</a></p>`
-            : ""
-        }
-        <p><strong>Special Requests:</strong> ${specialRequests || "None"}</p>
+        <p><strong>Status:</strong> ${sale.paymentStatus}</p>
       `,
     };
 
-    const userMailOptions = {
+    const userMail = {
       from: `"Car Sale Booking" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: `Your Car Sale Booking - ${car}`,
       html: `
-        <h2>Booking ${
-          sale.paymentStatus === "completed" ? "Confirmed" : "Pending"
-        }</h2>
+        <h2>Booking ${sale.paymentStatus}</h2>
         <p>Dear ${name},</p>
-        <p>Your car sale booking details:</p>
+        <p>We received your booking for <strong>${car}</strong>.</p>
         <ul>
-          <li><strong>Phone:</strong> ${phone}</li>
-          <li><strong>Car:</strong> ${car}</li>
           <li><strong>Amount:</strong> ${amount} ETB</li>
           <li><strong>Payment Method:</strong> ${paymentMethod}</li>
-          <li><strong>Payment Status:</strong> ${sale.paymentStatus}</li>
-          ${
-            paymentEvidence
-              ? "<li><strong>Payment Evidence:</strong> Uploaded</li>"
-              : ""
-          }
-          <li><strong>Special Requests:</strong> ${
-            specialRequests || "None"
-          }</li>
+          <li><strong>Status:</strong> ${sale.paymentStatus}</li>
         </ul>
-        <p>${
-          sale.paymentStatus === "pending"
-            ? "Your payment is pending. Admin will verify your evidence."
-            : "Your payment is completed and booking is confirmed!"
-        }</p>
+        <p>We will contact you shortly with further details.</p>
         <hr/>
-        <p><em>Automated email, do not reply.</em></p>
+        <p><em>This is an automated email, please do not reply.</em></p>
       `,
     };
 
-    // ✅ Send emails in parallel
     await Promise.all([
-      transporter.sendMail(adminMailOptions),
-      transporter.sendMail(userMailOptions),
+      transporter.sendMail(adminMail),
+      transporter.sendMail(userMail),
     ]);
 
-    return res.status(201).json({ status: "success", booking: sale });
-  } catch (err) {
-    console.error("Sale booking error:", err);
     return res
-      .status(500)
-      .json({ error: "Server error while creating booking" });
+      .status(201)
+      .json({ message: "Booking created successfully", booking: sale });
+  } catch (err) {
+    console.error("❌ Sale booking error:", err);
+    return res.status(500).json({ message: "Server error" });
   }
 };

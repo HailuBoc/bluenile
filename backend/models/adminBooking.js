@@ -2,11 +2,11 @@ import mongoose from "mongoose";
 
 const propertySchema = new mongoose.Schema(
   {
-    listingType: { type: String, required: true }, // house, car, land, etc.
+    listingType: { type: String, required: true },
     propertyName: { type: String, required: true },
     address: { type: String, required: true },
     price: { type: Number, required: true },
-    userEmail: { type: String }, // optional if admin creates
+    userEmail: { type: String },
     facilities: [{ type: String }],
     description: { type: String },
     bedrooms: { type: Number },
@@ -23,6 +23,7 @@ const propertySchema = new mongoose.Schema(
       enum: ["pending", "approved", "rejected"],
       default: "pending",
     },
+    rating: { type: Number, default: 0 }, // ✅ same logic as propertyName but numeric
   },
   { timestamps: true }
 );

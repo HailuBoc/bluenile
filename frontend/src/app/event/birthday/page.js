@@ -67,29 +67,6 @@ export default function BirthdaysPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
-    if (
-      !formData.name ||
-      !formData.email ||
-      !formData.phone ||
-      !formData.birthdayDate ||
-      !formData.guests ||
-      !formData.selectedServices.length ||
-      !formData.paymentMethod
-    ) {
-      setStatus({ text: "❌ Missing required fields", type: "error" });
-      return;
-    }
-
-    if (
-      (formData.paymentMethod === "Telebirr" ||
-        formData.paymentMethod === "CBE Birr") &&
-      !formData.paymentEvidence
-    ) {
-      setStatus({ text: "❌ Please upload payment proof", type: "error" });
-      return;
-    }
-
     setLoading(true);
     setStatus({ text: "", type: "" });
 
@@ -97,21 +74,20 @@ export default function BirthdaysPage() {
       const payload = new FormData();
       payload.append("name", formData.name);
       payload.append("email", formData.email);
-      payload.append("phone", formData.phone);
+      payload.append("phone", formData.phone || "");
       payload.append("birthdayDate", formData.birthdayDate);
-      payload.append("guests", String(formData.guests));
+      payload.append("guests", formData.guests);
       payload.append("specialRequests", formData.specialRequests || "");
-      payload.append("paymentMethod", formData.paymentMethod);
-      payload.append("amount", String(totalAmount));
+      payload.append("amount", totalAmount);
       payload.append(
         "selectedServices",
         JSON.stringify(formData.selectedServices)
       );
+      payload.append("paymentMethod", formData.paymentMethod);
 
       if (
         formData.paymentEvidence &&
-        (formData.paymentMethod === "Telebirr" ||
-          formData.paymentMethod === "CBE Birr")
+        ["Telebirr", "CBE Birr"].includes(formData.paymentMethod)
       ) {
         payload.append("paymentEvidence", formData.paymentEvidence);
       }
@@ -124,36 +100,8 @@ export default function BirthdaysPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Booking failed");
 
-      const bookingId = data.booking?._id;
-
-      // Handle Chapa Payment
-      if (formData.paymentMethod === "Chapa" && bookingId) {
-        const payRes = await fetch(
-          "http://localhost:10000/bookings/pay/chapa",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              amount: totalAmount,
-              currency: "ETB",
-              email: formData.email,
-              fullName: formData.name,
-              bookingId,
-            }),
-          }
-        );
-
-        const payData = await payRes.json();
-        if (payData.checkout_url) {
-          window.location.href = payData.checkout_url;
-          return;
-        } else {
-          throw new Error("❌ Failed to start Chapa payment");
-        }
-      }
-
       setStatus({
-        text: `✅ Booking submitted successfully!`,
+        text: "✅ Booking submitted successfully!",
         type: "success",
       });
 
@@ -216,6 +164,7 @@ export default function BirthdaysPage() {
             value={formData.name}
             onChange={handleChange}
             className="w-full p-3 border rounded-lg text-black"
+            required
           />
           <input
             type="email"
@@ -224,6 +173,7 @@ export default function BirthdaysPage() {
             value={formData.email}
             onChange={handleChange}
             className="w-full p-3 border rounded-lg text-black"
+            required
           />
           <input
             type="text"
@@ -239,6 +189,7 @@ export default function BirthdaysPage() {
             value={formData.birthdayDate}
             onChange={handleChange}
             className="w-full p-3 border rounded-lg text-black"
+            required
           />
           <input
             type="number"
@@ -247,27 +198,39 @@ export default function BirthdaysPage() {
             value={formData.guests}
             onChange={handleChange}
             className="w-full p-3 border rounded-lg text-black"
+            required
           />
 
           {/* Services */}
           <div className="space-y-2">
-            <p className="font-medium">Select Services:</p>
-            {servicesList.map((service) => (
-              <label
-                key={service.name}
-                className="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={formData.selectedServices.includes(service.name)}
-                  onChange={() => toggleService(service.name)}
-                />
-                {service.name} —{" "}
-                {service.name === "Catering"
-                  ? `${service.price} ETB / guest`
-                  : `${service.price} ETB`}
-              </label>
-            ))}
+            <p className="font-medium mb-2 text-black">Select Services:</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {servicesList.map((service) => {
+                const selected = formData.selectedServices.includes(
+                  service.name
+                );
+                return (
+                  <div
+                    key={service.name}
+                    onClick={() => toggleService(service.name)}
+                    className={`flex justify-between items-center p-3 border rounded-lg cursor-pointer transition ${
+                      selected
+                        ? "bg-yellow-100 border-yellow-400"
+                        : "bg-white border-black"
+                    }`}
+                  >
+                    <span className="font-medium text-black">
+                      {service.name}
+                    </span>
+                    <span className="text-black text-sm">
+                      {service.name === "Catering"
+                        ? `${service.price} ETB / guest`
+                        : `${service.price} ETB`}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {totalAmount > 0 && (
@@ -296,6 +259,7 @@ export default function BirthdaysPage() {
                     checked={formData.paymentMethod === method.name}
                     onChange={handleChange}
                     className="hidden"
+                    required
                   />
                   <Image
                     src={method.logo}
@@ -317,6 +281,7 @@ export default function BirthdaysPage() {
               accept="image/*"
               onChange={handleFileChange}
               className="w-full p-2 border rounded-lg"
+              required
             />
           )}
 

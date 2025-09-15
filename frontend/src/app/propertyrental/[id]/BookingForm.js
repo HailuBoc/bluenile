@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 
 export default function BookingForm({ property }) {
@@ -35,7 +35,6 @@ export default function BookingForm({ property }) {
     }
   };
 
-  // Automatically calculate nights from checkIn and checkOut
   const calculateNights = (checkIn, checkOut) => {
     if (!checkIn || !checkOut) return 0;
     const inDate = new Date(checkIn);
@@ -87,12 +86,11 @@ export default function BookingForm({ property }) {
         formData.paymentMethod === "Chapa" ? "pending" : "completed"
       );
       payload.append("specialRequests", formData.specialRequests || "");
-
       if (["Telebirr", "CBE Birr", "M-Pesa"].includes(formData.paymentMethod)) {
         payload.append("paymentEvidence", formData.paymentEvidence);
       }
 
-      const res = await fetch("http://localhost:10000/bookings", {
+      const res = await fetch("http://localhost:10000/propertyrentals", {
         method: "POST",
         body: payload,
       });

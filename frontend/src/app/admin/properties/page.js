@@ -12,17 +12,15 @@ export default function AdminPropertiesPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [search, setSearch] = useState("");
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null); // Track delete confirmation
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
-  // -------------------------------
-  // Add Property Form State
-  // -------------------------------
   const [listingType, setListingType] = useState("");
   const [serviceType, setServiceType] = useState("");
   const [formData, setFormData] = useState({});
   const [facilities, setFacilities] = useState([]);
   const [image, setImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [editingId, setEditingId] = useState(null);
 
   const facilityOptions = [
     "WiFi",
@@ -47,15 +45,10 @@ export default function AdminPropertiesPage() {
     "Leather Seats",
   ];
 
-  // ----------------------------
-  // Check authentication
-  // ----------------------------
+  // Authenticate admin
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/admin/login");
-      return;
-    }
+    if (!token) return router.push("/admin/login");
 
     const verifyToken = async () => {
       try {
@@ -63,18 +56,15 @@ export default function AdminPropertiesPage() {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAuthorized(true);
-      } catch (err) {
+      } catch {
         localStorage.removeItem("token");
         router.push("/admin/login");
       }
     };
-
     verifyToken();
   }, [router]);
 
-  // -------------------------------
-  // Fetch Properties
-  // -------------------------------
+  // Fetch all properties
   const fetchProperties = async () => {
     setLoading(true);
     try {
@@ -86,28 +76,19 @@ export default function AdminPropertiesPage() {
       const data = Array.isArray(res.data)
         ? res.data
         : res.data?.properties || [];
-
-      const formattedData = data.map((item) => {
-        const baseUrl = "http://localhost:10000";
-        let firstImage =
-          Array.isArray(item.imageUrl) && item.imageUrl.length > 0
-            ? item.imageUrl[0]
-            : typeof item.imageUrl === "string"
+      const formattedData = data.map((item) => ({
+        ...item,
+        rating: Number(item.rating ?? 0),
+        imageUrl: item.imageUrl
+          ? item.imageUrl.startsWith("http")
             ? item.imageUrl
-            : null;
-
-        const imageSrc = firstImage
-          ? firstImage.startsWith("http")
-            ? firstImage
-            : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
-          : null;
-
-        return { ...item, imageUrl: imageSrc };
-      });
+            : `http://localhost:10000${item.imageUrl}`
+          : null,
+      }));
 
       setProperties(formattedData);
     } catch (err) {
-      console.error("Error fetching properties:", err);
+      console.error(err);
       setErrorMessage("❌ Unable to fetch properties.");
     } finally {
       setLoading(false);
@@ -118,61 +99,17 @@ export default function AdminPropertiesPage() {
     if (authorized) fetchProperties();
   }, [authorized]);
 
-  // -------------------------------
-  // Fetch Single Property Dynamically
-  // -------------------------------
-  const fetchPropertyByNameAndService = async (propertyName, serviceType) => {
-    if (!propertyName || !serviceType) return;
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(
-        `http://localhost:10000/admin/properties/search`,
-        {
-          params: { propertyName, serviceType },
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (res.data) {
-        const p = res.data; // assume backend returns single property
-        setFormData({
-          userEmail: p.userEmail,
-          propertyName: p.propertyName,
-          address: p.address,
-          price: p.price,
-          description: p.description || "",
-        });
-        setListingType(p.listingType);
-        setServiceType(p.serviceType);
-        setFacilities(p.facilities || []);
-        setPreviewUrl(
-          Array.isArray(p.imageUrl) ? p.imageUrl[0] : p.imageUrl || null
-        );
-      }
-    } catch (err) {
-      console.error("Error fetching property:", err);
-      setErrorMessage("❌ Unable to fetch property.");
-      setTimeout(() => setErrorMessage(""), 4000);
-    }
-  };
-
-  useEffect(() => {
-    fetchPropertyByNameAndService(formData.propertyName, serviceType);
-  }, [formData.propertyName, serviceType]);
-
-  // -------------------------------
-  // Approve / Reject / Delete
-  // -------------------------------
+  // Approve/Reject/Delete
   const handleStatusChange = async (id, status) => {
     try {
       await axios.patch(
         `http://localhost:10000/admin/properties/${id}/status`,
         { status }
       );
-      setSuccessMessage(`✅ Property has been ${status} successfully!`);
+      setSuccessMessage(`✅ Property ${status}!`);
       fetchProperties();
       setTimeout(() => setSuccessMessage(""), 4000);
     } catch (err) {
-      console.error(err);
       setErrorMessage("❌ " + (err.response?.data?.error || err.message));
       setTimeout(() => setErrorMessage(""), 4000);
     }
@@ -181,20 +118,34 @@ export default function AdminPropertiesPage() {
   const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:10000/admin/properties/${id}`);
-      setSuccessMessage("✅ Property deleted successfully!");
+      setSuccessMessage("✅ Property deleted!");
       setDeleteConfirmId(null);
       fetchProperties();
       setTimeout(() => setSuccessMessage(""), 4000);
     } catch (err) {
-      console.error(err);
       setErrorMessage("❌ Unable to delete property.");
       setTimeout(() => setErrorMessage(""), 4000);
     }
   };
 
-  // -------------------------------
-  // Form Handlers
-  // -------------------------------
+  // Edit
+  const handleEdit = (property) => {
+    setEditingId(property._id);
+    setFormData({
+      userEmail: property.userEmail,
+      propertyName: property.propertyName,
+      address: property.address,
+      price: property.price,
+      description: property.description || "",
+      rating: property.rating ?? 0,
+    });
+    setListingType(property.listingType);
+    setServiceType(property.serviceType);
+    setFacilities(property.facilities || []);
+    setPreviewUrl(property.imageUrl || null);
+  };
+
+  // Form changes
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === "checkbox") {
@@ -217,10 +168,12 @@ export default function AdminPropertiesPage() {
     setServiceType("");
     setImage(null);
     setPreviewUrl(null);
+    setEditingId(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (
       !listingType ||
       !serviceType ||
@@ -229,9 +182,10 @@ export default function AdminPropertiesPage() {
       !formData.userEmail ||
       !formData.propertyName
     ) {
-      setErrorMessage("❌ Please fill all required fields.");
+      setErrorMessage("❌ Fill all required fields.");
       return;
     }
+
     try {
       const data = new FormData();
       data.append("listingType", listingType);
@@ -240,37 +194,80 @@ export default function AdminPropertiesPage() {
       data.append("userEmail", formData.userEmail);
       data.append("address", formData.address);
       data.append("price", formData.price);
+      data.append("rating", formData.rating ?? 0);
       data.append("facilities", JSON.stringify(facilities));
+
       if (formData.description)
         data.append("description", formData.description);
       if (image) data.append("image", image);
 
       const token = localStorage.getItem("token");
-      const res = await axios.post(
-        "http://localhost:10000/admin/properties",
-        data,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
+
+      if (editingId) {
+        const res = await axios.patch(
+          `http://localhost:10000/admin/properties/${editingId}`,
+          data,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        setProperties((prev) =>
+          prev.map((p) =>
+            p._id === editingId
+              ? {
+                  ...p,
+                  ...res.data.property,
+                  rating: Number(res.data.property.rating ?? 0),
+                  imageUrl: res.data.property.imageUrl
+                    ? res.data.property.imageUrl.startsWith("http")
+                      ? res.data.property.imageUrl
+                      : `http://localhost:10000${res.data.property.imageUrl}`
+                    : null,
+                }
+              : p
+          )
+        );
+
+        setSuccessMessage("✅ Property updated!");
+      } else {
+        const res = await axios.post(
+          "http://localhost:10000/admin/properties",
+          data,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        setProperties((prev) => [
+          {
+            ...res.data.property,
+            rating: Number(res.data.property.rating ?? 0),
+            imageUrl: res.data.property.imageUrl
+              ? res.data.property.imageUrl.startsWith("http")
+                ? res.data.property.imageUrl
+                : `http://localhost:10000${res.data.property.imageUrl}`
+              : null,
           },
-        }
-      );
-      if (res.status !== 201) throw new Error("Failed to submit property");
-      setSuccessMessage("✅ Property submitted successfully!");
-      setErrorMessage("");
+          ...prev,
+        ]);
+
+        setSuccessMessage("✅ Property submitted!");
+      }
+
       resetForm();
-      fetchProperties();
       setTimeout(() => setSuccessMessage(""), 4000);
     } catch (err) {
-      console.error(err);
       setErrorMessage("❌ " + (err.response?.data?.error || err.message));
     }
   };
 
-  // -------------------------------
-  // Filter Properties
-  // -------------------------------
   const filteredProperties = properties.filter(
     (p) =>
       p.propertyName?.toLowerCase().includes(search.toLowerCase()) ||
@@ -292,7 +289,6 @@ export default function AdminPropertiesPage() {
       <h1 className="text-3xl font-bold text-white mb-6">
         Admin: Manage Properties
       </h1>
-
       {successMessage && (
         <p className="mb-4 text-green-400 font-semibold text-center">
           {successMessage}
@@ -304,12 +300,11 @@ export default function AdminPropertiesPage() {
         </p>
       )}
 
-      {/* Add Property Form */}
+      {/* ----------------- Form ----------------- */}
       <form
         className="bg-gray-800 p-8 rounded-2xl shadow text-white w-full max-w-4xl space-y-6 mb-8"
         onSubmit={handleSubmit}
       >
-        {/* --- FORM CONTENT REMAINS EXACTLY THE SAME --- */}
         <div>
           <label className="block mb-2 font-medium">User Email</label>
           <input
@@ -321,6 +316,7 @@ export default function AdminPropertiesPage() {
             required
           />
         </div>
+
         <div>
           <label className="block mb-2 font-medium">Property Name</label>
           <input
@@ -332,6 +328,7 @@ export default function AdminPropertiesPage() {
             required
           />
         </div>
+
         <div>
           <label className="block mb-2 font-medium">Listing Purpose</label>
           <select
@@ -346,6 +343,7 @@ export default function AdminPropertiesPage() {
             <option value="tourism">Tourism Service</option>
           </select>
         </div>
+
         <div>
           <label className="block mb-2 font-medium">Service Type</label>
           <select
@@ -363,6 +361,7 @@ export default function AdminPropertiesPage() {
             <option value="tourism">Tourism Site</option>
           </select>
         </div>
+
         <div>
           <input
             type="text"
@@ -374,6 +373,7 @@ export default function AdminPropertiesPage() {
             required
           />
         </div>
+
         <div>
           <input
             type="number"
@@ -385,6 +385,7 @@ export default function AdminPropertiesPage() {
             required
           />
         </div>
+
         <div>
           <textarea
             name="description"
@@ -394,6 +395,22 @@ export default function AdminPropertiesPage() {
             className="w-full border border-gray-500 bg-gray-900 rounded p-3 mb-3"
           />
         </div>
+
+        {/* Rating Input */}
+        <div>
+          <label className="block mb-2 font-medium">Rating (0-5)</label>
+          <input
+            type="number"
+            name="rating"
+            value={formData.rating || ""}
+            onChange={handleChange}
+            min={0}
+            max={5}
+            step={0.1}
+            className="w-full border border-gray-500 bg-gray-900 rounded p-3 mb-3"
+          />
+        </div>
+
         <div>
           <label className="block mb-2 font-medium">Property Image</label>
           <input type="file" accept="image/*" onChange={handleChange} />
@@ -407,6 +424,7 @@ export default function AdminPropertiesPage() {
             </div>
           )}
         </div>
+
         <div>
           <h3 className="text-lg font-semibold mb-3">
             {serviceType === "tourism"
@@ -435,11 +453,12 @@ export default function AdminPropertiesPage() {
             ))}
           </div>
         </div>
+
         <button
           type="submit"
           className="w-full py-3 bg-green-600 text-white rounded hover:bg-green-700"
         >
-          Submit Property
+          {editingId ? "Update Property" : "Submit Property"}
         </button>
       </form>
 
@@ -454,7 +473,7 @@ export default function AdminPropertiesPage() {
         />
       </div>
 
-      {/* Properties Table */}
+      {/* ----------------- Table ----------------- */}
       <table className="w-full max-w-6xl text-left text-white border border-gray-700">
         <thead>
           <tr className="bg-gray-800">
@@ -464,6 +483,7 @@ export default function AdminPropertiesPage() {
             <th className="p-3 border-b">Type</th>
             <th className="p-3 border-b">Listing</th>
             <th className="p-3 border-b">Price</th>
+            <th className="p-3 border-b">Rating</th>
             <th className="p-3 border-b">Status</th>
             <th className="p-3 border-b">Actions</th>
           </tr>
@@ -487,48 +507,54 @@ export default function AdminPropertiesPage() {
               <td className="p-3">{p.serviceType}</td>
               <td className="p-3">{p.listingType}</td>
               <td className="p-3">{p.price}</td>
+              {/* ✅ Rating is permanent now */}
+              <td className="p-3">{p.rating?.toFixed(1)}</td>
               <td className="p-3">{p.status}</td>
               <td className="p-3 space-x-2">
                 {p.status === "pending" && (
                   <>
                     <button
-                      className="px-3 py-1 bg-green-600 rounded hover:bg-green-700"
                       onClick={() => handleStatusChange(p._id, "approved")}
+                      className="px-3 py-1 bg-green-600 rounded hover:bg-green-700"
                     >
                       Approve
                     </button>
                     <button
-                      className="px-3 py-1 bg-red-600 rounded hover:bg-red-700"
                       onClick={() => handleStatusChange(p._id, "rejected")}
+                      className="px-3 py-1 bg-red-600 rounded hover:bg-red-700"
                     >
                       Reject
                     </button>
                   </>
                 )}
-
-                {/* --- UPDATED DELETE BUTTON LOGIC --- */}
+                <button
+                  onClick={() => handleEdit(p)}
+                  className="px-3 py-1 bg-blue-600 rounded hover:bg-blue-700"
+                >
+                  Edit
+                </button>
                 {deleteConfirmId === p._id ? (
                   <>
                     <span className="text-yellow-400 mr-2">
                       Confirm delete?
                     </span>
                     <button
-                      className="px-3 py-1 bg-red-600 rounded hover:bg-red-700"
                       onClick={() => handleDelete(p._id)}
+                      className="px-3 py-1 bg-red-600 rounded hover:bg-red-700"
                     >
                       Yes
                     </button>
                     <button
-                      className="px-3 py-1 bg-gray-600 rounded hover:bg-gray-700"
                       onClick={() => setDeleteConfirmId(null)}
+                      className="px-3 py-1 bg-gray-600 rounded hover:bg-gray-700"
                     >
                       No
                     </button>
                   </>
                 ) : (
                   <button
-                    className="px-3 py-1 bg-gray-600 rounded hover:bg-gray-700"
                     onClick={() => setDeleteConfirmId(p._id)}
+                    className="px-3 py-1 bg-red-600 rounded hover:bg-red-700"
                   >
                     Delete
                   </button>
@@ -536,6 +562,13 @@ export default function AdminPropertiesPage() {
               </td>
             </tr>
           ))}
+          {filteredProperties.length === 0 && (
+            <tr>
+              <td colSpan="9" className="p-3 text-center text-gray-400">
+                No properties found.
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>

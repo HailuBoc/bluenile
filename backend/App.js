@@ -3,13 +3,13 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import path from "path";
-
+import formidableMiddleware from "express-formidable";
 // Routes
 import transportRoutes from "./routes/transportRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import propertyRoutes from "./routes/propertyRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
-import weddingRoutes from "./routes/weddings.js";
+import weddingRoutes from "./routes/weddingRoutes.js";
 import birthdayRoutes from "./routes/birthdays.js";
 import graduationRoutes from "./routes/graduations.js";
 import generalEventRoutes from "./routes/generalEvents.js";
@@ -23,7 +23,10 @@ import houseRoutes from "./routes/houseRoutes.js";
 import testEmailRoutes from "./routes/testEmail.js";
 import CarSaleRoutes from "./routes/CarSaleRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
-
+// import likesRoutes from "./routes/likes.js";
+import carRoutes from "./routes/carRoutes.js";
+import tourismReservations from "./routes/tourismReservations.js";
+import saleRoutesReserve from "./routes/saleRoutesReserve.js";
 dotenv.config();
 const PORT = process.env.PORT || 10000;
 
@@ -32,6 +35,7 @@ const app = express();
 // --------------------
 // Middleware
 // --------------------
+
 app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -43,10 +47,10 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use("/test", testEmailRoutes);
 app.use("/admin", adminRoutes);
 app.use("/auth", authRoutes);
-app.use("/bookings", rentalRoutes);
+app.use("/propertyrentals", rentalRoutes);
 app.use("/bookings/pay", paymentRoutes);
 app.use("/general-events/pay", paymentRoutes);
-app.use("/api/houses", houseRoutes);
+app.use("/houses", houseRoutes);
 app.use("/carsale/reservations", CarSaleRoutes);
 app.use("/weddings", weddingRoutes);
 app.use("/birthdays", birthdayRoutes);
@@ -55,20 +59,24 @@ app.use("/general-events", generalEventRoutes);
 app.use("/quotes", quoteRoutes);
 app.use("/products/reservations", productRoutes);
 app.use("/rentalCars/reservations", rentalRoutes);
+app.use("/tourism/reservations", tourismReservations);
 app.use("/tour-bookings", tourBookingRoutes);
 app.use("/transports", transportRoutes);
-app.use("/sale", saleRoutes);
+app.use("/sales", saleRoutes);
 app.use("/vip-bookings", vipTourRoutes);
 app.use("/properties", propertyRoutes);
+// app.use("/api/likes", likesRoutes);
+app.use("/cars", carRoutes);
+app.use("/sale", saleRoutesReserve);
 // Global error handler (JSON)
-app.use((err, req, res, next) => {
-  console.error("Global error handler:", err.stack);
-  res
-    .status(500)
-    .json({ error: "Internal Server Error", details: err.message });
+app.use((req, res, next) => {
+  if (req.is("application/json")) {
+    return express.json()(req, res, next);
+  }
+  next();
 });
 
-// --------------------
+// --------- -----------
 // MongoDB Connection with Retry
 // --------------------
 const connectWithRetry = async (retries = 5, delay = 5000) => {
