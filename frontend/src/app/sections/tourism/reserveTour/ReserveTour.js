@@ -31,6 +31,8 @@ export default function ReserveTourismPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:10000";
+
   // ✅ Fetch tourism details
   useEffect(() => {
     const id = searchParams.get("id");
@@ -38,11 +40,8 @@ export default function ReserveTourismPage() {
 
     const fetchTourism = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:10000/admin/properties/${id}`
-        );
+        const res = await axios.get(`${API_URL}/admin/properties/${id}`);
 
-        const baseUrl = "http://localhost:10000";
         const firstImage =
           Array.isArray(res.data.imageUrl) && res.data.imageUrl.length > 0
             ? res.data.imageUrl[0]
@@ -53,7 +52,7 @@ export default function ReserveTourismPage() {
         const imageSrc = firstImage
           ? firstImage.startsWith("http")
             ? firstImage
-            : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
+            : `${API_URL}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
           : null;
 
         setTourism({ ...res.data, imageUrl: imageSrc });
@@ -64,7 +63,7 @@ export default function ReserveTourismPage() {
     };
 
     fetchTourism();
-  }, [searchParams]);
+  }, [searchParams, API_URL]);
 
   // Auto-hide messages
   useEffect(() => {
@@ -104,7 +103,6 @@ export default function ReserveTourismPage() {
     setLoading(true);
 
     try {
-      // Send JSON instead of FormData
       const reservationData = {
         tourismId: tourism._id,
         tourismTitle: tourism.propertyName || tourism.name,
@@ -116,29 +114,24 @@ export default function ReserveTourismPage() {
         email: guestInfo.email,
         phone: guestInfo.phone,
         paymentMethod: guestInfo.paymentMethod,
-        // paymentEvidence removed
       };
 
       const res = await axios.post(
-        "http://localhost:10000/tourism/reservations",
+        `${API_URL}/tourism/reservations`,
         reservationData,
         { headers: { "Content-Type": "application/json" } }
       );
 
       const reservationId = res.data?.reservation?._id;
 
-      // Handle Chapa payment after reservation
       if (guestInfo.paymentMethod === "chapa" && reservationId) {
         try {
-          const payRes = await axios.post(
-            "http://localhost:10000/bookings/pay/chapa",
-            {
-              amount: totalPrice,
-              email: guestInfo.email,
-              fullName: guestInfo.name,
-              bookingId: reservationId,
-            }
-          );
+          const payRes = await axios.post(`${API_URL}/bookings/pay/chapa`, {
+            amount: totalPrice,
+            email: guestInfo.email,
+            fullName: guestInfo.name,
+            bookingId: reservationId,
+          });
           if (payRes.data.checkout_url) {
             window.location.href = payRes.data.checkout_url;
             return;
