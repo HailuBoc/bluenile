@@ -1,32 +1,34 @@
-// import { NextResponse } from "next/server";
-// import { MongoClient } from "mongodb";
+import { NextResponse } from "next/server";
 
-// const uri = process.env.MONGODB_URI;
-// let client;
+export async function POST(req) {
+  try {
+    const body = await req.json();
 
-// export async function POST(req) {
-//   try {
-//     const body = await req.json();
+    // Call your Render backend API instead of MongoDB
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/properties`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }
+    );
 
-//     if (!client) {
-//       client = new MongoClient(uri);
-//       await client.connect();
-//     }
+    if (!res.ok) {
+      throw new Error(`Backend error: ${res.status}`);
+    }
 
-//     const db = client.db("realestate");
-//     const collection = db.collection("properties");
+    const data = await res.json();
 
-//     const result = await collection.insertOne(body);
-
-//     return NextResponse.json(
-//       { message: "Property posted successfully", id: result.insertedId },
-//       { status: 201 }
-//     );
-//   } catch (error) {
-//     console.error("❌ API error:", error);
-//     return NextResponse.json(
-//       { error: "Failed to save property", details: error.message },
-//       { status: 500 }
-//     );
-//   }
-// }
+    return NextResponse.json(
+      { message: "Property posted successfully", property: data },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("❌ API error:", error);
+    return NextResponse.json(
+      { error: "Failed to save property", details: error.message },
+      { status: 500 }
+    );
+  }
+}
