@@ -10,6 +10,8 @@ export default function AdminPaymentsPage() {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
   // ----------------------------
   // Check authentication
   // ----------------------------
@@ -22,7 +24,7 @@ export default function AdminPaymentsPage() {
 
     const verifyToken = async () => {
       try {
-        await axios.get("https://bluenile.onrender.com/admin/verify-token", {
+        await axios.get(`${baseUrl}/admin/verify-token`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAuthorized(true);
@@ -33,7 +35,7 @@ export default function AdminPaymentsPage() {
     };
 
     verifyToken();
-  }, [router]);
+  }, [router, baseUrl]);
 
   // ----------------------------
   // Fetch payments
@@ -42,12 +44,13 @@ export default function AdminPaymentsPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:10000/admin/bookings", {
+      const res = await axios.get(`${baseUrl}/admin/bookings`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPayments(res.data.bookings || []);
     } catch (err) {
       console.error("Error fetching payments:", err);
+      setPayments([]);
     } finally {
       setLoading(false);
     }

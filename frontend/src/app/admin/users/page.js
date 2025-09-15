@@ -12,6 +12,8 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
 
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
   // ----------------------------
   // Check authentication
   // ----------------------------
@@ -24,7 +26,7 @@ export default function AdminUsersPage() {
 
     const verifyToken = async () => {
       try {
-        await axios.get("https://bluenile.onrender.com/admin/verify-token", {
+        await axios.get(`${baseUrl}/admin/verify-token`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAuthorized(true); // token valid, allow rendering
@@ -35,7 +37,7 @@ export default function AdminUsersPage() {
     };
 
     verifyToken();
-  }, [router]);
+  }, [router, baseUrl]);
 
   // ----------------------------
   // Fetch all users
@@ -44,11 +46,11 @@ export default function AdminUsersPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("https://bluenile.onrender.com/admin/users", {
+      const res = await axios.get(`${baseUrl}/admin/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setUsers(res.data.users);
-      setFiltered(res.data.users);
+      setUsers(res.data.users || []);
+      setFiltered(res.data.users || []);
     } catch (err) {
       console.error("Error fetching users:", err);
     } finally {
@@ -83,7 +85,7 @@ export default function AdminUsersPage() {
     if (!confirm("Are you sure you want to delete this user?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`https://bluenile.onrender.com/admin/users/${id}`, {
+      await axios.delete(`${baseUrl}/admin/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchUsers();

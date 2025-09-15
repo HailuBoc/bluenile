@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 
 export default function TransportBookingPage() {
   const router = useRouter();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL; // ← environment variable
+
   const [formData, setFormData] = useState({
     start: "",
     end: "",
@@ -47,15 +49,11 @@ export default function TransportBookingPage() {
     setLoading(true);
 
     try {
-      // Replace URL with your backend endpoint if needed
-      const res = await fetch(
-        "https://bluenile.onrender.com/transport/bookings",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        }
-      );
+      const res = await fetch(`${API_URL}/transport/bookings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
       const data = await res.json();
 

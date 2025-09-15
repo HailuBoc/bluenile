@@ -9,6 +9,9 @@ export default function SalesPurchaseForm() {
   const params = useParams();
   const { id } = params;
 
+  const backendUrl =
+    process.env.NEXT_PUBLIC_BACKEND_URL || "https://bluenile.onrender.com";
+
   const listings = [
     {
       title: "Modern 3-Bedroom Apartment",
@@ -102,7 +105,7 @@ export default function SalesPurchaseForm() {
       formPayload.append("email", formData.email);
       formPayload.append("phone", formData.phone);
       formPayload.append("paymentMethod", formData.paymentMethod);
-      formPayload.append("car", item.title);
+      formPayload.append("itemTitle", item.title);
       formPayload.append("amount", item.price);
       formPayload.append("specialRequests", formData.specialRequests);
       if (formData.paymentEvidence) {
@@ -110,7 +113,7 @@ export default function SalesPurchaseForm() {
       }
 
       // Step 1: Create booking
-      const bookingRes = await fetch("https://bluenile.onrender.com/sale", {
+      const bookingRes = await fetch(`${backendUrl}/sale`, {
         method: "POST",
         body: formPayload,
       });
@@ -121,22 +124,19 @@ export default function SalesPurchaseForm() {
 
       const bookingId = bookingData.booking?._id;
 
-      // Step 2: Handle Chapa
+      // Step 2: Handle Chapa payment
       if (formData.paymentMethod === "Chapa") {
-        const payRes = await fetch(
-          "https://bluenile.onrender.com/bookings/pay/chapa",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              amount: item.price,
-              currency: "ETB",
-              email: formData.email,
-              fullName: formData.name,
-              bookingId,
-            }),
-          }
-        );
+        const payRes = await fetch(`${backendUrl}/bookings/pay/chapa`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: item.price,
+            currency: "ETB",
+            email: formData.email,
+            fullName: formData.name,
+            bookingId,
+          }),
+        });
 
         const payData = await payRes.json();
         if (payData?.checkout_url) {

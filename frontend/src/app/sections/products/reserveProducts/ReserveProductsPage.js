@@ -9,6 +9,9 @@ export default function ReservationPage() {
   const params = useSearchParams();
   const id = params.get("id");
 
+  const backendUrl =
+    process.env.NEXT_PUBLIC_BACKEND_URL || "https://bluenile.onrender.com";
+
   const [product, setProduct] = useState(null);
   const [error, setError] = useState("");
   const [guestInfo, setGuestInfo] = useState({
@@ -25,6 +28,7 @@ export default function ReservationPage() {
   const [checkOut, setCheckOut] = useState(
     new Date(Date.now() + 2 * 86400000).toISOString().split("T")[0]
   );
+
   const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -32,14 +36,11 @@ export default function ReservationPage() {
   useEffect(() => {
     async function fetchProduct() {
       try {
-        const res = await fetch(
-          `https://bluenile.onrender.com/admin/properties/${id}`
-        );
+        const res = await fetch(`${backendUrl}/admin/properties/${id}`);
         if (!res.ok)
           throw new Error(`Failed to fetch product (status ${res.status})`);
         const data = await res.json();
 
-        const baseUrl = "https://bluenile.onrender.com";
         let firstImage =
           Array.isArray(data.imageUrl) && data.imageUrl.length > 0
             ? data.imageUrl[0]
@@ -50,7 +51,9 @@ export default function ReservationPage() {
         const imageSrc = firstImage
           ? firstImage.startsWith("http")
             ? firstImage
-            : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
+            : `${backendUrl}${
+                firstImage.startsWith("/") ? "" : "/"
+              }${firstImage}`
           : null;
 
         const location =
@@ -62,7 +65,7 @@ export default function ReservationPage() {
       }
     }
     if (id) fetchProduct();
-  }, [id]);
+  }, [id, backendUrl]);
 
   const renderStars = (rating) => {
     const stars = [];
@@ -144,40 +147,31 @@ export default function ReservationPage() {
           : "",
       };
 
-      // 1️⃣ Create reservation
-      const res = await fetch(
-        "https://bluenile.onrender.com/products/reservations",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
+      const res = await fetch(`${backendUrl}/products/reservations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
       const data = await res.json();
       if (!res.ok)
-        throw new Error(data?.error || `Failed to create reservation`);
+        throw new Error(data?.error || "Failed to create reservation");
 
       const reservationId = data?.reservation?._id;
 
-      // 2️⃣ Initialize Chapa payment if selected
       if (guestInfo.paymentMethod === "chapa") {
-        const payRes = await fetch(
-          "https://bluenile.onrender.com/bookings/pay/chapa",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              amount: totalPrice,
-              email: guestInfo.email,
-              fullName: guestInfo.name,
-              bookingId: reservationId,
-            }),
-          }
-        );
+        const payRes = await fetch(`${backendUrl}/bookings/pay/chapa`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: totalPrice,
+            email: guestInfo.email,
+            fullName: guestInfo.name,
+            bookingId: reservationId,
+          }),
+        });
         const payData = await payRes.json();
 
         if (payData.checkout_url) {
-          // Redirect to Chapa checkout
           window.location.href = payData.checkout_url;
           return;
         } else {
@@ -208,7 +202,13 @@ export default function ReservationPage() {
     <>
       <main className="max-w-6xl mx-auto p-6">
         {successMessage && (
-          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded shadow-lg z-50">
+          <div
+            className={`fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded shadow-lg z-50 ${
+              successMessage.startsWith("✅")
+                ? "bg-green-600 text-white"
+                : "bg-red-600 text-white"
+            }`}
+          >
             {successMessage}
           </div>
         )}
@@ -216,23 +216,21 @@ export default function ReservationPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
           {/* Left: Product Info */}
           <section className="md:col-span-2 flex flex-col gap-6">
-            <img
-              src={product.imageUrl}
-              alt={product.propertyName}
-              className="rounded-lg w-full h-80 object-cover shadow"
-            />
+            {product.imageUrl && (
+              <img
+                src={product.imageUrl}
+                alt={product.propertyName}
+                className="rounded-lg w-full h-80 object-cover shadow"
+              />
+            )}
             <div>
               <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">
                 {product.propertyName}
               </h1>
-
-              {/* Location */}
               <p className="flex items-center text-blue-600 dark:text-blue-400 text-sm mt-1">
                 <MapPin className="w-4 h-4 mr-1" />
                 {product.location}
               </p>
-
-              {/* Rating */}
               <div className="flex items-center mt-2 space-x-1">
                 {renderStars(product.rating || 0)}
                 <span className="text-sm text-gray-500 dark:text-gray-300">
@@ -252,7 +250,6 @@ export default function ReservationPage() {
                 <li>✔ 24/7 Support</li>
               </ul>
 
-              {/* Map */}
               <div className="mt-6">
                 <h2 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white">
                   Location

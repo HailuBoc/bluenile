@@ -9,6 +9,9 @@ export default function HouseSaleReservationPage() {
   const params = useSearchParams();
   const id = params.get("id");
 
+  const API_URL =
+    process.env.NEXT_PUBLIC_API_URL || "https://bluenile.onrender.com";
+
   const [house, setHouse] = useState(null);
   const [error, setError] = useState("");
   const [guestInfo, setGuestInfo] = useState({
@@ -18,7 +21,6 @@ export default function HouseSaleReservationPage() {
     appointmentDate: new Date().toISOString().split("T")[0],
     paymentMethod: "cash",
   });
-
   const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -26,15 +28,12 @@ export default function HouseSaleReservationPage() {
   useEffect(() => {
     async function fetchHouse() {
       try {
-        const res = await fetch(
-          `https://bluenile.onrender.com/admin/properties/${id}`
-        );
+        const res = await fetch(`${API_URL}/admin/properties/${id}`);
         if (!res.ok)
           throw new Error(`Failed to fetch house (status ${res.status})`);
         const data = await res.json();
 
-        const baseUrl = "https://bluenile.onrender.com";
-        let firstImage =
+        const firstImage =
           Array.isArray(data.imageUrl) && data.imageUrl.length > 0
             ? data.imageUrl[0]
             : typeof data.imageUrl === "string"
@@ -44,7 +43,7 @@ export default function HouseSaleReservationPage() {
         const imageSrc = firstImage
           ? firstImage.startsWith("http")
             ? firstImage
-            : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
+            : `${API_URL}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
           : null;
 
         const location =
@@ -56,8 +55,9 @@ export default function HouseSaleReservationPage() {
         setError(err.message);
       }
     }
+
     if (id) fetchHouse();
-  }, [id]);
+  }, [id, API_URL]);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -90,14 +90,11 @@ export default function HouseSaleReservationPage() {
         paymentMethod: guestInfo.paymentMethod,
       };
 
-      const res = await fetch(
-        "https://bluenile.onrender.com/houses/reservations",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
+      const res = await fetch(`${API_URL}/houses/reservations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
       const data = await res.json();
       if (!res.ok)
@@ -106,7 +103,6 @@ export default function HouseSaleReservationPage() {
       setSuccessMessage(
         `✅ Appointment for ${house.houseName} successfully booked!`
       );
-
       setGuestInfo({
         name: "",
         email: "",
@@ -139,7 +135,13 @@ export default function HouseSaleReservationPage() {
     <>
       <main className="max-w-6xl mx-auto p-6">
         {successMessage && (
-          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded shadow-lg z-50">
+          <div
+            className={`fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded shadow-lg z-50 ${
+              successMessage.startsWith("✅")
+                ? "bg-green-600 text-white"
+                : "bg-red-600 text-white"
+            }`}
+          >
             {successMessage}
           </div>
         )}
@@ -147,11 +149,14 @@ export default function HouseSaleReservationPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
           {/* Left: House Info */}
           <section className="md:col-span-2 flex flex-col gap-6">
-            <img
-              src={house.imageUrl}
-              alt={house.houseName}
-              className="rounded-lg w-full h-80 object-cover shadow"
-            />
+            {house.imageUrl && (
+              <img
+                src={house.imageUrl}
+                alt={house.houseName}
+                className="rounded-lg w-full h-80 object-cover shadow"
+              />
+            )}
+
             <div>
               <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">
                 {house.houseName}
@@ -163,7 +168,7 @@ export default function HouseSaleReservationPage() {
               </p>
 
               <div className="mt-4 text-gray-700 dark:text-gray-300">
-                {house.description}
+                {house.description || "No description available."}
               </div>
 
               <h2 className="text-xl font-semibold mt-4 mb-2 text-gray-900 dark:text-white">

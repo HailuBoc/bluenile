@@ -2,13 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  Star,
-  StarHalf,
-  Star as StarOutline,
-  Heart,
-  MapPin,
-} from "lucide-react";
+import { Star, StarHalf, Heart, MapPin } from "lucide-react";
 import Link from "next/link";
 import Footer from "../../../components/Footer";
 import axios from "axios";
@@ -16,6 +10,9 @@ import axios from "axios";
 export default function ProductsPage() {
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
+
+  const backendUrl =
+    process.env.NEXT_PUBLIC_BACKEND_URL || "https://bluenile.onrender.com";
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [liked, setLiked] = useState(false);
@@ -33,12 +30,10 @@ export default function ProductsPage() {
       try {
         setLoading(true);
         const res = await axios.get(
-          `https://bluenile.onrender.com/admin/properties/${idParam}`
+          `${backendUrl}/admin/properties/${idParam}`
         );
         const product = res.data;
 
-        // Handle backend image paths
-        const baseUrl = "https://bluenile.onrender.com";
         let firstImage =
           Array.isArray(product.imageUrl) && product.imageUrl.length > 0
             ? product.imageUrl[0]
@@ -49,7 +44,9 @@ export default function ProductsPage() {
         const imageSrc = firstImage
           ? firstImage.startsWith("http")
             ? firstImage
-            : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
+            : `${backendUrl}${
+                firstImage.startsWith("/") ? "" : "/"
+              }${firstImage}`
           : null;
 
         setSelectedProduct({ ...product, imageUrl: imageSrc });
@@ -64,9 +61,8 @@ export default function ProductsPage() {
     };
 
     fetchProduct();
-  }, [idParam]);
+  }, [idParam, backendUrl]);
 
-  // ⭐ Render visual stars
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -74,8 +70,7 @@ export default function ProductsPage() {
         stars.push(<Star key={i} className="h-5 w-5 text-yellow-400" />);
       else if (rating >= i - 0.5)
         stars.push(<StarHalf key={i} className="h-5 w-5 text-yellow-400" />);
-      else
-        stars.push(<StarOutline key={i} className="h-5 w-5 text-gray-400" />);
+      else stars.push(<Star key={i} className="h-5 w-5 text-gray-400" />);
     }
     return stars;
   };
@@ -111,12 +106,14 @@ export default function ProductsPage() {
         <div className="flex flex-col md:flex-row gap-6">
           {/* Left side - Image */}
           <div className="md:w-1/2 relative rounded-xl overflow-hidden shadow-lg">
-            <img
-              src={selectedProduct.imageUrl}
-              alt={selectedProduct.propertyName || "Property"}
-              className="w-full h-full object-cover rounded-xl"
-              style={{ minHeight: "400px" }}
-            />
+            {selectedProduct.imageUrl && (
+              <img
+                src={selectedProduct.imageUrl}
+                alt={selectedProduct.propertyName || "Property"}
+                className="w-full h-full object-cover rounded-xl"
+                style={{ minHeight: "400px" }}
+              />
+            )}
             <button
               onClick={() => setLiked(!liked)}
               className="absolute top-4 right-4 bg-white dark:bg-gray-800 p-2 rounded-full shadow"
@@ -142,13 +139,13 @@ export default function ProductsPage() {
               {selectedProduct.propertyName}
             </h1>
 
-            {/* ⭐ Location */}
+            {/* Location */}
             <div className="flex items-center text-gray-600 dark:text-gray-300 mb-2">
               <MapPin className="h-5 w-5 mr-1 text-gray-400" />
               <span>{selectedProduct.address || "No address"}</span>
             </div>
 
-            {/* ⭐ Visual Rating */}
+            {/* Rating */}
             <div className="flex items-center mb-2 space-x-1">
               {renderStars(selectedProduct.rating || 0)}
               <span className="text-sm text-gray-500 dark:text-gray-300">
@@ -156,18 +153,19 @@ export default function ProductsPage() {
               </span>
             </div>
 
-            {/* ⭐ Price */}
+            {/* Price */}
             <div className="text-xl font-semibold mb-4">
               {selectedProduct.price
                 ? `${selectedProduct.price} Br`
                 : "Price not available"}
             </div>
 
+            {/* Description */}
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
-              {selectedProduct.description}
+              {selectedProduct.description || "No description available."}
             </p>
 
-            {/* ⭐ Stay Highlights Section */}
+            {/* Highlights Section */}
             <div>
               <h2 className="text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-2 sm:mb-3 text-gray-900 dark:text-white">
                 Stay Highlights

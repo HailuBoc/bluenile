@@ -39,6 +39,9 @@ export default function WeddingsPage() {
     { name: "CBE Bank", logo: "/cbebirr.png" },
   ];
 
+  const backendUrl =
+    process.env.NEXT_PUBLIC_BACKEND_URL || "https://bluenile.onrender.com";
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -140,8 +143,7 @@ export default function WeddingsPage() {
         totalAmount,
       };
 
-      // Always send JSON
-      const res = await fetch("https://bluenile.onrender.com/weddings", {
+      const res = await fetch(`${backendUrl}/weddings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -152,22 +154,18 @@ export default function WeddingsPage() {
 
       const bookingId = data.booking._id;
 
-      // Chapa payment
       if (formData.paymentMethod === "Chapa") {
-        const payRes = await fetch(
-          "https://bluenile.onrender.com/weddings/pay/chapa",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              amount: totalAmount,
-              currency: "ETB",
-              email: formData.email,
-              fullName: formData.name,
-              bookingId,
-            }),
-          }
-        );
+        const payRes = await fetch(`${backendUrl}/weddings/pay/chapa`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: totalAmount,
+            currency: "ETB",
+            email: formData.email,
+            fullName: formData.name,
+            bookingId,
+          }),
+        });
 
         const payData = await payRes.json();
         if (payData.checkout_url) {

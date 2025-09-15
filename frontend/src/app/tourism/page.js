@@ -17,6 +17,9 @@ import {
 import Link from "next/link";
 
 export default function TourismPage() {
+  const API_URL =
+    process.env.NEXT_PUBLIC_API_URL || "https://bluenile.onrender.com";
+
   const [activeTab, setActiveTab] = useState("regular"); // "regular" | "vip"
   const [search, setSearch] = useState("");
   const [formData, setFormData] = useState({
@@ -186,10 +189,13 @@ export default function TourismPage() {
         formPayload.append("paymentProof", formData.paymentProof);
       }
 
-      const res = await fetch("https://bluenile.onrender.com/vip-bookings", {
-        method: "POST",
-        body: formPayload,
-      });
+      const res = await fetch(
+        `${API_URL}https://bluenile.onrender.com/vip-bookings`,
+        {
+          method: "POST",
+          body: formPayload,
+        }
+      );
 
       const text = await res.text();
       let data;

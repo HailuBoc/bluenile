@@ -1,4 +1,5 @@
 "use client";
+
 import { Cake, CheckCircle, XCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import Image from "next/image";
@@ -36,6 +37,8 @@ export default function BirthdaysPage() {
   const [loading, setLoading] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0);
 
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
   // Calculate total dynamically
   useEffect(() => {
     const servicesTotal = formData.selectedServices.reduce((acc, sName) => {
@@ -66,7 +69,6 @@ export default function BirthdaysPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setLoading(true);
     setStatus({ text: "", type: "" });
 
@@ -92,7 +94,7 @@ export default function BirthdaysPage() {
         payload.append("paymentEvidence", formData.paymentEvidence);
       }
 
-      const res = await fetch("https://bluenile.onrender.com/birthdays", {
+      const res = await fetch(`${API_BASE}/birthdays`, {
         method: "POST",
         body: payload,
       });

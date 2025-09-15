@@ -9,28 +9,27 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage({ type: "", text: "" });
 
     try {
-      const res = await fetch(
-        "https://bluenile.onrender.com/auth/forgot-password",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        }
-      );
+      const res = await fetch(`${baseUrl}/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || data.message);
 
       setMessage({ type: "success", text: "✅ OTP sent to your email." });
 
-      setTimeout(() => router.push("/auth/OTPVerification"), 1500);
       localStorage.setItem("resetEmail", email);
+      setTimeout(() => router.push("/auth/OTPVerification"), 1500);
     } catch (err) {
       setMessage({ type: "error", text: `❌ ${err.message}` });
     } finally {

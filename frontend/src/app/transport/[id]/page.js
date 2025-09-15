@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import { fleet } from "../../../data/fleet";
 
 export default function TransportDetailPage({ params }) {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL; // ← environment variable
   const unwrappedParams = use(params);
   const { id } = unwrappedParams;
 
@@ -82,7 +83,8 @@ export default function TransportDetailPage({ params }) {
     setMessage({ text: "", type: "" });
 
     try {
-      const res = await fetch("https://bluenile.onrender.com/transports", {
+      const res = await fetch(`${API_URL}/transports`, {
+        // ← updated
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

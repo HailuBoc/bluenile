@@ -24,12 +24,12 @@ export default function CarsCard({
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(initialLikes);
 
+  const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+
   const toggleLike = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.put(
-        `https://bluenile.onrender.com/cars/${_id}/like`
-      );
+      const res = await axios.put(`${BASE_URL}/cars/${_id}/like`);
       setLikes(res.data.likes); // update likes count from backend
       setLiked(!liked);
     } catch (err) {
@@ -37,7 +37,6 @@ export default function CarsCard({
     }
   };
 
-  const baseUrl = "https://bluenile.onrender.com";
   const firstImage =
     Array.isArray(imageUrl) && imageUrl.length > 0
       ? imageUrl[0]
@@ -48,7 +47,7 @@ export default function CarsCard({
   const imageSrc = firstImage
     ? firstImage.startsWith("http")
       ? firstImage
-      : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
+      : `${BASE_URL}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
     : "/placeholder-car.jpg";
 
   const renderStars = (rating) => {

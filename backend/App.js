@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import path from "path";
-import formidableMiddleware from "express-formidable";
+
 // Routes
 import transportRoutes from "./routes/transportRoutes.js";
 import authRoutes from "./routes/authRoutes.js";

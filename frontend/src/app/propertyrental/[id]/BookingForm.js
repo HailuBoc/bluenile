@@ -26,6 +26,10 @@ export default function BookingForm({ property }) {
     { name: "M-Pesa", logo: "/mpesa.png" },
   ];
 
+  // Use environment variable for backend URL
+  const backendUrl =
+    process.env.NEXT_PUBLIC_BACKEND_URL || "https://bluenile.onrender.com";
+
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (files) {
@@ -90,7 +94,7 @@ export default function BookingForm({ property }) {
         payload.append("paymentEvidence", formData.paymentEvidence);
       }
 
-      const res = await fetch("https://bluenile.onrender.com/propertyrentals", {
+      const res = await fetch(`${backendUrl}/propertyrentals`, {
         method: "POST",
         body: payload,
       });

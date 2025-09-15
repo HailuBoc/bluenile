@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [authorized, setAuthorized] = useState(false); // <-- Only render if authorized
+  const [authorized, setAuthorized] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -23,6 +23,8 @@ export default function AdminDashboard() {
     date: "",
   });
 
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
   // ----------------------------
   // Check authentication
   // ----------------------------
@@ -35,10 +37,10 @@ export default function AdminDashboard() {
 
     const verifyToken = async () => {
       try {
-        await axios.get("https://bluenile.onrender.com/admin/verify-token", {
+        await axios.get(`${baseUrl}/admin/verify-token`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setAuthorized(true); // token valid, allow rendering
+        setAuthorized(true);
       } catch (err) {
         localStorage.removeItem("token");
         router.push("/admin/login");
@@ -46,7 +48,7 @@ export default function AdminDashboard() {
     };
 
     verifyToken();
-  }, [router]);
+  }, [router, baseUrl]);
 
   // ----------------------------
   // Fetch all bookings
@@ -55,19 +57,20 @@ export default function AdminDashboard() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("https://bluenile.onrender.com/admin", {
+      const res = await axios.get(`${baseUrl}/admin`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setBookings(res.data.bookings);
-      setFiltered(res.data.bookings);
+      const allBookings = res.data.bookings || [];
+      setBookings(allBookings);
+      setFiltered(allBookings);
 
       // Stats calculation
-      const total = res.data.bookings.length;
-      const verified = res.data.bookings.filter((b) => b.verified).length;
+      const total = allBookings.length;
+      const verified = allBookings.filter((b) => b.verified).length;
       const pending = total - verified;
-      const revenue = res.data.bookings
+      const revenue = allBookings
         .filter((b) => b.verified)
-        .reduce((sum, b) => sum + b.totalAmount, 0);
+        .reduce((sum, b) => sum + (b.totalAmount || 0), 0);
       setStats({ total, verified, pending, revenue });
     } catch (err) {
       console.error(err);
@@ -93,8 +96,10 @@ export default function AdminDashboard() {
     if (filters.search) {
       temp = temp.filter(
         (b) =>
-          b.fullName.toLowerCase().includes(filters.search.toLowerCase()) ||
-          b.email.toLowerCase().includes(filters.search.toLowerCase())
+          (b.fullName || "")
+            .toLowerCase()
+            .includes(filters.search.toLowerCase()) ||
+          (b.email || "").toLowerCase().includes(filters.search.toLowerCase())
       );
     }
 
@@ -120,7 +125,7 @@ export default function AdminDashboard() {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        `https://bluenile.onrender.com/admin/verify/${id}`,
+        `${baseUrl}/admin/verify/${id}`,
         { verified: approved },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -241,7 +246,7 @@ export default function AdminDashboard() {
                 <td className="px-4 py-2">
                   {b.document ? (
                     <a
-                      href={`http://localhost:10000/${b.document}`}
+                      href={`${baseUrl}/${b.document}`}
                       target="_blank"
                       className="text-blue-500 underline"
                     >

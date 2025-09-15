@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [authorized, setAuthorized] = useState(false); // <-- Only render if authorized
+  const [authorized, setAuthorized] = useState(false); // Only render if authorized
   const [settings, setSettings] = useState({
     basePrice: 500,
     vipFee: 300,
@@ -16,6 +16,8 @@ export default function SettingsPage() {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
   // ----------------------------
   // Check authentication
@@ -29,7 +31,7 @@ export default function SettingsPage() {
 
     const verifyToken = async () => {
       try {
-        await axios.get("https://bluenile.onrender.com/admin/verify-token", {
+        await axios.get(`${baseUrl}/admin/verify-token`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAuthorized(true); // token valid, allow rendering
@@ -40,7 +42,7 @@ export default function SettingsPage() {
     };
 
     verifyToken();
-  }, [router]);
+  }, [router, baseUrl]);
 
   // ----------------------------
   // Fetch current settings
@@ -49,12 +51,9 @@ export default function SettingsPage() {
     const fetchSettings = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(
-          "https://bluenile.onrender.com/admin/settings",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const res = await axios.get(`${baseUrl}/admin/settings`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (res.data.settings) {
           setSettings(res.data.settings);
         }
@@ -65,7 +64,7 @@ export default function SettingsPage() {
     };
 
     if (authorized) fetchSettings();
-  }, [authorized]);
+  }, [authorized, baseUrl]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -79,13 +78,9 @@ export default function SettingsPage() {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.post(
-        "https://bluenile.onrender.com/admin/settings",
-        settings,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.post(`${baseUrl}/admin/settings`, settings, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setMessage("Settings updated successfully!");
     } catch (err) {
       console.error(err);

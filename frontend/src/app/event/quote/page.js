@@ -1,8 +1,7 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function GetQuotePage() {
-  // Services from each event type
   const eventServices = {
     Wedding: [
       { name: "Church / Mosque Venue", price: 5000 },
@@ -70,12 +69,11 @@ export default function GetQuotePage() {
 
   const handleServiceChange = (service) => {
     setForm((prev) => {
-      const exists = prev.selectedServices.includes(service.name);
-      const updatedServices = exists
+      const updatedServices = prev.selectedServices.includes(service.name)
         ? prev.selectedServices.filter((s) => s !== service.name)
         : [...prev.selectedServices, service.name];
 
-      // Calculate total price dynamically
+      // Recalculate total
       const price = updatedServices.reduce((acc, s) => {
         const srv = eventServices[form.eventType].find(
           (item) => item.name === s
@@ -91,10 +89,13 @@ export default function GetQuotePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.name || !form.email || !form.phone || !form.eventType) {
+    // Validate required fields
+    const requiredFields = ["name", "email", "phone", "eventType"];
+    const missing = requiredFields.filter((field) => !form[field]);
+    if (missing.length > 0) {
       setFeedback({
         type: "error",
-        text: "⚠️ Please fill all required fields.",
+        text: `⚠️ Missing required fields: ${missing.join(", ")}`,
       });
       setTimeout(() => setFeedback({ type: "", text: "" }), 4000);
       return;
@@ -153,7 +154,6 @@ export default function GetQuotePage() {
           Request a Quote
         </h1>
 
-        {/* Feedback */}
         {feedback.text && (
           <div
             className={`mb-4 p-3 rounded text-center font-medium ${
@@ -207,10 +207,11 @@ export default function GetQuotePage() {
             required
           >
             <option value="">Select Event Type</option>
-            <option value="Wedding">Wedding</option>
-            <option value="Birthday">Birthday</option>
-            <option value="Graduation">Graduation</option>
-            <option value="General Event">General Event</option>
+            {Object.keys(eventServices).map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
           </select>
 
           <input
@@ -229,7 +230,6 @@ export default function GetQuotePage() {
             className="w-full p-3 border rounded-lg outline-none"
           />
 
-          {/* Dynamic Services */}
           {form.eventType && (
             <div>
               <h3 className="font-semibold mb-2">Select Services</h3>
@@ -268,10 +268,10 @@ export default function GetQuotePage() {
 
           <button
             type="submit"
+            disabled={loading}
             className={`w-full bg-blue-700 text-white py-3 rounded-lg font-bold hover:bg-blue-800 transition ${
               loading ? "opacity-50 cursor-not-allowed" : ""
             }`}
-            disabled={loading}
           >
             {loading ? "Submitting..." : "Submit Request"}
           </button>

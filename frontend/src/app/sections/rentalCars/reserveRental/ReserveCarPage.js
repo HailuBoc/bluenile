@@ -8,6 +8,8 @@ import { MapPin, Star, StarHalf, Star as StarOutline } from "lucide-react";
 export default function CarRentalReservationPage() {
   const params = useSearchParams();
   const id = params.get("id");
+  const backendUrl =
+    process.env.NEXT_PUBLIC_BACKEND_URL || "https://bluenile.onrender.com";
 
   const [car, setCar] = useState(null);
   const [error, setError] = useState("");
@@ -18,7 +20,6 @@ export default function CarRentalReservationPage() {
     paymentMethod: "chapa",
     paymentEvidence: null,
   });
-
   const [checkIn, setCheckIn] = useState(
     new Date().toISOString().split("T")[0]
   );
@@ -32,14 +33,12 @@ export default function CarRentalReservationPage() {
   useEffect(() => {
     async function fetchCar() {
       try {
-        const res = await fetch(
-          `https://bluenile.onrender.com/admin/properties/${id}`
-        );
+        const res = await fetch(`${backendUrl}/admin/properties/${id}`);
         if (!res.ok)
           throw new Error(`Failed to fetch car (status ${res.status})`);
         const data = await res.json();
 
-        const baseUrl = "https://bluenile.onrender.com";
+        // Handle image
         let firstImage =
           Array.isArray(data.imageUrl) && data.imageUrl.length > 0
             ? data.imageUrl[0]
@@ -50,7 +49,9 @@ export default function CarRentalReservationPage() {
         const imageSrc = firstImage
           ? firstImage.startsWith("http")
             ? firstImage
-            : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
+            : `${backendUrl}${
+                firstImage.startsWith("/") ? "" : "/"
+              }${firstImage}`
           : null;
 
         setCar({
@@ -64,9 +65,9 @@ export default function CarRentalReservationPage() {
       }
     }
     if (id) fetchCar();
-  }, [id]);
+  }, [id, backendUrl]);
 
-  // ⭐ Render visual stars like TourismPage
+  // Render visual stars
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -103,11 +104,8 @@ export default function CarRentalReservationPage() {
 
   function handleChange(e) {
     const { name, value, files } = e.target;
-    if (files) {
-      setGuestInfo((prev) => ({ ...prev, paymentEvidence: files[0] }));
-    } else {
-      setGuestInfo((prev) => ({ ...prev, [name]: value }));
-    }
+    if (files) setGuestInfo((prev) => ({ ...prev, paymentEvidence: files[0] }));
+    else setGuestInfo((prev) => ({ ...prev, [name]: value }));
   }
 
   function validateForm() {
@@ -142,40 +140,31 @@ export default function CarRentalReservationPage() {
         days: daysDiff,
         amount: totalPrice,
         paymentMethod: guestInfo.paymentMethod,
-        paymentEvidence: guestInfo.paymentEvidence
-          ? guestInfo.paymentEvidence.name
-          : "",
+        paymentEvidence: guestInfo.paymentEvidence?.name || "",
       };
 
-      const res = await fetch(
-        "https://bluenile.onrender.com/rentalCars/reservations",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-
+      const res = await fetch(`${backendUrl}/rentalCars/reservations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
       const data = await res.json();
       if (!res.ok)
-        throw new Error(data?.error || `Failed to create reservation`);
+        throw new Error(data?.error || "Failed to create reservation");
 
       const reservationId = data?.reservation?._id;
 
       if (guestInfo.paymentMethod === "chapa") {
-        const payRes = await fetch(
-          "https://bluenile.onrender.com/bookings/pay/chapa",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              amount: totalPrice,
-              email: guestInfo.email,
-              fullName: guestInfo.name,
-              bookingId: reservationId,
-            }),
-          }
-        );
+        const payRes = await fetch(`${backendUrl}/bookings/pay/chapa`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: totalPrice,
+            email: guestInfo.email,
+            fullName: guestInfo.name,
+            bookingId: reservationId,
+          }),
+        });
         const payData = await payRes.json();
         if (payData.checkout_url) {
           window.location.href = payData.checkout_url;
@@ -216,23 +205,23 @@ export default function CarRentalReservationPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
           {/* Left: Car Info */}
           <section className="md:col-span-2 flex flex-col gap-6">
-            <img
-              src={car.imageUrl}
-              alt={car.name}
-              className="rounded-lg w-full h-72 object-cover shadow"
-            />
+            {car.imageUrl && (
+              <img
+                src={car.imageUrl}
+                alt={car.name}
+                className="rounded-lg w-full h-72 object-cover shadow"
+              />
+            )}
             <div>
               <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">
                 {car.name}
               </h1>
 
-              {/* ⭐ Location */}
               <p className="flex items-center text-blue-600 dark:text-blue-400 text-sm mt-1">
                 <MapPin className="w-4 h-4 mr-1" />
                 {car.location}
               </p>
 
-              {/* ⭐ Rating */}
               <div className="flex items-center mt-2 space-x-1">
                 {renderStars(car.rating || 0)}
                 <span className="text-sm text-gray-500 dark:text-gray-300">
@@ -252,7 +241,6 @@ export default function CarRentalReservationPage() {
                 <li>✔ Latest Car Models</li>
               </ul>
 
-              {/* Map */}
               {car.location && (
                 <div className="mt-6">
                   <h2 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white">

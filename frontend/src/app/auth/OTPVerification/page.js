@@ -5,14 +5,15 @@ import { useRouter } from "next/navigation";
 
 export default function OTPVerification() {
   const router = useRouter();
-  const [email, setEmail] = useState(""); // moved localStorage value here
+  const [email, setEmail] = useState(""); // stored email
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
   const inputRefs = useRef([]);
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
-  // ✅ Only access localStorage in useEffect (browser only)
+  // ✅ Access localStorage only on client
   useEffect(() => {
     const storedEmail = localStorage.getItem("resetEmail") || "";
     setEmail(storedEmail);
@@ -24,7 +25,6 @@ export default function OTPVerification() {
       const newOtp = [...otp];
       newOtp[index] = val;
       setOtp(newOtp);
-
       if (val && index < 5) inputRefs.current[index + 1]?.focus();
     }
   };
@@ -47,7 +47,7 @@ export default function OTPVerification() {
     setMessage({ type: "", text: "" });
 
     try {
-      const res = await fetch("https://bluenile.onrender.com/auth/verify-otp", {
+      const res = await fetch(`${baseUrl}/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp: otpString }),

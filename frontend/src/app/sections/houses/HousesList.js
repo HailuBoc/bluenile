@@ -2,13 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  Star,
-  StarHalf,
-  Star as StarOutline,
-  Heart,
-  MapPin,
-} from "lucide-react";
+import { Star, StarHalf, Heart, MapPin } from "lucide-react";
 import Link from "next/link";
 import Footer from "../../../components/Footer";
 import axios from "axios";
@@ -16,6 +10,9 @@ import axios from "axios";
 export default function HouseDetailPage() {
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
+
+  const backendUrl =
+    process.env.NEXT_PUBLIC_BACKEND_URL || "https://bluenile.onrender.com";
 
   const [selectedHouse, setSelectedHouse] = useState(null);
   const [liked, setLiked] = useState(false);
@@ -33,11 +30,10 @@ export default function HouseDetailPage() {
       try {
         setLoading(true);
         const res = await axios.get(
-          `https://bluenile.onrender.com/admin/properties/${idParam}`
+          `${backendUrl}/admin/properties/${idParam}`
         );
         const house = res.data;
 
-        const baseUrl = "https://bluenile.onrender.com";
         let firstImage =
           Array.isArray(house.imageUrl) && house.imageUrl.length > 0
             ? house.imageUrl[0]
@@ -48,7 +44,9 @@ export default function HouseDetailPage() {
         const imageSrc = firstImage
           ? firstImage.startsWith("http")
             ? firstImage
-            : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
+            : `${backendUrl}${
+                firstImage.startsWith("/") ? "" : "/"
+              }${firstImage}`
           : null;
 
         setSelectedHouse({ ...house, imageUrl: imageSrc });
@@ -63,9 +61,9 @@ export default function HouseDetailPage() {
     };
 
     fetchHouse();
-  }, [idParam]);
+  }, [idParam, backendUrl]);
 
-  // ⭐ Render visual stars
+  // Render stars visually
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -73,8 +71,7 @@ export default function HouseDetailPage() {
         stars.push(<Star key={i} className="h-5 w-5 text-yellow-400" />);
       else if (rating >= i - 0.5)
         stars.push(<StarHalf key={i} className="h-5 w-5 text-yellow-400" />);
-      else
-        stars.push(<StarOutline key={i} className="h-5 w-5 text-gray-400" />);
+      else stars.push(<Star key={i} className="h-5 w-5 text-gray-400" />);
     }
     return stars;
   };
@@ -110,12 +107,14 @@ export default function HouseDetailPage() {
         <div className="flex flex-col md:flex-row gap-6">
           {/* Left side - Image */}
           <div className="md:w-1/2 relative rounded-xl overflow-hidden shadow-lg">
-            <img
-              src={selectedHouse.imageUrl}
-              alt={selectedHouse.propertyName || "House"}
-              className="w-full h-full object-cover rounded-xl"
-              style={{ minHeight: "400px" }}
-            />
+            {selectedHouse.imageUrl && (
+              <img
+                src={selectedHouse.imageUrl}
+                alt={selectedHouse.propertyName || "House"}
+                className="w-full h-full object-cover rounded-xl"
+                style={{ minHeight: "400px" }}
+              />
+            )}
             <button
               onClick={() => setLiked(!liked)}
               className="absolute top-4 right-4 bg-white dark:bg-gray-800 p-2 rounded-full shadow"
@@ -141,13 +140,13 @@ export default function HouseDetailPage() {
               {selectedHouse.propertyName}
             </h1>
 
-            {/* ⭐ Location */}
+            {/* Location */}
             <div className="flex items-center text-gray-600 dark:text-gray-300 mb-2">
               <MapPin className="h-5 w-5 mr-1 text-gray-400" />
               <span>{selectedHouse.address || "No address"}</span>
             </div>
 
-            {/* ⭐ Visual Rating */}
+            {/* Rating */}
             <div className="flex items-center mb-2 space-x-1">
               {renderStars(selectedHouse.rating || 0)}
               <span className="text-sm text-gray-500 dark:text-gray-300">
@@ -155,14 +154,14 @@ export default function HouseDetailPage() {
               </span>
             </div>
 
-            {/* ⭐ Price */}
+            {/* Price */}
             <div className="text-xl font-semibold mb-4">
               {selectedHouse.offerPrice
                 ? `${selectedHouse.offerPrice} Br`
                 : "Price not available"}
             </div>
 
-            {/* ⭐ House Features */}
+            {/* House Features */}
             <div>
               <h2 className="text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-2 sm:mb-3 text-gray-900 dark:text-white">
                 House Features
@@ -177,7 +176,7 @@ export default function HouseDetailPage() {
               </ul>
             </div>
 
-            {/* ⭐ Reserve Button */}
+            {/* Reserve Button */}
             <Link
               href={`/sections/houses/reserveHouse?id=${selectedHouse._id}`}
             >

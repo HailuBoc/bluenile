@@ -22,7 +22,8 @@ export default function HouseCard({
 }) {
   const { liked, likes, toggleLike } = useLike(0, _id);
 
-  const baseUrl = "https://bluenile.onrender.com";
+  const BASE_URL = process.env.NEXT_PUBLIC_API_URL || ""; // ← use environment variable
+
   const firstImage =
     Array.isArray(imageUrl) && imageUrl.length > 0
       ? imageUrl[0]
@@ -33,7 +34,7 @@ export default function HouseCard({
   const imageSrc = firstImage
     ? firstImage.startsWith("http")
       ? firstImage
-      : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
+      : `${BASE_URL}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
     : img || "/placeholder-house.jpg";
 
   // ⭐ Render stars visually

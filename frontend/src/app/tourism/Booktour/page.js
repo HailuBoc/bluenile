@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 
 export default function TourBooking() {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL; // ← environment variable
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -49,14 +51,12 @@ export default function TourBooking() {
 
     try {
       const data = new FormData();
-
-      // ✅ Correct field names to match backend
-      data.append("destination", "VIP Tour"); // fixed
-      data.append("date", formData.tourDate); // fixed
-      data.append("phone", formData.phone); // fixed
-      data.append("email", formData.email); // fixed
-      data.append("paymentMethod", formData.paymentMethod); // fixed
-      data.append("notes", formData.message); // fixed
+      data.append("destination", "VIP Tour");
+      data.append("date", formData.tourDate);
+      data.append("phone", formData.phone);
+      data.append("email", formData.email);
+      data.append("paymentMethod", formData.paymentMethod);
+      data.append("notes", formData.message);
       data.append(
         "extras",
         JSON.stringify(formData.vipService ? ["VIP Service"] : [])
@@ -64,26 +64,21 @@ export default function TourBooking() {
       data.append("totalAmount", String(totalAmount));
 
       if (formData.document) {
-        data.append("paymentProof", formData.document); // fixed
+        data.append("paymentProof", formData.document);
       }
 
-      const res = await axios.post(
-        "https://bluenile.onrender.com/vip-bookings",
-        data,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+      const res = await axios.post(`${API_URL}/vip-bookings`, data, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-      if (formData.paymentMethod === "Chapa") {
-        const paymentRes = await axios.post(
-          "https://bluenile.onrender.com/bookings/pay/chapa",
-          {
-            amount: totalAmount,
-            currency: "ETB",
-            email: formData.email,
-            fullName: formData.fullName,
-            bookingId: res.data.booking._id,
-          }
-        );
+      if (formData.paymentMethod.toLowerCase() === "chapa") {
+        const paymentRes = await axios.post(`${API_URL}/bookings/pay/chapa`, {
+          amount: totalAmount,
+          currency: "ETB",
+          email: formData.email,
+          fullName: formData.fullName,
+          bookingId: res.data.booking._id,
+        });
 
         if (paymentRes.data?.checkout_url) {
           window.location.href = paymentRes.data.checkout_url;

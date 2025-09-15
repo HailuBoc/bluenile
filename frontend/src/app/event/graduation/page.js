@@ -36,6 +36,8 @@ export default function GraduationsPage() {
   const [loading, setLoading] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0);
 
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
   // Calculate total
   useEffect(() => {
     const servicesTotal = formData.selectedServices.reduce((acc, sName) => {
@@ -97,69 +99,44 @@ export default function GraduationsPage() {
     setStatus({ text: "", type: "" });
 
     try {
+      const form = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === "selectedServices") form.append(key, JSON.stringify(value));
+        else if (value) form.append(key, value);
+      });
+      form.append("totalAmount", totalAmount);
+
+      const res = await fetch(`${API_BASE}/graduations`, {
+        method: "POST",
+        body: form,
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Booking failed");
+
+      const bookingId = data.booking._id;
+
       if (formData.paymentMethod === "Chapa") {
-        // 1️⃣ Save booking first
-        const payload = new FormData();
-        Object.entries(formData).forEach(([key, value]) => {
-          if (key === "selectedServices") {
-            payload.append(key, JSON.stringify(value));
-          } else if (value) {
-            payload.append(key, value);
-          }
-        });
-        payload.append("totalAmount", totalAmount);
-
-        const res = await fetch("https://bluenile.onrender.com/graduations", {
+        const payRes = await fetch(`${API_BASE}/bookings/pay/chapa`, {
           method: "POST",
-          body: payload,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: totalAmount,
+            currency: "ETB",
+            email: formData.email,
+            fullName: formData.name,
+            bookingId,
+          }),
         });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Booking failed");
-
-        const bookingId = data.booking._id;
-
-        // 2️⃣ Initialize Chapa payment (send full details like GeneralEventsPage)
-        const payRes = await fetch(
-          "https://bluenile.onrender.com/bookings/pay/chapa",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              amount: totalAmount,
-              currency: "ETB",
-              email: formData.email,
-              fullName: formData.name,
-              bookingId,
-            }),
-          }
-        );
 
         const payData = await payRes.json();
         if (payData?.checkout_url) {
-          window.location.href = payData.checkout_url; // redirect to Chapa
+          window.location.href = payData.checkout_url;
           return;
         } else {
           throw new Error("❌ Failed to start Chapa payment");
         }
       } else {
-        // Telebirr / CBE Birr: submit with payment evidence
-        const form = new FormData();
-        Object.entries(formData).forEach(([key, value]) => {
-          if (key === "selectedServices")
-            form.append(key, JSON.stringify(value));
-          else if (value) form.append(key, value);
-        });
-        form.append("totalAmount", totalAmount);
-
-        const res = await fetch("https://bluenile.onrender.com/graduations", {
-          method: "POST",
-          body: form,
-        });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Booking failed");
-
         setStatus({
           text: "✅ Booking submitted! Please upload payment receipt.",
           type: "success",

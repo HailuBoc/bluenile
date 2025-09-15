@@ -9,39 +9,36 @@ import { MapPin, Star, StarHalf, Star as StarOutline } from "lucide-react";
 
 export default function ReservationPage() {
   const searchParams = useSearchParams();
+  const backendUrl =
+    process.env.NEXT_PUBLIC_BACKEND_URL || "https://bluenile.onrender.com";
+
   const [listing, setListing] = useState(null);
   const [error, setError] = useState(null);
-
   const [guestInfo, setGuestInfo] = useState({
     name: "",
     email: "",
     phone: "",
     paymentMethod: "bank_transfer",
   });
-
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // --- Fetch car details ---
+  // Fetch car details
   useEffect(() => {
     const id = searchParams.get("id");
     if (!id) return;
 
     const fetchCar = async () => {
       try {
-        const res = await axios.get(
-          `https://bluenile.onrender.com/admin/properties/${id}`
-        );
-
-        const baseUrl = "https://bluenile.onrender.com";
+        const res = await axios.get(`${backendUrl}/admin/properties/${id}`);
+        const baseUrl = backendUrl;
         const firstImage =
           Array.isArray(res.data.imageUrl) && res.data.imageUrl.length > 0
             ? res.data.imageUrl[0]
             : typeof res.data.imageUrl === "string"
             ? res.data.imageUrl
             : null;
-
         const imageSrc = firstImage
           ? firstImage.startsWith("http")
             ? firstImage
@@ -56,7 +53,7 @@ export default function ReservationPage() {
     };
 
     fetchCar();
-  }, [searchParams]);
+  }, [searchParams, backendUrl]);
 
   // Auto-hide messages
   useEffect(() => {
@@ -74,14 +71,13 @@ export default function ReservationPage() {
     setGuestInfo((prev) => ({ ...prev, [name]: value }));
   };
 
-  // --- Submit reservation ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!listing) return;
 
     setLoading(true);
     try {
-      const response = await axios.post("https://bluenile.onrender.com/sales", {
+      const response = await axios.post(`${backendUrl}/sales`, {
         name: guestInfo.name,
         email: guestInfo.email,
         phone: guestInfo.phone,
@@ -112,7 +108,6 @@ export default function ReservationPage() {
     }
   };
 
-  // ⭐ Stars
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -172,7 +167,6 @@ export default function ReservationPage() {
                 {listing.location || listing.address}
               </p>
 
-              {/* ⭐ Visual Rating */}
               <div className="flex items-center mt-2 space-x-2">
                 {renderStars(listing.rating || 0)}
                 <span className="text-sm text-gray-500 dark:text-gray-300">
@@ -183,37 +177,37 @@ export default function ReservationPage() {
               <p className="mt-3 sm:mt-4 text-gray-700 dark:text-gray-300 text-sm sm:text-base leading-relaxed">
                 {listing.description}
               </p>
-            </div>
 
-            {/* Features */}
-            <div>
-              <h2 className="text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-2 sm:mb-3 text-gray-900 dark:text-white">
-                Car Features
-              </h2>
-              <ul className="grid grid-cols-2 gap-2 text-gray-700 dark:text-gray-300 text-sm sm:text-base">
-                <li>✔ Low Mileage</li>
-                <li>✔ Accident Free</li>
-                <li>✔ Full Service History</li>
-                <li>✔ Fuel Efficient</li>
-                <li>✔ Air Conditioning</li>
-                <li>✔ Modern Safety Features</li>
-              </ul>
-            </div>
+              {/* Features */}
+              <div className="mt-4 sm:mt-6">
+                <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-gray-900 dark:text-white">
+                  Car Features
+                </h2>
+                <ul className="grid grid-cols-2 gap-2 text-gray-700 dark:text-gray-300 text-sm sm:text-base">
+                  <li>✔ Low Mileage</li>
+                  <li>✔ Accident Free</li>
+                  <li>✔ Full Service History</li>
+                  <li>✔ Fuel Efficient</li>
+                  <li>✔ Air Conditioning</li>
+                  <li>✔ Modern Safety Features</li>
+                </ul>
+              </div>
 
-            {/* Map */}
-            <div>
-              <h2 className="text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-2 sm:mb-3 text-gray-900 dark:text-white">
-                Location
-              </h2>
-              <iframe
-                title="Map"
-                src={`https://www.google.com/maps?q=${encodeURIComponent(
-                  listing.location || listing.address || "Ethiopia"
-                )}&output=embed`}
-                className="w-full h-48 sm:h-60 rounded-lg shadow"
-                allowFullScreen
-                loading="lazy"
-              />
+              {/* Map */}
+              <div className="mt-4 sm:mt-6">
+                <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-gray-900 dark:text-white">
+                  Location
+                </h2>
+                <iframe
+                  title="Map"
+                  src={`https://www.google.com/maps?q=${encodeURIComponent(
+                    listing.location || listing.address || "Ethiopia"
+                  )}&output=embed`}
+                  className="w-full h-48 sm:h-60 rounded-lg shadow"
+                  allowFullScreen
+                  loading="lazy"
+                />
+              </div>
             </div>
           </section>
 

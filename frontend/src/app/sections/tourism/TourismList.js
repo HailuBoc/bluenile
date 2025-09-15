@@ -16,15 +16,17 @@ import axios from "axios";
 export default function TourismPage() {
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
+  const backendUrl = "https://bluenile.onrender.com";
 
-  const [selectedTourism, setSelectedTourism] = useState(null);
+  const [tourism, setTourism] = useState(null);
   const [liked, setLiked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Fetch tourism data
   useEffect(() => {
     if (!idParam) {
-      setSelectedTourism(null);
+      setTourism(null);
       setLoading(false);
       return;
     }
@@ -33,31 +35,32 @@ export default function TourismPage() {
       try {
         setLoading(true);
         const res = await axios.get(
-          `https://bluenile.onrender.com/admin/properties/${idParam}`
+          `${backendUrl}/admin/properties/${idParam}`
         );
-        const tourism = res.data;
+        const data = res.data;
 
-        // Handle backend image paths
-        const baseUrl = "https://bluenile.onrender.com";
-        let firstImage =
-          Array.isArray(tourism.imageUrl) && tourism.imageUrl.length > 0
-            ? tourism.imageUrl[0]
-            : typeof tourism.imageUrl === "string"
-            ? tourism.imageUrl
+        // Handle image URLs
+        const firstImage =
+          Array.isArray(data.imageUrl) && data.imageUrl.length > 0
+            ? data.imageUrl[0]
+            : typeof data.imageUrl === "string"
+            ? data.imageUrl
             : null;
 
         const imageSrc = firstImage
           ? firstImage.startsWith("http")
             ? firstImage
-            : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
+            : `${backendUrl}${
+                firstImage.startsWith("/") ? "" : "/"
+              }${firstImage}`
           : null;
 
-        setSelectedTourism({ ...tourism, imageUrl: imageSrc });
+        setTourism({ ...data, imageUrl: imageSrc });
         setError(null);
       } catch (err) {
         console.error("❌ Error fetching tourism:", err);
         setError("Failed to load tourism.");
-        setSelectedTourism(null);
+        setTourism(null);
       } finally {
         setLoading(false);
       }
@@ -66,7 +69,7 @@ export default function TourismPage() {
     fetchTourism();
   }, [idParam]);
 
-  // ⭐ Render visual stars
+  // Render stars
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -80,21 +83,23 @@ export default function TourismPage() {
     return stars;
   };
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="flex flex-col min-h-screen items-center justify-center">
+      <div className="flex flex-col min-h-screen items-center justify-center bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
         <p className="text-lg">Loading tourism...</p>
       </div>
     );
+  }
 
-  if (error)
+  if (error) {
     return (
-      <div className="flex flex-col min-h-screen items-center justify-center">
+      <div className="flex flex-col min-h-screen items-center justify-center bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
         <p className="text-lg text-red-600">{error}</p>
       </div>
     );
+  }
 
-  if (!selectedTourism) {
+  if (!tourism) {
     return (
       <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
         <main className="flex-grow flex items-center justify-center">
@@ -112,14 +117,14 @@ export default function TourismPage() {
           {/* Left side - Image */}
           <div className="md:w-1/2 relative rounded-xl overflow-hidden shadow-lg">
             <img
-              src={selectedTourism.imageUrl}
-              alt={selectedTourism.propertyName || "Tourism"}
+              src={tourism.imageUrl}
+              alt={tourism.propertyName || "Tourism"}
               className="w-full h-full object-cover rounded-xl"
               style={{ minHeight: "400px" }}
             />
             <button
               onClick={() => setLiked(!liked)}
-              className="absolute top-4 right-4 bg-white dark:bg-gray-800 p-2 rounded-full shadow"
+              className="absolute top-4 right-4 bg-white dark:bg-gray-800 p-2 rounded-full shadow hover:scale-105 transition-transform"
               aria-pressed={liked}
               aria-label={liked ? "Unlike tourism" : "Like tourism"}
             >
@@ -129,7 +134,7 @@ export default function TourismPage() {
                 }`}
               />
             </button>
-            {selectedTourism.guestFavorite && (
+            {tourism.guestFavorite && (
               <div className="absolute top-4 left-4 text-sm bg-rose-200 dark:bg-rose-800 text-rose-700 dark:text-white px-3 py-1 rounded-full shadow">
                 Guest Favorite
               </div>
@@ -138,32 +143,25 @@ export default function TourismPage() {
 
           {/* Right side - Details */}
           <div className="md:w-1/2 flex flex-col justify-start">
-            <h1 className="text-3xl font-bold mb-2">
-              {selectedTourism.propertyName}
-            </h1>
+            <h1 className="text-3xl font-bold mb-2">{tourism.propertyName}</h1>
 
-            {/* ⭐ Location */}
             <div className="flex items-center text-gray-600 dark:text-gray-300 mb-2">
               <MapPin className="h-5 w-5 mr-1 text-gray-400" />
-              <span>{selectedTourism.address || "No address"}</span>
+              <span>{tourism.address || "No address"}</span>
             </div>
 
-            {/* ⭐ Visual Rating */}
             <div className="flex items-center mb-2 space-x-1">
-              {renderStars(selectedTourism.rating || 0)}
+              {renderStars(tourism.rating || 0)}
               <span className="text-sm text-gray-500 dark:text-gray-300">
-                ({selectedTourism.rating?.toFixed(1) || "N/A"})
+                ({tourism.rating?.toFixed(1) || "N/A"})
               </span>
             </div>
 
-            {/* ⭐ Price */}
             <div className="text-xl font-semibold mb-4">
-              {selectedTourism.price
-                ? `${selectedTourism.price} Br`
-                : "Price not available"}
+              {tourism.price ? `${tourism.price} Br` : "Price not available"}
             </div>
 
-            {/* ⭐ Tourism Highlights Section */}
+            {/* Highlights */}
             <div>
               <h2 className="text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-2 sm:mb-3 text-gray-900 dark:text-white">
                 Tour Highlights
@@ -178,9 +176,7 @@ export default function TourismPage() {
               </ul>
             </div>
 
-            <Link
-              href={`/sections/tourism/reserveTour?id=${selectedTourism._id}`}
-            >
+            <Link href={`/sections/tourism/reserveTour?id=${tourism._id}`}>
               <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200 mt-6">
                 Book Now
               </button>

@@ -37,6 +37,10 @@ export default function ListPropertyPage() {
     "Leather Seats",
   ];
 
+  // Use environment variable for backend URL
+  const backendUrl =
+    process.env.NEXT_PUBLIC_BACKEND_URL || "https://bluenile.onrender.com";
+
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === "checkbox")
@@ -84,16 +88,14 @@ export default function ListPropertyPage() {
       data.append("address", formData.address);
       data.append("price", formData.price);
       data.append("facilities", JSON.stringify(facilities));
-      data.append("rating", formData.rating ?? 0); // ✅ include rating
+      data.append("rating", formData.rating ?? 0);
       if (formData.description)
         data.append("description", formData.description);
       if (image) data.append("image", image);
 
-      const res = await axios.post(
-        "https://bluenile.onrender.com/admin/properties",
-        data,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+      const res = await axios.post(`${backendUrl}/admin/properties`, data, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       if (res.status !== 201) throw new Error("Failed to submit listing");
 

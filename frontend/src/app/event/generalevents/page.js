@@ -23,7 +23,7 @@ export default function GeneralEventsPage() {
 
   const [formData, setFormData] = useState({
     name: "",
-    phone: "", // NEW
+    phone: "",
     email: "",
     date: "",
     guests: "",
@@ -36,6 +36,8 @@ export default function GeneralEventsPage() {
   const [amount, setAmount] = useState(0);
   const [status, setStatus] = useState({ text: "", type: "" });
   const [loading, setLoading] = useState(false);
+
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
   // Calculate total dynamically
   useEffect(() => {
@@ -68,10 +70,9 @@ export default function GeneralEventsPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
     const errors = [];
     if (!formData.name) errors.push("Full Name");
-    if (!formData.phone) errors.push("Phone Number"); // NEW
+    if (!formData.phone) errors.push("Phone Number");
     if (!formData.email) errors.push("Email");
     if (!formData.date) errors.push("Date");
     if (!formData.guests) errors.push("Number of Guests");
@@ -111,7 +112,7 @@ export default function GeneralEventsPage() {
       payload.append("amount", amount);
 
       // Save booking
-      const res = await fetch("https://bluenile.onrender.com/general-events", {
+      const res = await fetch(`${API_BASE}/general-events`, {
         method: "POST",
         body: payload,
       });
@@ -123,20 +124,17 @@ export default function GeneralEventsPage() {
 
       // Handle Chapa payment
       if (formData.paymentMethod === "Chapa") {
-        const payRes = await fetch(
-          "https://bluenile.onrender.com/general-events/pay/chapa",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              amount,
-              currency: "ETB",
-              email: formData.email,
-              fullName: formData.name,
-              bookingId,
-            }),
-          }
-        );
+        const payRes = await fetch(`${API_BASE}/general-events/pay/chapa`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount,
+            currency: "ETB",
+            email: formData.email,
+            fullName: formData.name,
+            bookingId,
+          }),
+        });
 
         const payData = await payRes.json();
         if (payData?.checkout_url) {
@@ -212,7 +210,7 @@ export default function GeneralEventsPage() {
           />
           <input
             type="text"
-            name="phone" // NEW
+            name="phone"
             placeholder="Phone Number"
             value={formData.phone}
             onChange={handleChange}

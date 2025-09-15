@@ -11,6 +11,8 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
   // ✅ Only access localStorage on client
   useEffect(() => {
     const storedEmail = localStorage.getItem("resetEmail");
@@ -32,14 +34,11 @@ export default function ResetPassword() {
     setMessage({ type: "", text: "" });
 
     try {
-      const res = await fetch(
-        "https://bluenile.onrender.com/auth/reset-password",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        }
-      );
+      const res = await fetch(`${baseUrl}/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || data.message);

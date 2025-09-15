@@ -10,22 +10,21 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
   // Redirect to dashboard if already logged in
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) router.push("/admin");
-  }, []);
+  }, [router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(
-        "https://bluenile.onrender.com/admin/login",
-        {
-          email,
-          password,
-        }
-      );
+      const res = await axios.post(`${baseUrl}/admin/login`, {
+        email,
+        password,
+      });
 
       // Save JWT token in localStorage
       localStorage.setItem("token", res.data.token);

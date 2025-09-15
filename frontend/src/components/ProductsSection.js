@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import axios from "axios";
 import ProductCard from "./ProductCard";
@@ -12,18 +13,16 @@ export default function ProductsSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
   const fetchProperties = async () => {
     try {
-      const res = await axios.get(
-        "https://bluenile.onrender.com/admin/properties"
-      );
+      const res = await axios.get(`${baseUrl}/admin/properties`);
       const data = Array.isArray(res.data)
         ? res.data
         : res.data?.properties || [];
 
-      // ✅ format images to include backend URL
       const formattedData = data.map((item) => {
-        const baseUrl = "https://bluenile.onrender.com";
         let firstImage =
           Array.isArray(item.imageUrl) && item.imageUrl.length > 0
             ? item.imageUrl[0]
@@ -63,7 +62,6 @@ export default function ProductsSection() {
     return <p className="text-center mt-10">Loading properties...</p>;
   if (error) return <p className="text-center text-red-600">{error}</p>;
 
-  // ✅ filter categories
   const popularStays = properties.filter(
     (p) =>
       ["apartment", "villa", "guesthouse"].includes(
@@ -96,7 +94,6 @@ export default function ProductsSection() {
       p.status === "approved"
   );
 
-  // ✅ reusable scroll UI
   const renderHorizontalScroll = (items, CardComponent) => (
     <div className="relative overflow-hidden">
       <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth hide-scrollbar py-2">

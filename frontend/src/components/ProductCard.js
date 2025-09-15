@@ -8,7 +8,7 @@ import {
   Star as StarOutline,
   MapPin,
 } from "lucide-react";
-import { useLike } from "../../lib/useLike";
+import { useLike } from "@/lib/useLike"; // make sure path is correct
 
 export default function ProductCard({
   _id,
@@ -17,13 +17,13 @@ export default function ProductCard({
   propertyName,
   address,
   price,
-  rating = 0, // ⭐ dynamic rating
+  rating = 0,
   guestFavorite,
   initialLikes = 0,
 }) {
   const { liked, likes, toggleLike } = useLike(initialLikes, _id);
 
-  const baseUrl = "https://bluenile.onrender.com";
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
   const firstImage =
     Array.isArray(imageUrl) && imageUrl.length > 0
       ? imageUrl[0]
@@ -37,7 +37,6 @@ export default function ProductCard({
       : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
     : img || "/placeholder-product.jpg";
 
-  // ⭐ Render stars visually
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -91,11 +90,11 @@ export default function ProductCard({
             <MapPin className="h-4 w-4 mr-1 text-gray-400" />
             {address || "No address"}
           </div>
+
           <div className="font-semibold text-sm sm:text-base truncate mt-1">
             {propertyName || "Unnamed Property"}
           </div>
 
-          {/* ⭐ Visual star rating */}
           <div className="flex items-center mt-2 space-x-1">
             {renderStars(rating)}
             <span className="text-xs text-gray-500 dark:text-gray-300 ml-1">

@@ -45,6 +45,8 @@ export default function AdminPropertiesPage() {
     "Leather Seats",
   ];
 
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
   // Authenticate admin
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -52,7 +54,7 @@ export default function AdminPropertiesPage() {
 
     const verifyToken = async () => {
       try {
-        await axios.get("https://bluenile.onrender.com/admin/verify-token", {
+        await axios.get(`${baseUrl}/admin/verify-token`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAuthorized(true);
@@ -62,19 +64,16 @@ export default function AdminPropertiesPage() {
       }
     };
     verifyToken();
-  }, [router]);
+  }, [router, baseUrl]);
 
   // Fetch all properties
   const fetchProperties = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(
-        "https://bluenile.onrender.com/admin/properties",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await axios.get(`${baseUrl}/admin/properties`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const data = Array.isArray(res.data)
         ? res.data
@@ -85,7 +84,7 @@ export default function AdminPropertiesPage() {
         imageUrl: item.imageUrl
           ? item.imageUrl.startsWith("http")
             ? item.imageUrl
-            : `https://bluenile.onrender.com${item.imageUrl}`
+            : `${baseUrl}${item.imageUrl}`
           : null,
       }));
 
@@ -105,10 +104,7 @@ export default function AdminPropertiesPage() {
   // Approve/Reject/Delete
   const handleStatusChange = async (id, status) => {
     try {
-      await axios.patch(
-        `https://bluenile.onrender.com/admin/properties/${id}/status`,
-        { status }
-      );
+      await axios.patch(`${baseUrl}/admin/properties/${id}/status`, { status });
       setSuccessMessage(`✅ Property ${status}!`);
       fetchProperties();
       setTimeout(() => setSuccessMessage(""), 4000);
@@ -120,9 +116,7 @@ export default function AdminPropertiesPage() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(
-        `https://bluenile.onrender.com/admin/properties/${id}`
-      );
+      await axios.delete(`${baseUrl}/admin/properties/${id}`);
       setSuccessMessage("✅ Property deleted!");
       setDeleteConfirmId(null);
       fetchProperties();
@@ -210,7 +204,7 @@ export default function AdminPropertiesPage() {
 
       if (editingId) {
         const res = await axios.patch(
-          `https://bluenile.onrender.com/admin/properties/${editingId}`,
+          `${baseUrl}/admin/properties/${editingId}`,
           data,
           {
             headers: {
@@ -230,7 +224,7 @@ export default function AdminPropertiesPage() {
                   imageUrl: res.data.property.imageUrl
                     ? res.data.property.imageUrl.startsWith("http")
                       ? res.data.property.imageUrl
-                      : `https://bluenile.onrender.com${res.data.property.imageUrl}`
+                      : `${baseUrl}${res.data.property.imageUrl}`
                     : null,
                 }
               : p
@@ -239,16 +233,12 @@ export default function AdminPropertiesPage() {
 
         setSuccessMessage("✅ Property updated!");
       } else {
-        const res = await axios.post(
-          "https://bluenile.onrender.com/admin/properties",
-          data,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await axios.post(`${baseUrl}/admin/properties`, data, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         setProperties((prev) => [
           {
@@ -257,7 +247,7 @@ export default function AdminPropertiesPage() {
             imageUrl: res.data.property.imageUrl
               ? res.data.property.imageUrl.startsWith("http")
                 ? res.data.property.imageUrl
-                : `https://bluenile.onrender.com${res.data.property.imageUrl}`
+                : `${baseUrl}${res.data.property.imageUrl}`
               : null,
           },
           ...prev,

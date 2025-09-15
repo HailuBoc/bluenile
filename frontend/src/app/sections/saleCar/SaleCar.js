@@ -16,22 +16,21 @@ import axios from "axios";
 export default function CarsPage() {
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
+  const backendUrl = "https://bluenile.onrender.com";
 
   const [selectedCar, setSelectedCar] = useState(null);
   const [liked, setLiked] = useState(false);
   const [error, setError] = useState(null);
 
-  // ⭐ Fetch car from backend
+  // Fetch car details
   useEffect(() => {
     if (!idParam) return;
 
     const fetchCar = async () => {
       try {
         const res = await axios.get(
-          `https://bluenile.onrender.com/admin/properties/${idParam}`
+          `${backendUrl}/admin/properties/${idParam}`
         );
-
-        const baseUrl = "https://bluenile.onrender.com";
         const firstImage =
           Array.isArray(res.data.imageUrl) && res.data.imageUrl.length > 0
             ? res.data.imageUrl[0]
@@ -42,7 +41,9 @@ export default function CarsPage() {
         const imageSrc = firstImage
           ? firstImage.startsWith("http")
             ? firstImage
-            : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
+            : `${backendUrl}${
+                firstImage.startsWith("/") ? "" : "/"
+              }${firstImage}`
           : null;
 
         setSelectedCar({ ...res.data, imageUrl: imageSrc });
@@ -56,7 +57,7 @@ export default function CarsPage() {
     fetchCar();
   }, [idParam]);
 
-  // ⭐ Render visual stars
+  // Render stars
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -85,7 +86,7 @@ export default function CarsPage() {
     <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
       <main className="flex-grow px-4 sm:px-6 lg:px-8 py-10 max-w-7xl mx-auto w-full">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Left side - Car Image */}
+          {/* Left - Car Image */}
           <div className="md:w-1/2 relative rounded-2xl overflow-hidden shadow-xl">
             <img
               src={selectedCar.imageUrl}
@@ -112,13 +113,12 @@ export default function CarsPage() {
             )}
           </div>
 
-          {/* Right side - Car Details */}
+          {/* Right - Car Details */}
           <div className="md:w-1/2 flex flex-col justify-start">
             <h1 className="text-4xl font-extrabold tracking-tight mb-3">
               {selectedCar.carName || selectedCar.propertyName}
             </h1>
 
-            {/* ⭐ Location */}
             <div className="flex items-center text-gray-600 dark:text-gray-300 mb-3">
               <MapPin className="h-6 w-6 mr-2 text-gray-400" />
               <span>
@@ -126,7 +126,6 @@ export default function CarsPage() {
               </span>
             </div>
 
-            {/* ⭐ Visual Rating */}
             <div className="flex items-center mb-3 space-x-1">
               {renderStars(selectedCar.rating || 0)}
               <span className="text-lg font-medium text-gray-500 dark:text-gray-300">
@@ -134,14 +133,13 @@ export default function CarsPage() {
               </span>
             </div>
 
-            {/* ⭐ Price (ProductsPage style) */}
             <div className="text-xl font-semibold mb-4">
               {selectedCar.price
                 ? `${selectedCar.price} ETB`
                 : "Price not available"}
             </div>
 
-            {/* ⭐ Car Features */}
+            {/* Car Features */}
             <div>
               <h2 className="text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-2 sm:mb-3 text-gray-900 dark:text-white">
                 Car Features
@@ -156,7 +154,7 @@ export default function CarsPage() {
               </ul>
             </div>
 
-            {/* ⭐ Buy Button */}
+            {/* Buy Button */}
             <Link href={`/sections/saleCar/reserveSale?id=${selectedCar._id}`}>
               <button className="mt-6 w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl shadow-md transition duration-200">
                 Buy Now
