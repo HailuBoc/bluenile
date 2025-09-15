@@ -5,14 +5,11 @@ export async function POST(req) {
     const body = await req.json();
 
     // Call your Render backend API instead of MongoDB
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/properties`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      }
-    );
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/properties`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
 
     if (!res.ok) {
       throw new Error(`Backend error: ${res.status}`);
