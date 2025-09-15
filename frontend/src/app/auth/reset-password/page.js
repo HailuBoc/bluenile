@@ -5,16 +5,21 @@ import { useRouter } from "next/navigation";
 
 export default function ResetPassword() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
-  const email = localStorage.getItem("resetEmail") || "";
-
+  // ✅ Only access localStorage on client
   useEffect(() => {
-    if (!email) router.push("/auth/forgot-password");
-  }, [email, router]);
+    const storedEmail = localStorage.getItem("resetEmail");
+    if (!storedEmail) {
+      router.push("/auth/forgot-password");
+    } else {
+      setEmail(storedEmail);
+    }
+  }, [router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -49,6 +54,9 @@ export default function ResetPassword() {
       setLoading(false);
     }
   };
+
+  // ✅ Only render the form if email is loaded from localStorage
+  if (!email) return null;
 
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4 text-white">
