@@ -2,7 +2,13 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Star, StarHalf, Heart, MapPin } from "lucide-react";
+import {
+  Star,
+  StarHalf,
+  Star as StarOutline,
+  Heart,
+  MapPin,
+} from "lucide-react";
 import Link from "next/link";
 import Footer from "../../../components/Footer";
 import axios from "axios";
@@ -10,60 +16,80 @@ import axios from "axios";
 export default function HouseDetailPage() {
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
-
-  const backendUrl =
+  const priceParam = searchParams.get("price"); // get price from card
+  const BASE_URL =
     process.env.NEXT_PUBLIC_BACKEND_URL || "https://bluenile.onrender.com";
 
-  const [selectedHouse, setSelectedHouse] = useState(null);
+  const [house, setHouse] = useState(null);
   const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Fetch house details
   useEffect(() => {
-    if (!idParam) {
-      setSelectedHouse(null);
-      setLoading(false);
-      return;
-    }
+    if (!idParam) return;
 
     const fetchHouse = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(
-          `${backendUrl}/admin/properties/${idParam}`
-        );
-        const house = res.data;
+        const res = await axios.get(`${BASE_URL}/admin/properties/${idParam}`);
+        const data = res.data;
 
-        let firstImage =
-          Array.isArray(house.imageUrl) && house.imageUrl.length > 0
-            ? house.imageUrl[0]
-            : typeof house.imageUrl === "string"
-            ? house.imageUrl
+        const firstImage =
+          Array.isArray(data.imageUrl) && data.imageUrl.length > 0
+            ? data.imageUrl[0]
+            : typeof data.imageUrl === "string"
+            ? data.imageUrl
             : null;
 
         const imageSrc = firstImage
           ? firstImage.startsWith("http")
             ? firstImage
-            : `${backendUrl}${
-                firstImage.startsWith("/") ? "" : "/"
-              }${firstImage}`
+            : `${BASE_URL}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
           : null;
 
-        setSelectedHouse({ ...house, imageUrl: imageSrc });
+        setHouse({ ...data, imageUrl: imageSrc });
+        setLiked(data.liked || false);
+        setLikesCount(data.likes || 0); // initialize from house object
         setError(null);
       } catch (err) {
         console.error("❌ Error fetching house:", err);
         setError("Failed to load house.");
-        setSelectedHouse(null);
+        setHouse(null);
       } finally {
         setLoading(false);
       }
     };
 
     fetchHouse();
-  }, [idParam, backendUrl]);
+  }, [idParam, BASE_URL]);
 
-  // Render stars visually
+  // Toggle like (POST only, no GET)
+  const handleToggleLike = async () => {
+    if (!house) return;
+    try {
+      const newLiked = !liked;
+      setLiked(newLiked);
+      setLikesCount((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
+
+      const res = await axios.post(`${BASE_URL}/houselike/${idParam}/like`, {
+        liked: newLiked,
+      });
+
+      setLiked(res.data.userLiked ?? newLiked);
+      setLikesCount(
+        res.data.likes ?? (newLiked ? likesCount + 1 : likesCount - 1)
+      );
+    } catch (err) {
+      console.error("❌ Failed to toggle house like:", err);
+      // rollback
+      setLiked((prev) => !prev);
+      setLikesCount((prev) => (liked ? Math.max(prev - 1, 0) : prev + 1));
+    }
+  };
+
+  // Render stars
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -71,7 +97,8 @@ export default function HouseDetailPage() {
         stars.push(<Star key={i} className="h-5 w-5 text-yellow-400" />);
       else if (rating >= i - 0.5)
         stars.push(<StarHalf key={i} className="h-5 w-5 text-yellow-400" />);
-      else stars.push(<Star key={i} className="h-5 w-5 text-gray-400" />);
+      else
+        stars.push(<StarOutline key={i} className="h-5 w-5 text-gray-400" />);
     }
     return stars;
   };
@@ -90,7 +117,7 @@ export default function HouseDetailPage() {
       </div>
     );
 
-  if (!selectedHouse) {
+  if (!house)
     return (
       <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
         <main className="flex-grow flex items-center justify-center">
@@ -99,7 +126,6 @@ export default function HouseDetailPage() {
         <Footer />
       </div>
     );
-  }
 
   return (
     <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
@@ -107,27 +133,26 @@ export default function HouseDetailPage() {
         <div className="flex flex-col md:flex-row gap-6">
           {/* Left side - Image */}
           <div className="md:w-1/2 relative rounded-xl overflow-hidden shadow-lg">
-            {selectedHouse.imageUrl && (
+            {house.imageUrl && (
               <img
-                src={selectedHouse.imageUrl}
-                alt={selectedHouse.propertyName || "House"}
+                src={house.imageUrl}
+                alt={house.propertyName || "House"}
                 className="w-full h-full object-cover rounded-xl"
                 style={{ minHeight: "400px" }}
               />
             )}
             <button
-              onClick={() => setLiked(!liked)}
-              className="absolute top-4 right-4 bg-white dark:bg-gray-800 p-2 rounded-full shadow"
-              aria-pressed={liked}
-              aria-label={liked ? "Unlike house" : "Like house"}
+              onClick={handleToggleLike}
+              className="absolute top-4 right-4 bg-white dark:bg-gray-800 p-2 rounded-full shadow flex items-center"
             >
               <Heart
                 className={`w-6 h-6 ${
                   liked ? "text-red-500 fill-red-500" : "text-gray-500"
                 }`}
               />
+              <span className="ml-1 text-sm font-semibold">{likesCount}</span>
             </button>
-            {selectedHouse.guestFavorite && (
+            {house.guestFavorite && (
               <div className="absolute top-4 left-4 text-sm bg-blue-600 text-white px-3 py-1 rounded-full shadow">
                 Top Pick
               </div>
@@ -136,28 +161,22 @@ export default function HouseDetailPage() {
 
           {/* Right side - Details */}
           <div className="md:w-1/2 flex flex-col justify-start">
-            <h1 className="text-3xl font-bold mb-2">
-              {selectedHouse.propertyName}
-            </h1>
-
-            {/* Location */}
+            <h1 className="text-3xl font-bold mb-2">{house.propertyName}</h1>
             <div className="flex items-center text-gray-600 dark:text-gray-300 mb-2">
               <MapPin className="h-5 w-5 mr-1 text-gray-400" />
-              <span>{selectedHouse.address || "No address"}</span>
+              <span>{house.address || "No address"}</span>
             </div>
-
-            {/* Rating */}
             <div className="flex items-center mb-2 space-x-1">
-              {renderStars(selectedHouse.rating || 0)}
+              {renderStars(house.rating || 0)}
               <span className="text-sm text-gray-500 dark:text-gray-300">
-                ({selectedHouse.rating?.toFixed(1) || "N/A"})
+                ({house.rating?.toFixed(1) || "N/A"})
               </span>
             </div>
 
-            {/* Price */}
+            {/* Price from card or house object */}
             <div className="text-xl font-semibold mb-4">
-              {selectedHouse.offerPrice
-                ? `${selectedHouse.offerPrice} Br`
+              {priceParam || house.offerPrice
+                ? `${priceParam || house.offerPrice} Br`
                 : "Price not available"}
             </div>
 
@@ -176,9 +195,10 @@ export default function HouseDetailPage() {
               </ul>
             </div>
 
-            {/* Reserve Button */}
             <Link
-              href={`/sections/houses/reserveHouse?id=${selectedHouse._id}`}
+              href={`/sections/houses/reserveHouse?id=${house._id}&price=${
+                priceParam || house.offerPrice
+              }`}
             >
               <button className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200">
                 Reserve Now
@@ -187,7 +207,6 @@ export default function HouseDetailPage() {
           </div>
         </div>
       </main>
-
       <Footer />
     </div>
   );

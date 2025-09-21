@@ -55,7 +55,7 @@ export default function Footer() {
               </li>
               <li>
                 <a href="/auth/login" className="hover:underline">
-                  This is not a real site
+                  This is a real site
                 </a>
               </li>
               <li>
@@ -83,7 +83,7 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2">
               <li>
-                <a href="/auth/login" className="hover:underline">
+                <a href="/listProperty" className="hover:underline">
                   Become a Host
                 </a>
               </li>

@@ -8,7 +8,8 @@ import {
   Star as StarOutline,
   MapPin,
 } from "lucide-react";
-import { useLike } from "../../lib/useLike"; // make sure path is correct
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function ProductCard({
   _id,
@@ -19,11 +20,53 @@ export default function ProductCard({
   price,
   rating = 0,
   guestFavorite,
-  initialLikes = 0,
 }) {
-  const { liked, likes, toggleLike } = useLike(initialLikes, _id);
+  const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+  const [likes, setLikes] = useState(0);
+  const [liked, setLiked] = useState(false);
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+  // ✅ Fetch initial likes from backend
+  useEffect(() => {
+    async function fetchLikes() {
+      try {
+        const res = await axios.get(`${BASE_URL}/productlike/${_id}`);
+        setLikes(res.data.likes || 0);
+      } catch (err) {
+        console.error("❌ Failed to fetch product likes:", err);
+      }
+    }
+    fetchLikes();
+  }, [_id, BASE_URL]);
+
+  // ✅ Handle like/unlike toggle
+  const handleLike = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      const newLiked = !liked;
+
+      // Optimistic UI update
+      setLikes((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
+      setLiked(newLiked);
+
+      // Notify backend
+      const res = await axios.post(`${BASE_URL}/productlike/${_id}/like`, {
+        liked: newLiked,
+      });
+
+      // Sync with backend response
+      setLikes(res.data.likes);
+    } catch (err) {
+      console.error("❌ Failed to like product:", err);
+
+      // rollback if failed
+      setLiked((prev) => !prev);
+      setLikes((prev) => (liked ? Math.max(prev - 1, 0) : prev + 1));
+    }
+  };
+
+  // ✅ Handle image
   const firstImage =
     Array.isArray(imageUrl) && imageUrl.length > 0
       ? imageUrl[0]
@@ -34,9 +77,10 @@ export default function ProductCard({
   const imageSrc = firstImage
     ? firstImage.startsWith("http")
       ? firstImage
-      : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
+      : `${BASE_URL}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
     : img || "/placeholder-product.jpg";
 
+  // ✅ Star renderer
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -62,11 +106,9 @@ export default function ProductCard({
           </div>
         )}
 
+        {/* ❤️ Like Button */}
         <button
-          onClick={(e) => {
-            e.preventDefault();
-            toggleLike();
-          }}
+          onClick={handleLike}
           className="absolute top-2 right-2 p-2 bg-white dark:bg-gray-900 rounded-full z-10 shadow-sm flex items-center gap-1"
         >
           <Heart
@@ -79,12 +121,14 @@ export default function ProductCard({
           </span>
         </button>
 
+        {/* Product Image */}
         <img
           src={imageSrc}
           alt={propertyName || "Product"}
           className="w-full h-32 sm:h-40 object-cover group-hover:scale-105 transition-transform"
         />
 
+        {/* Details */}
         <div className="p-3 sm:p-4">
           <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-gray-300">
             <MapPin className="h-4 w-4 mr-1 text-gray-400" />

@@ -8,35 +8,64 @@ import {
   Star as StarOutline,
   MapPin,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 
 export default function CarsCard({
   _id,
-  imageUrl,
   propertyName,
   address,
+  imageUrl,
   price,
   rating = 0,
   guestFavorite,
-  initialLikes = 0,
 }) {
+  const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+  const [likes, setLikes] = useState(0);
   const [liked, setLiked] = useState(false);
-  const [likes, setLikes] = useState(initialLikes);
 
-  const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+  // Fetch initial likes from backend
+  useEffect(() => {
+    async function fetchLikes() {
+      try {
+        const res = await axios.get(`${BASE_URL}/cars/${_id}`);
+        setLikes(res.data.likes || 0);
+      } catch (err) {
+        console.error("❌ Failed to fetch car likes:", err);
+      }
+    }
+    fetchLikes();
+  }, [_id, BASE_URL]);
 
-  const toggleLike = async (e) => {
+  // Handle like/unlike toggle
+  const handleLike = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
+
     try {
-      const res = await axios.put(`${BASE_URL}/cars/${_id}/like`);
-      setLikes(res.data.likes); // update likes count from backend
-      setLiked(!liked);
+      const newLiked = !liked;
+
+      // Optimistic UI update
+      setLikes((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
+      setLiked(newLiked);
+
+      // Notify backend
+      const res = await axios.post(`${BASE_URL}/cars/${_id}/like`, {
+        liked: newLiked,
+      });
+
+      // Sync with backend response
+      setLikes(res.data.likes);
     } catch (err) {
-      console.error("Failed to like car:", err);
+      console.error("❌ Failed to like car:", err);
+
+      // rollback if failed
+      setLiked((prev) => !prev);
+      setLikes((prev) => (liked ? Math.max(prev - 1, 0) : prev + 1));
     }
   };
 
+  // Handle image
   const firstImage =
     Array.isArray(imageUrl) && imageUrl.length > 0
       ? imageUrl[0]
@@ -50,6 +79,7 @@ export default function CarsCard({
       : `${BASE_URL}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
     : "/placeholder-car.jpg";
 
+  // Render stars
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -74,26 +104,29 @@ export default function CarsCard({
         </div>
       )}
 
+      {/* Like Button */}
       <button
-        onClick={toggleLike}
+        onClick={handleLike}
         className="absolute top-2 right-2 p-2 bg-white dark:bg-gray-900 rounded-full z-10 shadow-md flex items-center gap-1"
       >
         <Heart
-          className={`h-5 w-5 transition-colors duration-200 ${
-            liked ? "text-red-500 fill-red-500" : "text-gray-500"
-          }`}
+          className={`h-5 w-5 ${liked ? "text-red-500" : "text-gray-500"}`}
+          fill={liked ? "red" : "none"}
+          strokeWidth={2}
         />
         <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">
           {likes}
         </span>
       </button>
 
+      {/* Image */}
       <img
         src={imageSrc}
         alt={propertyName}
         className="w-full h-40 sm:h-52 object-cover group-hover:scale-105 transition-transform"
       />
 
+      {/* Details */}
       <div className="p-4">
         <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-gray-300">
           <MapPin className="h-4 w-4 mr-1 text-gray-400" />

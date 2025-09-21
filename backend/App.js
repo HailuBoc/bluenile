@@ -27,6 +27,10 @@ import adminRoutes from "./routes/adminRoutes.js";
 import carRoutes from "./routes/carRoutes.js";
 import tourismReservations from "./routes/tourismReservations.js";
 import saleRoutesReserve from "./routes/saleRoutesReserve.js";
+import houseLikeRoutes from "./routes/houseLikeRoutes.js";
+import productLikeRoutes from "./routes/productLikeRoutes.js";
+import tourismLikeRoutes from "./routes/tourismLikeRoutes.js";
+
 dotenv.config();
 const PORT = process.env.PORT || 10000;
 
@@ -65,9 +69,11 @@ app.use("/transports", transportRoutes);
 app.use("/sales", saleRoutes);
 app.use("/vip-bookings", vipTourRoutes);
 app.use("/properties", propertyRoutes);
-// app.use("/api/likes", likesRoutes);
 app.use("/cars", carRoutes);
 app.use("/sale", saleRoutesReserve);
+app.use("/houselike", houseLikeRoutes);
+app.use("/productlike", productLikeRoutes);
+app.use("/tourismlike", tourismLikeRoutes);
 // Global error handler (JSON)
 app.use((req, res, next) => {
   if (req.is("application/json")) {

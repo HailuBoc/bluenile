@@ -16,9 +16,11 @@ import axios from "axios";
 export default function CarsPage() {
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
-  const backendUrl = "https://bluenile.onrender.com";
+  const BASE_URL =
+    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:10000";
 
   const [selectedCar, setSelectedCar] = useState(null);
+  const [likes, setLikes] = useState(0);
   const [liked, setLiked] = useState(false);
   const [error, setError] = useState(null);
 
@@ -28,9 +30,7 @@ export default function CarsPage() {
 
     const fetchCar = async () => {
       try {
-        const res = await axios.get(
-          `${backendUrl}/admin/properties/${idParam}`
-        );
+        const res = await axios.get(`${BASE_URL}/admin/properties/${idParam}`);
         const firstImage =
           Array.isArray(res.data.imageUrl) && res.data.imageUrl.length > 0
             ? res.data.imageUrl[0]
@@ -41,9 +41,7 @@ export default function CarsPage() {
         const imageSrc = firstImage
           ? firstImage.startsWith("http")
             ? firstImage
-            : `${backendUrl}${
-                firstImage.startsWith("/") ? "" : "/"
-              }${firstImage}`
+            : `${BASE_URL}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
           : null;
 
         setSelectedCar({ ...res.data, imageUrl: imageSrc });
@@ -55,7 +53,44 @@ export default function CarsPage() {
     };
 
     fetchCar();
-  }, [idParam]);
+  }, [idParam, BASE_URL]);
+
+  // Fetch likes
+  useEffect(() => {
+    if (!idParam) return;
+
+    const fetchLikes = async () => {
+      try {
+        const res = await axios.get(`${BASE_URL}/cars/${idParam}`);
+        setLikes(res.data.likes || 0);
+        setLiked(res.data.userLiked || false);
+      } catch (err) {
+        console.error("❌ Failed to fetch car likes:", err);
+      }
+    };
+
+    fetchLikes();
+  }, [idParam, BASE_URL]);
+
+  // Handle like toggle
+  const handleLike = async () => {
+    try {
+      const newLiked = !liked;
+      setLiked(newLiked);
+      setLikes((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
+
+      const res = await axios.post(`${BASE_URL}/cars/${idParam}/like`, {
+        liked: newLiked,
+      });
+
+      setLikes(res.data.likes);
+      setLiked(res.data.userLiked);
+    } catch (err) {
+      console.error("❌ Failed to like car:", err);
+      setLiked((prev) => !prev);
+      setLikes((prev) => (liked ? Math.max(prev - 1, 0) : prev + 1));
+    }
+  };
 
   // Render stars
   const renderStars = (rating) => {
@@ -95,7 +130,7 @@ export default function CarsPage() {
               style={{ minHeight: "420px", maxHeight: "550px" }}
             />
             <button
-              onClick={() => setLiked(!liked)}
+              onClick={handleLike}
               className="absolute top-4 right-4 bg-white dark:bg-gray-800 p-3 rounded-full shadow-md hover:scale-105 transition-transform"
               aria-pressed={liked}
               aria-label={liked ? "Unlike car" : "Like car"}
@@ -105,6 +140,7 @@ export default function CarsPage() {
                   liked ? "text-red-500 fill-red-500" : "text-gray-500"
                 }`}
               />
+              <span className="ml-1 text-sm font-semibold">{likes}</span>
             </button>
             {selectedCar.guestFavorite && (
               <div className="absolute top-4 left-4 text-sm bg-rose-200 dark:bg-rose-800 text-rose-700 dark:text-white px-4 py-1.5 rounded-full shadow-md">
@@ -163,7 +199,6 @@ export default function CarsPage() {
           </div>
         </div>
       </main>
-
       <Footer />
     </div>
   );

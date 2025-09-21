@@ -8,7 +8,8 @@ import {
   Star as StarOutline,
   MapPin,
 } from "lucide-react";
-import { useLike } from "../../lib/useLike";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function TourismCard({
   _id,
@@ -17,13 +18,46 @@ export default function TourismCard({
   propertyName,
   address,
   price,
-  rating = 0, // ⭐ dynamic rating
+  rating = 0,
   guestFavorite,
-  initialLikes = 0,
 }) {
-  const { liked, likes, toggleLike } = useLike(initialLikes, _id);
+  const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+  const [likes, setLikes] = useState(0);
+  const [liked, setLiked] = useState(false);
 
-  const baseUrl = "http://localhost:10000";
+  useEffect(() => {
+    async function fetchLikes() {
+      try {
+        const res = await axios.get(`${BASE_URL}/tourismlike/${_id}`);
+        setLikes(res.data.likes || 0);
+      } catch (err) {
+        console.error("❌ Failed to fetch tourism likes:", err);
+      }
+    }
+    fetchLikes();
+  }, [_id, BASE_URL]);
+
+  const handleLike = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      const newLiked = !liked;
+
+      setLikes((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
+      setLiked(newLiked);
+
+      const res = await axios.post(`${BASE_URL}/tourismlike/${_id}/like`, {
+        liked: newLiked,
+      });
+      setLikes(res.data.likes);
+    } catch (err) {
+      console.error("❌ Failed to like tourism:", err);
+      setLiked((prev) => !prev);
+      setLikes((prev) => (liked ? Math.max(prev - 1, 0) : prev + 1));
+    }
+  };
+
   const firstImage =
     Array.isArray(imageUrl) && imageUrl.length > 0
       ? imageUrl[0]
@@ -34,10 +68,9 @@ export default function TourismCard({
   const imageSrc = firstImage
     ? firstImage.startsWith("http")
       ? firstImage
-      : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
+      : `${BASE_URL}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
     : img || "/placeholder-tourism.jpg";
 
-  // ⭐ Render stars visually
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -64,18 +97,15 @@ export default function TourismCard({
         )}
 
         <button
-          onClick={(e) => {
-            e.preventDefault();
-            toggleLike();
-          }}
+          onClick={handleLike}
           className="absolute top-2 right-2 p-2 bg-white dark:bg-gray-900 rounded-full z-10 shadow-sm flex items-center gap-1"
         >
           <Heart
-            className={`h-5 w-5 transition-colors duration-200 ${
-              liked ? "text-red-500 fill-red-500" : "text-gray-500"
-            }`}
+            className={`h-5 w-5 ${liked ? "text-red-500" : "text-gray-500"}`}
+            fill={liked ? "red" : "none"}
+            strokeWidth={2}
           />
-          <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full">
+          <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
             {likes}
           </span>
         </button>
@@ -91,11 +121,11 @@ export default function TourismCard({
             <MapPin className="h-4 w-4 mr-1 text-gray-400" />
             {address || "No address"}
           </div>
+
           <div className="font-semibold text-sm sm:text-base truncate mt-1">
             {propertyName || "Unnamed Place"}
           </div>
 
-          {/* ⭐ Visual star rating */}
           <div className="flex items-center mt-2 space-x-1">
             {renderStars(rating)}
             <span className="text-xs text-gray-500 dark:text-gray-300 ml-1">

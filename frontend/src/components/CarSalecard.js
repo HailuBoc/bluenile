@@ -8,7 +8,8 @@ import {
   Star as StarOutline,
   MapPin,
 } from "lucide-react";
-import { useLike } from "../../lib/useLike";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function CarSaleCard({
   _id,
@@ -19,11 +20,62 @@ export default function CarSaleCard({
   price,
   rating = 0,
   guestFavorite,
+  userId = "currentUser123", // ✅ replace with logged-in userId
 }) {
-  const { liked, likes, toggleLike } = useLike(0, _id);
+  const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+  const [likes, setLikes] = useState(0);
+  const [liked, setLiked] = useState(false);
 
-  const BASE_URL = process.env.NEXT_PUBLIC_API_URL || ""; // ← environment variable
+  // ✅ Fetch initial likes + userLiked
+  useEffect(() => {
+    async function fetchLikes() {
+      try {
+        const res = await axios.get(`${BASE_URL}/cars/${_id}`, {
+          params: { userId },
+        });
+        setLikes(res.data.likes || 0);
+        setLiked(res.data.userLiked || false);
+      } catch (err) {
+        console.error("❌ Failed to fetch car likes:", err);
+      }
+    }
+    fetchLikes();
+  }, [_id, BASE_URL, userId]);
 
+  // ✅ Toggle like
+  const handleLike = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      const newLiked = !liked;
+
+      // Optimistic update
+      setLikes((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
+      setLiked(newLiked);
+
+      // Notify backend
+      const res = await axios.post(`${BASE_URL}/cars/${_id}/like`, {
+        userId,
+        liked: newLiked,
+      });
+
+      // Sync with backend response
+      setLikes(res.data.likes);
+      setLiked(res.data.userLiked);
+    } catch (err) {
+      console.error(
+        "❌ Failed to like car:",
+        err.response?.data || err.message
+      );
+
+      // Rollback
+      setLiked((prev) => !prev);
+      setLikes((prev) => (liked ? Math.max(prev - 1, 0) : prev + 1));
+    }
+  };
+
+  // ✅ Handle image
   const firstImage =
     Array.isArray(imageUrl) && imageUrl.length > 0
       ? imageUrl[0]
@@ -37,7 +89,7 @@ export default function CarSaleCard({
       : `${BASE_URL}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
     : img || "/placeholder-car.jpg";
 
-  // ⭐ Render stars visually
+  // ⭐ Render stars
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -63,30 +115,30 @@ export default function CarSaleCard({
           </div>
         )}
 
+        {/* ❤️ Like Button */}
         <button
-          onClick={(e) => {
-            e.preventDefault();
-            toggleLike();
-          }}
+          onClick={handleLike}
           className="absolute top-2 right-2 p-2 bg-white dark:bg-gray-900 rounded-full z-10 shadow-md flex items-center gap-1"
           aria-label={liked ? "Unlike" : "Like"}
         >
           <Heart
-            className={`h-5 w-5 transition-colors duration-200 ${
-              liked ? "text-red-500 fill-red-500" : "text-gray-500"
-            }`}
+            className={`h-5 w-5 ${liked ? "text-red-500" : "text-gray-500"}`}
+            fill={liked ? "red" : "none"} // ❤️ stays red if liked
+            strokeWidth={2}
           />
           <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">
             {likes}
           </span>
         </button>
 
+        {/* 🖼 Image */}
         <img
           src={imageSrc}
           alt={propertyName}
           className="w-full h-40 sm:h-52 object-cover group-hover:scale-105 transition-transform"
         />
 
+        {/* 📌 Details */}
         <div className="p-4">
           <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-gray-300">
             <MapPin className="h-4 w-4 mr-1 text-gray-400" />
@@ -97,7 +149,7 @@ export default function CarSaleCard({
             {propertyName}
           </div>
 
-          {/* ⭐ Visual star rating */}
+          {/* ⭐ Rating */}
           <div className="flex items-center mt-2 space-x-1">
             {renderStars(rating)}
             <span className="text-xs text-gray-500 dark:text-gray-300 ml-1">

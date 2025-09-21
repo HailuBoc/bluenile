@@ -1,9 +1,12 @@
 import express from "express";
-import { getCarById, likeCar } from "../controllers/carController.js";
+import { getCarById, toggleLikeCar } from "../controllers/carController.js";
 
 const router = express.Router();
 
-router.get("/:id", getCarById); // Fetch car details
-router.post("/like/:id", likeCar); // Increment likes
+// Fetch car details
+router.get("/:id", getCarById);
+
+// ✅ Toggle like/unlike (frontend sends { liked: true/false })
+router.post("/:id/like", toggleLikeCar);
 
 export default router;

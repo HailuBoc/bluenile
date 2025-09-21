@@ -14,6 +14,11 @@ const propertySchema = new mongoose.Schema(
 
     // ✅ New rating field
     rating: { type: Number, default: 0, min: 0, max: 5 },
+    likes: {
+      type: Number,
+      default: 0,
+    },
+    likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 
     status: {
       type: String,

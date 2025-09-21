@@ -57,5 +57,6 @@ router.get("/settings", adminAuth, getSettings);
 router.put("/settings", adminAuth, updateSettings);
 
 router.get("/", adminAuth, getAllBookingsForAdmin);
+// routes/cars.js
 
 export default router;
