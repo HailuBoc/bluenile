@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 
-export default function BookingForm({ property }) {
+export default function BookingPage() {
+  const { id } = useParams();
+  const [property, setProperty] = useState(null);
+  const [loadingProperty, setLoadingProperty] = useState(true);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -15,7 +19,6 @@ export default function BookingForm({ property }) {
     paymentMethod: "",
     paymentEvidence: null,
   });
-
   const [message, setMessage] = useState({ text: "", type: "" });
   const [loading, setLoading] = useState(false);
 
@@ -26,9 +29,32 @@ export default function BookingForm({ property }) {
     { name: "M-Pesa", logo: "/mpesa.png" },
   ];
 
-  // Use environment variable for backend URL
   const backendUrl =
-    process.env.NEXT_PUBLIC_BACKEND_URL || "https://bluenile.onrender.com";
+    process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:10000";
+
+  // ✅ Fetch property from backend API
+  useEffect(() => {
+    const fetchProperty = async () => {
+      try {
+        const res = await fetch(`${backendUrl}/propertyrental/${id}`);
+        if (!res.ok) throw new Error("Failed to fetch property");
+        const data = await res.json();
+
+        // Add full image URL
+        if (data.img) {
+          data.img = `${backendUrl}/uploads/${data.img}`;
+        }
+
+        setProperty(data);
+      } catch (err) {
+        console.error(err);
+        setProperty(null);
+      } finally {
+        setLoadingProperty(false);
+      }
+    };
+    fetchProperty();
+  }, [id, backendUrl]);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -50,6 +76,7 @@ export default function BookingForm({ property }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!property) return;
 
     const nights = calculateNights(formData.checkIn, formData.checkOut);
 
@@ -75,7 +102,7 @@ export default function BookingForm({ property }) {
 
     try {
       const payload = new FormData();
-      payload.append("listingId", property.id);
+      payload.append("listingId", property._id);
       payload.append("listingTitle", property.title);
       payload.append("name", formData.fullName);
       payload.append("email", formData.email);
@@ -83,7 +110,7 @@ export default function BookingForm({ property }) {
       payload.append("checkIn", formData.checkIn);
       payload.append("checkOut", formData.checkOut);
       payload.append("nights", nights);
-      payload.append("amount", property.charge || 0);
+      payload.append("amount", property.price || 0);
       payload.append("paymentMethod", formData.paymentMethod);
       payload.append(
         "paymentStatus",
@@ -94,7 +121,7 @@ export default function BookingForm({ property }) {
         payload.append("paymentEvidence", formData.paymentEvidence);
       }
 
-      const res = await fetch(`${backendUrl}/propertyrentals`, {
+      const res = await fetch(`${backendUrl}/propertyrental`, {
         method: "POST",
         body: payload,
       });
@@ -139,13 +166,21 @@ export default function BookingForm({ property }) {
     }
   };
 
+  if (loadingProperty)
+    return <p className="text-center mt-10">Loading property...</p>;
+  if (!property)
+    return (
+      <p className="text-center mt-10 text-red-600">Property not found.</p>
+    );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-lg max-w-3xl w-full p-6 md:p-10">
-        <h1 className="text-2xl md:text-3xl font-bold text-blue-700 mb-6 text-center">
+        <h1 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2 text-center">
           Book: {property.title}
         </h1>
-        <p className="text-center text-gray-600 mb-6">{property.location}</p>
+        <p className="text-center text-gray-600 mb-6">📍 {property.location}</p>
+
         <form onSubmit={handleSubmit} className="space-y-5">
           <input
             type="text"
@@ -218,13 +253,12 @@ export default function BookingForm({ property }) {
                     onChange={handleChange}
                     className="hidden"
                   />
-                  <Image
+                  <img
                     src={pm.logo}
                     alt={pm.name}
-                    width={40}
-                    height={40}
-                    className="object-contain"
+                    className="w-10 h-10 object-contain"
                   />
+
                   <span>{pm.name}</span>
                 </label>
               ))}

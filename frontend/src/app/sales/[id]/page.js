@@ -1,51 +1,22 @@
 "use client";
+
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckCircle, XCircle } from "lucide-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import axios from "axios";
 
 export default function SalesPurchaseForm() {
   const params = useParams();
   const { id } = params;
 
   const backendUrl =
-    process.env.NEXT_PUBLIC_BACKEND_URL || "https://bluenile.onrender.com";
+    process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:10000";
 
-  const listings = [
-    {
-      title: "Modern 3-Bedroom Apartment",
-      category: "Apartment",
-      price: 150000,
-      location: "Downtown, New York",
-    },
-    {
-      title: "Luxury Beachfront Villa",
-      category: "House",
-      price: 120000,
-      location: "Malibu, California",
-    },
-    {
-      title: "5 Acres of Prime Land",
-      category: "Land",
-      price: 300000,
-      location: "Nairobi, Kenya",
-    },
-    {
-      title: "2023 Luxury SUV",
-      category: "Vehicle",
-      price: 80000,
-      location: "Dubai, UAE",
-    },
-  ];
-
-  const paymentMethods = [
-    { name: "Chapa", logo: "/chapa.png" },
-    { name: "Telebirr", logo: "/telebirr.png" },
-    { name: "CBE Birr", logo: "/cbebirr.png" },
-  ];
-
-  const item = listings[id];
+  const [item, setItem] = useState(null);
+  const [status, setStatus] = useState({ text: "", type: "" });
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -55,16 +26,31 @@ export default function SalesPurchaseForm() {
     specialRequests: "",
   });
 
-  const [status, setStatus] = useState({ text: "", type: "" });
-  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    const fetchItem = async () => {
+      try {
+        const res = await axios.get(`${backendUrl}/salepost/${id}`);
+        setItem(res.data);
+      } catch (err) {
+        setStatus({ text: "❌ Failed to fetch listing.", type: "error" });
+      }
+    };
+    fetchItem();
+  }, [id]);
 
   if (!item) {
     return (
       <div className="min-h-screen flex items-center justify-center text-red-600 font-bold">
-        Listing not found ❌
+        Loading listing...
       </div>
     );
   }
+
+  const paymentMethods = [
+    { name: "Chapa", logo: "/chapa.png" },
+    { name: "Telebirr", logo: "/telebirr.png" },
+    { name: "CBE Birr", logo: "/cbebirr.png" },
+  ];
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -112,7 +98,6 @@ export default function SalesPurchaseForm() {
         formPayload.append("paymentEvidence", formData.paymentEvidence);
       }
 
-      // Step 1: Create booking
       const bookingRes = await fetch(`${backendUrl}/sale`, {
         method: "POST",
         body: formPayload,
@@ -124,7 +109,6 @@ export default function SalesPurchaseForm() {
 
       const bookingId = bookingData.booking?._id;
 
-      // Step 2: Handle Chapa payment
       if (formData.paymentMethod === "Chapa") {
         const payRes = await fetch(`${backendUrl}/bookings/pay/chapa`, {
           method: "POST",
@@ -147,7 +131,6 @@ export default function SalesPurchaseForm() {
         }
       }
 
-      // Telebirr or CBE
       setStatus({
         text: `✅ Booking submitted! Your payment of ${item.price} ETB via ${formData.paymentMethod} will be reviewed.`,
         type: "success",
@@ -179,6 +162,15 @@ export default function SalesPurchaseForm() {
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">
           {item.title}
         </h1>
+        {item.image && (
+          <Image
+            src={`http://localhost:10000/${item.image}`}
+            alt={item.title}
+            width={400}
+            height={300}
+            className="rounded-lg mb-4"
+          />
+        )}
         <p className="text-gray-600 mb-2">Category: {item.category}</p>
         <p className="text-gray-600 mb-2">Location: {item.location}</p>
         <p className="text-yellow-600 font-bold text-lg mb-6">

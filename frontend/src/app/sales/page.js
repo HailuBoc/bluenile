@@ -1,40 +1,10 @@
 "use client";
-import { Home, Building, Map, Car } from "lucide-react";
+
 import { motion } from "framer-motion";
 import Link from "next/link";
+import SaleSection from "../../components/SaleSection";
 
 export default function Sales() {
-  const listings = [
-    {
-      title: "Modern 3-Bedroom Apartment",
-      category: "Apartment",
-      price: "150,000 birr",
-      location: "Downtown, New York",
-      icon: <Building className="w-10 h-10 text-blue-600" />,
-    },
-    {
-      title: "Luxury Beachfront Villa",
-      category: "House",
-      price: "1,200,000 birr",
-      location: "Malibu, California",
-      icon: <Home className="w-10 h-10 text-green-600" />,
-    },
-    {
-      title: "5 Acres of Prime Land",
-      category: "Land",
-      price: "300,000 birr",
-      location: "Nairobi, Kenya",
-      icon: <Map className="w-10 h-10 text-yellow-600" />,
-    },
-    {
-      title: "2023 Luxury SUV",
-      category: "Vehicle",
-      price: "80,000 birr",
-      location: "Dubai, UAE",
-      icon: <Car className="w-10 h-10 text-red-600" />,
-    },
-  ];
-
   const highlights = [
     "Verified listings from trusted owners and companies",
     "Fair and transparent pricing",
@@ -65,41 +35,8 @@ export default function Sales() {
         </motion.p>
       </header>
 
-      {/* Listings */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
-        <h2 className="text-2xl sm:text-3xl font-semibold mb-6 sm:mb-8 text-gray-800 text-center">
-          Featured Listings
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-          {listings.map((item, index) => (
-            <motion.div
-              key={index}
-              className="bg-white p-5 sm:p-6 rounded-2xl shadow-md hover:shadow-xl transition"
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.15 }}
-            >
-              <div className="mb-4 flex justify-center">{item.icon}</div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-1 text-center">
-                {item.title}
-              </h3>
-              <p className="text-gray-500 text-center">{item.category}</p>
-              <p className="text-gray-500 text-sm text-center">
-                {item.location}
-              </p>
-              <p className="text-yellow-600 font-semibold text-center mt-3">
-                {item.price}
-              </p>
-              <Link href={`/sales/${index}`}>
-                <button className="mt-4 w-full bg-yellow-500 text-white py-2 sm:py-3 rounded-lg hover:bg-yellow-600 transition">
-                  Buy Now
-                </button>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+      {/* Listings (Dynamic with Images) */}
+      <SaleSection />
 
       {/* Highlights */}
       <section className="bg-white py-10 sm:py-12">
@@ -147,7 +84,6 @@ export default function Sales() {
             sellers.
           </motion.p>
           <Link href={"/sales/postSale"}>
-            {" "}
             <motion.button
               className="bg-white text-blue-700 font-bold py-2 sm:py-3 px-6 sm:px-8 rounded-lg shadow hover:bg-gray-100 transition"
               whileHover={{ scale: 1.05 }}

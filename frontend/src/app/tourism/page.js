@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Map,
   Landmark,
@@ -16,11 +16,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-export default function TourismPage() {
-  const API_URL =
-    process.env.NEXT_PUBLIC_API_URL || "https://bluenile.onrender.com";
+const iconMap = { Map, Landmark, Building, Calendar, Shield, BedDouble };
 
-  const [activeTab, setActiveTab] = useState("regular"); // "regular" | "vip"
+export default function TourismPage() {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:10000";
+
+  const [activeTab, setActiveTab] = useState("regular");
   const [search, setSearch] = useState("");
   const [formData, setFormData] = useState({
     destination: "",
@@ -33,115 +34,41 @@ export default function TourismPage() {
     paymentProof: null,
   });
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(null); // { type: "success" | "error", text: string }
+  const [message, setMessage] = useState(null);
+  const [vipPosts, setVipPosts] = useState([]);
+  const [regularTours, setRegularTours] = useState([]);
 
-  // Regular tourism packages
-  const tours = [
-    {
-      category: "4-Week Rotation Plan",
-      icon: <Map className="w-6 h-6 text-yellow-600" />,
-      destinations: [
-        "Week 1 → Destination A",
-        "Week 2 → Destination B",
-        "Week 3 → Destination C",
-        "Week 4 → Destination D",
-      ],
-    },
-    {
-      category: "Monthly Plan",
-      icon: <Calendar className="w-6 h-6 text-green-600" />,
-      destinations: [
-        "Full month travel schedule",
-        "Pre-planned routes & fixed dates",
-      ],
-    },
-    {
-      category: "Special Offers",
-      icon: <Landmark className="w-6 h-6 text-pink-600" />,
-      destinations: [
-        "Discounted packages for groups",
-        "Seasonal events and festivals",
-      ],
-    },
-    {
-      category: "Included Services",
-      icon: <Building className="w-6 h-6 text-blue-600" />,
-      destinations: [
-        "Transportation (shared or private options)",
-        "Guided tours with experienced local guides",
-      ],
-    },
-    {
-      category: "Accommodation",
-      icon: <BedDouble className="w-6 h-6 text-purple-600" />,
-      destinations: [
-        "Hotels & lodges included",
-        "Options for budget, mid-range, and luxury stays",
-      ],
-    },
-    {
-      category: "Safety & Support",
-      icon: <Shield className="w-6 h-6 text-red-600" />,
-      destinations: [
-        "24/7 customer support during trips",
-        "Local emergency assistance",
-        "Experienced guides ensuring safe travel",
-      ],
-    },
-  ];
+  // ✅ Fetch VIP posts
+  useEffect(() => {
+    const fetchVipPosts = async () => {
+      try {
+        const res = await fetch(`${API_URL}/vip-post`);
+        if (!res.ok) throw new Error("Failed to fetch VIP posts");
+        const data = await res.json();
+        setVipPosts(data);
+      } catch (err) {
+        console.error("Error fetching VIP posts:", err);
+        setMessage({ type: "error", text: "Failed to fetch VIP posts" });
+      }
+    };
+    fetchVipPosts();
+  }, []);
 
-  // VIP tourism packages
-  const vipTours = [
-    {
-      name: "VIP Custom Tourism – Lalibela Experience",
-      image: "/lali.jpg",
-      description:
-        "A fully customizable luxury experience for high-end clients. Design your own itinerary, choose travel dates, and enjoy premium comfort throughout your Ethiopian journey.",
-      date: "Flexible Dates – On Your Schedule",
-      highlights: [
-        "Create your own custom itinerary",
-        "Flexible travel dates & locations",
-        "VIP transportation options (private car, limo, luxury bus, airplane if available)",
-        "Personal tour guide / concierge",
-        "Private booking management by our team",
-        "Premium pricing model for unmatched service quality",
-      ],
-    },
-    {
-      name: "VIP Sof Omar Cave Expedition",
-      image: "/sofomer.jpg",
-      description:
-        "Discover Ethiopia’s largest cave system with a luxurious touch. Journey through the breathtaking limestone formations, underground river passages, and sacred chambers with private expert guides.",
-      date: "Custom Dates Available",
-      highlights: [
-        "Private guided cave exploration",
-        "Luxury lodge accommodations nearby",
-        "VIP 4x4 ground transport",
-        "Personal historian guide",
-      ],
-    },
-    {
-      name: "VIP Rift Valley Safari",
-      image: "/safari.jpg",
-      description:
-        "Discover Ethiopia’s Rift Valley lakes and wildlife with a luxury safari tour designed for exclusivity and comfort.",
-      date: "Custom Dates Available",
-      highlights: [
-        "Luxury safari lodge stay",
-        "Private 4x4 vehicles",
-        "Exclusive wildlife tours",
-        "Custom photography sessions",
-      ],
-    },
-  ];
-
-  const filteredTours = tours.filter(
-    (tour) =>
-      tour.category.toLowerCase().includes(search.toLowerCase()) ||
-      tour.destinations.some((dest) =>
-        dest.toLowerCase().includes(search.toLowerCase())
-      )
-  );
+  // ✅ Fetch Regular tours
+  useEffect(() => {
+    const fetchRegularTours = async () => {
+      try {
+        const res = await fetch(`${API_URL}/regular-post`);
+        if (!res.ok) throw new Error("Failed to fetch regular tours");
+        const data = await res.json();
+        setRegularTours(data);
+      } catch (err) {
+        console.error("Error fetching regular tours:", err);
+        setMessage({ type: "error", text: "Failed to fetch regular tours" });
+      }
+    };
+    fetchRegularTours();
+  }, []);
 
   const handleCheckboxChange = (value) => {
     setFormData((prev) => ({
@@ -180,7 +107,6 @@ export default function TourismPage() {
       formPayload.append("phone", formData.phone);
       formPayload.append("email", formData.email);
 
-      // Only append file if exists (for telebirr or cbe_birr)
       if (
         (formData.paymentMethod === "telebirr" ||
           formData.paymentMethod === "cbe_birr") &&
@@ -189,13 +115,10 @@ export default function TourismPage() {
         formPayload.append("paymentProof", formData.paymentProof);
       }
 
-      const res = await fetch(
-        `${API_URL}https://bluenile.onrender.com/vip-bookings`,
-        {
-          method: "POST",
-          body: formPayload,
-        }
-      );
+      const res = await fetch(`${API_URL}/vip-bookings`, {
+        method: "POST",
+        body: formPayload,
+      });
 
       const text = await res.text();
       let data;
@@ -211,7 +134,6 @@ export default function TourismPage() {
         throw new Error(data.error || data.message || "Request failed");
 
       if (formData.paymentMethod === "chapa" && data.paymentUrl) {
-        // Redirect to Chapa
         window.location.href = data.paymentUrl;
       } else {
         setMessage({
@@ -220,7 +142,6 @@ export default function TourismPage() {
         });
       }
 
-      // Reset form
       setFormData({
         destination: "",
         date: "",
@@ -251,7 +172,7 @@ export default function TourismPage() {
         </p>
       </header>
 
-      {/* Tab Switcher */}
+      {/* Tabs */}
       <div className="flex justify-center mt-6 md:mt-8 gap-3 md:gap-4 flex-wrap px-3">
         <button
           onClick={() => setActiveTab("regular")}
@@ -277,6 +198,7 @@ export default function TourismPage() {
 
       {/* Content */}
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 md:py-12">
+        {/* ✅ Regular Tours (from Admin) */}
         {activeTab === "regular" && (
           <div>
             <div className="max-w-md mx-auto mb-6 md:mb-8 flex items-center bg-white rounded-lg shadow px-3">
@@ -290,80 +212,99 @@ export default function TourismPage() {
               />
             </div>
 
-            {filteredTours.length > 0 ? (
+            {regularTours.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                {filteredTours.map((tour, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-white p-4 md:p-6 rounded-xl shadow hover:shadow-lg transition"
-                  >
-                    <div className="flex items-center gap-2 mb-3">
-                      {tour.icon}
-                      <h3 className="text-base md:text-lg font-bold">
-                        {tour.category}
-                      </h3>
-                    </div>
-                    <ul className="list-disc list-inside text-gray-600 text-sm md:text-base">
-                      {tour.destinations.map((d, i) => (
-                        <li key={i}>{d}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+                {regularTours
+                  .filter((tour) =>
+                    tour.category?.toLowerCase().includes(search.toLowerCase())
+                  )
+                  .map((tour) => {
+                    const IconComponent = iconMap[tour.icon] || Map;
+                    return (
+                      <div
+                        key={tour._id}
+                        className="bg-white p-4 md:p-6 rounded-xl shadow hover:shadow-lg transition"
+                      >
+                        <div className="flex items-center gap-2 mb-3">
+                          <IconComponent className="w-6 h-6 text-yellow-600" />
+                          <h3 className="text-base md:text-lg font-bold">
+                            {tour.category}
+                          </h3>
+                        </div>
+                        {tour.destinations && (
+                          <ul className="list-disc list-inside text-gray-600 text-sm md:text-base">
+                            {tour.destinations.map((d, i) => (
+                              <li key={i}>{d}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    );
+                  })}
               </div>
             ) : (
               <p className="text-center text-gray-500">
-                No matching packages found.
+                No regular tours available.
               </p>
             )}
           </div>
         )}
 
+        {/* ✅ VIP Tours (unchanged) */}
         {activeTab === "vip" && (
           <div>
-            {/* VIP Cards */}
+            {/* VIP Posts dynamically fetched */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-12">
-              {vipTours.map((tour, idx) => (
-                <div
-                  key={idx}
-                  className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition relative"
-                >
-                  <div className="absolute top-2 left-2 md:top-3 md:left-3 bg-yellow-500 text-white px-2 md:px-3 py-1 rounded-full flex items-center gap-1 text-xs md:text-sm font-semibold shadow-lg">
-                    <Crown className="w-3 h-3 md:w-4 md:h-4" /> VIP Tour
-                  </div>
-
-                  <img
-                    src={tour.image}
-                    alt={tour.name}
-                    className="w-full h-52 md:h-64 object-cover"
-                  />
-                  <div className="p-4 md:p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 md:mb-4 gap-2">
-                      <h2 className="text-xl md:text-2xl font-bold text-gray-800">
-                        {tour.name}
-                      </h2>
-                      <div className="flex items-center text-gray-600 text-xs md:text-sm">
-                        <Calendar className="w-4 h-4 mr-1 text-yellow-600" />
-                        {tour.date}
-                      </div>
+              {vipPosts.length > 0 ? (
+                vipPosts.map((tour) => (
+                  <div
+                    key={tour._id}
+                    className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition relative"
+                  >
+                    <div className="absolute top-2 left-2 md:top-3 md:left-3 bg-yellow-500 text-white px-2 md:px-3 py-1 rounded-full flex items-center gap-1 text-xs md:text-sm font-semibold shadow-lg">
+                      <Crown className="w-3 h-3 md:w-4 md:h-4" /> VIP Tour
                     </div>
-                    <p className="text-gray-600 text-sm md:text-base mb-3 md:mb-4">
-                      {tour.description}
-                    </p>
-                    <ul className="space-y-2 text-gray-700 mb-5 text-sm md:text-base">
-                      {tour.highlights.map((item, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-yellow-600 mt-0.5" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
+
+                    {tour.image && (
+                      <img
+                        src={`${API_URL}/uploads/${tour.image}`}
+                        alt={tour.name}
+                        className="w-full h-52 md:h-64 object-cover"
+                      />
+                    )}
+                    <div className="p-4 md:p-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 md:mb-4 gap-2">
+                        <h2 className="text-xl md:text-2xl font-bold text-gray-800">
+                          {tour.name}
+                        </h2>
+                        <div className="flex items-center text-gray-600 text-xs md:text-sm">
+                          <Calendar className="w-4 h-4 mr-1 text-yellow-600" />
+                          {tour.date}
+                        </div>
+                      </div>
+                      <p className="text-gray-600 text-sm md:text-base mb-3 md:mb-4">
+                        {tour.description}
+                      </p>
+                      <ul className="space-y-2 text-gray-700 mb-5 text-sm md:text-base">
+                        {tour.highlights?.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-yellow-600 mt-0.5" />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-center text-gray-500 col-span-2">
+                  No VIP posts available.
+                </p>
+              )}
             </div>
 
-            {/* VIP Form */}
+            {/* VIP Form (unchanged) */}
+            {/* ... keep your existing VIP form code here ... */}
             <div className="bg-white shadow-lg rounded-2xl p-6 md:p-8">
               <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">
                 VIP Tour Customization Form
@@ -572,6 +513,7 @@ export default function TourismPage() {
           </div>
         )}
       </div>
+
       <section className="bg-green-700 text-white py-10 md:py-12">
         <div className="max-w-4xl mx-auto text-center px-4 md:px-6">
           <h2 className="text-2xl md:text-3xl font-bold mb-3">
@@ -588,7 +530,7 @@ export default function TourismPage() {
           </Link>
         </div>
       </section>
-      {/* Footer */}
+
       <footer className="bg-gray-800 text-gray-300 py-5 md:py-6 text-center text-xs md:text-sm">
         &copy; {new Date().getFullYear()} Explore Ethiopia Tours. All rights
         reserved.

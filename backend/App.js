@@ -23,13 +23,18 @@ import houseRoutes from "./routes/houseRoutes.js";
 import testEmailRoutes from "./routes/testEmail.js";
 import CarSaleRoutes from "./routes/CarSaleRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
-// import likesRoutes from "./routes/likes.js";
 import carRoutes from "./routes/carRoutes.js";
 import tourismReservations from "./routes/tourismReservations.js";
 import saleRoutesReserve from "./routes/saleRoutesReserve.js";
 import houseLikeRoutes from "./routes/houseLikeRoutes.js";
 import productLikeRoutes from "./routes/productLikeRoutes.js";
 import tourismLikeRoutes from "./routes/tourismLikeRoutes.js";
+import PropertyRentalRoutes from "./routes/propertyRentalRoutes.js";
+import transportRoute from "./routes/transportRoute.js";
+import salePostRoutes from "./routes/salePostRoutes.js";
+import tours from "./routes/tours.js";
+import vipPostRoutes from "./routes/vipPostRoutes.js";
+import regularPostRoutes from "./routes/regularPostRoutes.js";
 
 dotenv.config();
 const PORT = process.env.PORT || 10000;
@@ -74,6 +79,13 @@ app.use("/sale", saleRoutesReserve);
 app.use("/houselike", houseLikeRoutes);
 app.use("/productlike", productLikeRoutes);
 app.use("/tourismlike", tourismLikeRoutes);
+app.use("/propertyrental", PropertyRentalRoutes);
+app.use("/transportpost", transportRoute);
+app.use("/salepost", salePostRoutes);
+app.use("/api/tours", tours);
+app.use("/vip-post", vipPostRoutes);
+app.use("/regular-post", regularPostRoutes);
+
 // Global error handler (JSON)
 app.use((req, res, next) => {
   if (req.is("application/json")) {

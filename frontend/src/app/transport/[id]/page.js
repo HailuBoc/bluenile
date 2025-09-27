@@ -1,15 +1,27 @@
 "use client";
 import { Car, CheckCircle, XCircle } from "lucide-react";
-import { useState, useEffect, use } from "react";
-import { fleet } from "../../../data/fleet";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import axios from "axios";
 
-export default function TransportDetailPage({ params }) {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL; // ← environment variable
-  const unwrappedParams = use(params);
-  const { id } = unwrappedParams;
+export default function TransportDetailPage() {
+  const { id } = useParams(); // gets the transport id from URL
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:10000";
 
-  const transport =
-    fleet.find((item) => String(item.id) === String(id)) || fleet[0];
+  const [transport, setTransport] = useState(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    date: "",
+    guests: "",
+    specialRequests: "",
+    selectedServices: [],
+    paymentMethod: "",
+  });
+  const [message, setMessage] = useState({ text: "", type: "" });
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   const serviceOptions = {
     Chauffeur: 500,
@@ -26,28 +38,30 @@ export default function TransportDetailPage({ params }) {
     { name: "CBE Birr", logo: "/cbebirr.png" },
   ];
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    date: "",
-    guests: "",
-    specialRequests: "",
-    selectedServices: [],
-    paymentMethod: "",
-  });
-
-  const [message, setMessage] = useState({ text: "", type: "" });
-  const [total, setTotal] = useState(transport.price || 0);
-  const [loading, setLoading] = useState(false);
-
+  // Fetch transport from backend by ID
   useEffect(() => {
-    let sum = Number(transport.price) || 0;
+    const fetchTransport = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/transportpost/${id}`);
+        setTransport(res.data);
+        setTotal(Number(res.data.price || 0));
+      } catch (err) {
+        console.error("❌ Failed to fetch transport", err);
+        setMessage({ text: "❌ Failed to load transport.", type: "error" });
+      }
+    };
+    fetchTransport();
+  }, [id]);
+
+  // Update total price when selected services change
+  useEffect(() => {
+    if (!transport) return;
+    let sum = Number(transport.price || 0);
     formData.selectedServices.forEach((s) => {
       sum += serviceOptions[s] || 0;
     });
     setTotal(sum);
-  }, [formData.selectedServices, transport.price]);
+  }, [formData.selectedServices, transport]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -84,12 +98,11 @@ export default function TransportDetailPage({ params }) {
 
     try {
       const res = await fetch(`${API_URL}/transports`, {
-        // ← updated
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          car: transport.title,
+          car: transport.vehicleName, // ← now using vehicleName from backend
           amount: total,
         }),
       });
@@ -98,7 +111,7 @@ export default function TransportDetailPage({ params }) {
       if (!res.ok) throw new Error(data.message || "Failed to submit booking");
 
       setMessage({
-        text: `✅ Booking submitted! Confirmation sent to your email.`,
+        text: "✅ Booking submitted! Confirmation sent to your email.",
         type: "success",
       });
 
@@ -126,11 +139,14 @@ export default function TransportDetailPage({ params }) {
     }
   };
 
+  if (!transport)
+    return <p className="text-center mt-10">Loading transport...</p>;
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <header className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-16 text-center px-4">
         <Car className="w-12 h-12 mx-auto mb-4" />
-        <h1 className="text-4xl font-bold">{transport.title}</h1>
+        <h1 className="text-4xl font-bold">{transport.vehicleName}</h1>
         <p className="mt-3 text-lg max-w-2xl mx-auto">
           {transport.description}
         </p>
@@ -141,9 +157,9 @@ export default function TransportDetailPage({ params }) {
         <div className="bg-white shadow-lg rounded-lg p-8">
           <div className="text-center mb-8">
             <Car className="w-12 h-12 text-green-600 mx-auto mb-4" />
-            <h2 className="text-3xl font-bold">Book Your Car</h2>
+            <h2 className="text-3xl font-bold">Book This Vehicle</h2>
             <p className="mt-2 text-gray-600">
-              Reserve your preferred car with extra services for your event.
+              Reserve your preferred transport with extra services.
             </p>
           </div>
 
@@ -165,13 +181,15 @@ export default function TransportDetailPage({ params }) {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5 max-w-2xl mx-auto">
+            {/* Vehicle Name */}
             <input
               type="text"
-              value={transport.title}
+              value={transport.vehicleName}
               readOnly
               className="w-full border rounded px-4 py-2 bg-gray-100 font-semibold text-black"
             />
 
+            {/* User Info */}
             <input
               type="text"
               name="name"
@@ -217,6 +235,7 @@ export default function TransportDetailPage({ params }) {
               required
             />
 
+            {/* Extra Services */}
             <div>
               <h3 className="font-semibold mb-2">Select Extra Services</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -239,6 +258,7 @@ export default function TransportDetailPage({ params }) {
               </div>
             </div>
 
+            {/* Payment Method */}
             <div>
               <h3 className="font-semibold mb-2">Select Payment Method</h3>
               <div className="flex gap-4">
