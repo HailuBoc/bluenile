@@ -7,6 +7,7 @@ import HousesCard from "./HousesCard";
 import CarsCard from "./CarsCard";
 import CarSalecard from "./CarSalecard";
 import TourismCard from "./TourismCard";
+import SpecialOfferCard from "./SpecialOfferCard";
 
 export default function ProductsSection() {
   const [properties, setProperties] = useState([]);
@@ -62,6 +63,7 @@ export default function ProductsSection() {
     return <p className="text-center mt-10">Loading properties...</p>;
   if (error) return <p className="text-center text-red-600">{error}</p>;
 
+  // ✅ Filters
   const popularStays = properties.filter(
     (p) =>
       ["apartment", "villa", "guesthouse"].includes(
@@ -94,6 +96,11 @@ export default function ProductsSection() {
       p.status === "approved"
   );
 
+  // ✅ New special offers (example: either "topRated" field or manually chosen)
+  const specialOffers = properties.filter(
+    (p) => (p.isSpecialOffer || p.rating >= 4.5) && p.status === "approved"
+  );
+
   const renderHorizontalScroll = (items, CardComponent) => (
     <div className="relative overflow-hidden">
       <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth hide-scrollbar py-2">
@@ -111,6 +118,20 @@ export default function ProductsSection() {
 
   return (
     <section className="px-4 sm:px-6 pt-6 pb-24 bg-gray-100 dark:bg-gray-900">
+      {/* ✅ Special Offers Section */}
+      {specialOffers.length > 0 && (
+        <div className="mb-12">
+          <h2 className="text-xl sm:text-3xl font-bold pb-6 text-center text-yellow-700 dark:text-yellow-300">
+            Top Rated In This Week ✨
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {specialOffers.slice(0, 3).map((offer) => (
+              <SpecialOfferCard key={offer._id} {...offer} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {popularStays.length > 0 && (
         <div className="mb-10">
           <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
