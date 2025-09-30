@@ -1,8 +1,12 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 export default function AdminPropertyRentalPage() {
+  const router = useRouter();
+  const [authorized, setAuthorized] = useState(false);
   const [form, setForm] = useState({
     title: "",
     type: "",
@@ -19,10 +23,35 @@ export default function AdminPropertyRentalPage() {
 
   const baseUrl = "http://localhost:10000/propertyrental";
 
+  // ✅ Admin authentication
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return router.push("/admin/login");
+
+    const verifyToken = async () => {
+      try {
+        await axios.get(`${baseUrl}/verify-token`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setAuthorized(true);
+      } catch {
+        localStorage.removeItem("token");
+        router.push("/admin/login");
+      }
+    };
+
+    verifyToken();
+  }, [router]);
+
+  // ✅ Fetch properties
   const fetchProperties = async () => {
+    if (!authorized) return;
     try {
       setLoading(true);
-      const res = await axios.get(baseUrl);
+      const token = localStorage.getItem("token");
+      const res = await axios.get(baseUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setProperties(res.data);
     } catch (err) {
       console.error("❌ Failed to fetch properties:", err);
@@ -33,8 +62,8 @@ export default function AdminPropertyRentalPage() {
   };
 
   useEffect(() => {
-    fetchProperties();
-  }, []);
+    if (authorized) fetchProperties();
+  }, [authorized]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -48,17 +77,21 @@ export default function AdminPropertyRentalPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const formData = new FormData();
-      formData.append("title", form.title);
-      formData.append("type", form.type);
-      formData.append("location", form.location);
-      formData.append("price", form.price);
-      if (imgFile) formData.append("img", imgFile);
+      const data = new FormData();
+      data.append("title", form.title);
+      data.append("type", form.type);
+      data.append("location", form.location);
+      data.append("price", form.price);
+      if (imgFile) data.append("img", imgFile);
 
+      const token = localStorage.getItem("token");
       let res;
       if (editingId) {
-        res = await axios.put(`${baseUrl}/${editingId}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
+        res = await axios.put(`${baseUrl}/${editingId}`, data, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
         });
         setProperties((prev) =>
           prev.map((p) => (p._id === editingId ? res.data : p))
@@ -66,8 +99,11 @@ export default function AdminPropertyRentalPage() {
         setEditingId(null);
         setSuccessMessage("Property updated successfully!");
       } else {
-        res = await axios.post(baseUrl, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
+        res = await axios.post(baseUrl, data, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
         });
         setProperties([...properties, res.data]);
         setSuccessMessage("Property added successfully!");
@@ -97,7 +133,10 @@ export default function AdminPropertyRentalPage() {
   const handleApprove = async (id) => {
     try {
       setApproveLoadingId(id);
-      await axios.put(`${baseUrl}/${id}/approve`);
+      const token = localStorage.getItem("token");
+      await axios.put(`${baseUrl}/${id}/approve`, null, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setProperties((prev) =>
         prev.map((p) => (p._id === id ? { ...p, status: "approved" } : p))
       );
@@ -111,7 +150,10 @@ export default function AdminPropertyRentalPage() {
   const handleReject = async (id) => {
     try {
       setApproveLoadingId(id);
-      await axios.put(`${baseUrl}/${id}/reject`);
+      const token = localStorage.getItem("token");
+      await axios.put(`${baseUrl}/${id}/reject`, null, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setProperties((prev) =>
         prev.map((p) => (p._id === id ? { ...p, status: "rejected" } : p))
       );
@@ -124,13 +166,22 @@ export default function AdminPropertyRentalPage() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${baseUrl}/${id}`);
+      const token = localStorage.getItem("token");
+      await axios.delete(`${baseUrl}/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setProperties(properties.filter((p) => p._id !== id));
     } catch (err) {
       console.error("❌ Failed to delete property:", err);
     }
   };
 
+  if (!authorized)
+    return (
+      <p className="text-center mt-10 text-gray-700">
+        Checking admin access...
+      </p>
+    );
   if (loading) return <p className="text-center mt-10">Loading...</p>;
 
   return (

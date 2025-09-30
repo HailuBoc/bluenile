@@ -1,40 +1,31 @@
+// models/SpecialReservation.js
 import mongoose from "mongoose";
 
-const specialOfferReservationSchema = new mongoose.Schema(
+const specialReservationSchema = new mongoose.Schema(
   {
     offerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "SpecialOffer",
+
       required: true,
     },
     offerTitle: { type: String, required: true },
+
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
-    days: { type: Number, default: 1 },
+    days: { type: Number, required: true },
+
     amount: { type: Number, required: true },
 
-    // Guest info
     name: { type: String, required: true },
     email: { type: String, required: true },
     phone: { type: String, required: true },
 
-    // Payment
-    paymentMethod: {
-      type: String,
-      enum: ["chapa", "telebirr", "cbe-birr", "mpesa"],
-      default: "chapa",
-    },
-    paymentEvidence: { type: String }, // store file path if uploaded
-    status: {
-      type: String,
-      enum: ["pending", "confirmed", "cancelled"],
-      default: "pending",
-    },
+    paymentMethod: { type: String, required: true },
+    paymentEvidence: { type: String }, // filesystem path or URL
+    status: { type: String, default: "pending" }, // pending, paid
   },
   { timestamps: true }
 );
 
-export default mongoose.model(
-  "SpecialOfferReservation",
-  specialOfferReservationSchema
-);
+export default mongoose.models.SpecialReservation ||
+  mongoose.model("SpecialReservations", specialReservationSchema);

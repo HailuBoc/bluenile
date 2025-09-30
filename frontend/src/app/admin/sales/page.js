@@ -1,8 +1,12 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 export default function AdminSalesPage() {
+  const router = useRouter();
+  const [authorized, setAuthorized] = useState(false);
   const [form, setForm] = useState({
     title: "",
     category: "",
@@ -13,22 +17,53 @@ export default function AdminSalesPage() {
   const [imgFile, setImgFile] = useState(null);
   const [sales, setSales] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const baseUrl = "http://localhost:10000/salepost";
 
-  // Fetch all sales
+  // ✅ Admin authentication
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return router.push("/admin/login");
+
+    const verifyToken = async () => {
+      try {
+        await axios.get(`${baseUrl}/verify-token`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setAuthorized(true);
+      } catch {
+        localStorage.removeItem("token");
+        router.push("/admin/login");
+      }
+    };
+
+    verifyToken();
+  }, [router]);
+
+  // ✅ Fetch sales
   const fetchSales = async () => {
+    if (!authorized) return;
     try {
-      const res = await axios.get(baseUrl);
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const res = await axios.get(baseUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setSales(res.data);
     } catch (err) {
       console.error("❌ Failed to fetch sales", err);
+      setErrorMessage("Failed to fetch sales");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSales();
-  }, []);
+    if (authorized) fetchSales();
+  }, [authorized]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -62,20 +97,30 @@ export default function AdminSalesPage() {
       Object.entries(form).forEach(([k, v]) => fd.append(k, v));
       if (imgFile) fd.append("img", imgFile);
 
+      const token = localStorage.getItem("token");
       let res;
+
       if (editingId) {
         res = await axios.put(`${baseUrl}/${editingId}`, fd, {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
         });
         setSales((prev) =>
           prev.map((s) => (s._id === editingId ? res.data : s))
         );
         setEditingId(null);
+        setSuccessMessage("Sale updated successfully!");
       } else {
         res = await axios.post(baseUrl, fd, {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
         });
         setSales([...sales, res.data]);
+        setSuccessMessage("Sale added successfully!");
       }
 
       setForm({
@@ -86,12 +131,14 @@ export default function AdminSalesPage() {
         description: "",
       });
       setImgFile(null);
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
       console.error(
         "❌ Failed to submit sale",
         err.response?.data || err.message
       );
-      alert(err.response?.data?.message || "Something went wrong!");
+      setErrorMessage(err.response?.data?.message || "Something went wrong!");
+      setTimeout(() => setErrorMessage(""), 3000);
     }
   };
 
@@ -103,27 +150,63 @@ export default function AdminSalesPage() {
       location: s.location,
       description: s.description,
     });
+    setImgFile(null);
     setEditingId(s._id);
   };
 
   const handleApprove = async (id) => {
-    const res = await axios.put(`${baseUrl}/${id}/approve`);
-    setSales((prev) => prev.map((s) => (s._id === id ? res.data : s)));
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.put(`${baseUrl}/${id}/approve`, null, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSales((prev) => prev.map((s) => (s._id === id ? res.data : s)));
+    } catch (err) {
+      console.error("❌ Failed to approve sale", err);
+    }
   };
 
   const handleReject = async (id) => {
-    const res = await axios.put(`${baseUrl}/${id}/reject`);
-    setSales((prev) => prev.map((s) => (s._id === id ? res.data : s)));
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.put(`${baseUrl}/${id}/reject`, null, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSales((prev) => prev.map((s) => (s._id === id ? res.data : s)));
+    } catch (err) {
+      console.error("❌ Failed to reject sale", err);
+    }
   };
 
   const handleDelete = async (id) => {
-    await axios.delete(`${baseUrl}/${id}`);
-    setSales(sales.filter((s) => s._id !== id));
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${baseUrl}/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSales(sales.filter((s) => s._id !== id));
+    } catch (err) {
+      console.error("❌ Failed to delete sale", err);
+    }
   };
+
+  if (!authorized)
+    return (
+      <p className="text-center mt-10 text-gray-700">
+        Checking admin access...
+      </p>
+    );
+
+  if (loading) return <p className="text-center mt-10">Loading...</p>;
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <h1 className="text-2xl font-bold mb-6">Admin - Manage Sales</h1>
+
+      {successMessage && (
+        <p className="text-green-600 mb-4">{successMessage}</p>
+      )}
+      {errorMessage && <p className="text-red-600 mb-4">{errorMessage}</p>}
 
       {/* Form */}
       <form
@@ -220,7 +303,7 @@ export default function AdminSalesPage() {
                 Status: {s.status || "pending"}
               </p>
 
-              {/* Action Buttons BELOW the sale item */}
+              {/* Action Buttons */}
               <div className="flex gap-2 mt-3 flex-wrap">
                 {s.status === "pending" && (
                   <>

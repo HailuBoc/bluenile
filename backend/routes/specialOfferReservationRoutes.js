@@ -1,27 +1,24 @@
+// routes/specialReservationRoutes.js
 import express from "express";
 import multer from "multer";
 import {
-  createReservation,
-  getReservations,
-  getReservationById,
-  updateReservationStatus,
-  deleteReservation,
+  createSpecialReservation,
+  listSpecialReservations,
 } from "../controllers/specialOfferReservationController.js";
 
 const router = express.Router();
 
-// ✅ File upload config (for payment evidence)
+// multer saves to uploads/ by default - keep it simple
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
+  filename: (req, file, cb) =>
+    cb(null, Date.now() + "-" + file.originalname.replace(/\s+/g, "_")),
 });
 const upload = multer({ storage });
 
-// ✅ Routes
-router.post("/", upload.single("paymentEvidence"), createReservation);
-router.get("/", getReservations);
-router.get("/:id", getReservationById);
-router.put("/:id/status", updateReservationStatus);
-router.delete("/:id", deleteReservation);
+router.post("/", upload.single("paymentEvidence"), createSpecialReservation);
+
+// helpful GET for quick test
+router.get("/", listSpecialReservations);
 
 export default router;

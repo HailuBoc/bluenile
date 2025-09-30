@@ -1,8 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import axios from "axios";
 
 export default function AdminTransportPage() {
+  const router = useRouter();
+  const [authorized, setAuthorized] = useState(false);
+  const [loading, setLoading] = useState(true);
+
   const [form, setForm] = useState({
     vehicleName: "",
     vehicleType: "",
@@ -15,7 +20,29 @@ export default function AdminTransportPage() {
 
   const baseUrl = "http://localhost:10000/transportpost";
 
-  // Fetch all transports
+  // ---------------- Admin Authentication ----------------
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return router.push("/admin/login");
+
+    const verifyToken = async () => {
+      try {
+        await axios.get("http://localhost:10000/admin/verify-token", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setAuthorized(true);
+      } catch {
+        localStorage.removeItem("token");
+        router.push("/admin/login");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifyToken();
+  }, [router]);
+
+  // ---------------- Fetch Transports ----------------
   const fetchTransports = async () => {
     try {
       const res = await axios.get(baseUrl);
@@ -26,21 +53,16 @@ export default function AdminTransportPage() {
   };
 
   useEffect(() => {
-    fetchTransports();
-  }, []);
+    if (authorized) fetchTransports();
+  }, [authorized]);
 
-  const handleChange = (e) => {
+  // ---------------- Handlers ----------------
+  const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleFileChange = (e) => setImgFile(e.target.files[0]);
 
-  const handleFileChange = (e) => {
-    setImgFile(e.target.files[0]);
-  };
-
-  // Submit form (Add or Update)
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (
       !form.vehicleName ||
       !form.vehicleType ||
@@ -54,11 +76,10 @@ export default function AdminTransportPage() {
     try {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => fd.append(k, v));
-      if (imgFile) fd.append("img", imgFile); // only append if new file selected
+      if (imgFile) fd.append("img", imgFile);
 
       let res;
       if (editingId) {
-        // PUT request: backend will keep old img if none provided
         res = await axios.put(`${baseUrl}/${editingId}`, fd, {
           headers: { "Content-Type": "multipart/form-data" },
         });
@@ -73,7 +94,6 @@ export default function AdminTransportPage() {
         setTransports([...transports, res.data]);
       }
 
-      // Reset form & file input
       setForm({ vehicleName: "", vehicleType: "", description: "", price: "" });
       setImgFile(null);
     } catch (err) {
@@ -84,6 +104,7 @@ export default function AdminTransportPage() {
       alert(err.response?.data?.message || "Something went wrong!");
     }
   };
+
   const handleEdit = (t) => {
     setForm({
       vehicleName: t.vehicleName,
@@ -92,10 +113,9 @@ export default function AdminTransportPage() {
       price: t.price,
     });
     setEditingId(t._id);
-    setImgFile(null); // leave file empty; user can optionally upload new one
+    setImgFile(null);
   };
 
-  // Approve transport
   const handleApprove = async (id) => {
     try {
       const res = await axios.put(`${baseUrl}/${id}/approve`);
@@ -106,7 +126,6 @@ export default function AdminTransportPage() {
     }
   };
 
-  // Reject transport
   const handleReject = async (id) => {
     try {
       const res = await axios.put(`${baseUrl}/${id}/reject`);
@@ -117,11 +136,9 @@ export default function AdminTransportPage() {
     }
   };
 
-  // Delete transport
   const handleDelete = async (id) => {
     try {
-      const res = await axios.delete(`${baseUrl}/${id}`);
-      console.log("Deleted:", res.data);
+      await axios.delete(`${baseUrl}/${id}`);
       setTransports(transports.filter((t) => t._id !== id));
     } catch (err) {
       console.error(
@@ -131,6 +148,16 @@ export default function AdminTransportPage() {
       alert(err.response?.data?.message || "Delete failed!");
     }
   };
+
+  // ---------------- Render ----------------
+  if (loading)
+    return (
+      <p className="text-center mt-10 text-gray-700">
+        Checking admin access...
+      </p>
+    );
+  if (!authorized)
+    return <p className="text-center mt-10 text-red-600">Unauthorized</p>;
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -149,7 +176,6 @@ export default function AdminTransportPage() {
           className="border p-2 rounded"
           required
         />
-
         <select
           name="vehicleType"
           value={form.vehicleType}
@@ -163,7 +189,6 @@ export default function AdminTransportPage() {
           <option value="Van">Van</option>
           <option value="SUV">SUV</option>
         </select>
-
         <input
           type="text"
           name="description"
@@ -173,7 +198,6 @@ export default function AdminTransportPage() {
           className="border p-2 rounded"
           required
         />
-
         <input
           type="text"
           name="price"
@@ -183,14 +207,12 @@ export default function AdminTransportPage() {
           className="border p-2 rounded"
           required
         />
-
         <input
           type="file"
           name="img"
           onChange={handleFileChange}
           className="border p-2 rounded"
         />
-
         <button
           type="submit"
           className="col-span-1 md:col-span-2 bg-blue-600 text-white p-2 rounded hover:bg-blue-700"

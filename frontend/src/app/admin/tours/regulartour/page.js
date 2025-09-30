@@ -1,5 +1,7 @@
 "use client";
+
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import axios from "axios";
 import {
   Map,
@@ -13,6 +15,10 @@ import {
 const iconMap = { Map, Calendar, Landmark, Building, BedDouble, Shield };
 
 export default function AdminTours() {
+  const router = useRouter();
+  const [authorized, setAuthorized] = useState(false);
+  const [loading, setLoading] = useState(true);
+
   const [tours, setTours] = useState([]);
   const [form, setForm] = useState({
     category: "",
@@ -24,10 +30,29 @@ export default function AdminTours() {
 
   const API_URL = "http://localhost:10000/regular-post";
 
+  // ---------------- Admin Authentication ----------------
   useEffect(() => {
-    fetchTours();
-  }, []);
+    const token = localStorage.getItem("token");
+    if (!token) return router.push("/admin/login");
 
+    const verifyToken = async () => {
+      try {
+        await axios.get("http://localhost:10000/admin/verify-token", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setAuthorized(true);
+      } catch {
+        localStorage.removeItem("token");
+        router.push("/admin/login");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifyToken();
+  }, [router]);
+
+  // ---------------- Fetch Tours ----------------
   const fetchTours = async () => {
     try {
       const res = await axios.get(API_URL);
@@ -38,6 +63,11 @@ export default function AdminTours() {
     }
   };
 
+  useEffect(() => {
+    if (authorized) fetchTours();
+  }, [authorized]);
+
+  // ---------------- Form Handlers ----------------
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -88,6 +118,16 @@ export default function AdminTours() {
       setMessage({ type: "error", text: "Delete failed!" });
     }
   };
+
+  // ---------------- Render ----------------
+  if (loading)
+    return (
+      <p className="text-center mt-10 text-gray-700">
+        Checking admin access...
+      </p>
+    );
+  if (!authorized)
+    return <p className="text-center mt-10 text-red-600">Unauthorized</p>;
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">

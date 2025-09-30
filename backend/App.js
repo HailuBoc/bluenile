@@ -88,7 +88,8 @@ app.use("/api/tours", tours);
 app.use("/vip-post", vipPostRoutes);
 app.use("/regular-post", regularPostRoutes);
 app.use("/api/special-offers", specialOfferRoutes);
-app.use("/api/special-offers/reservations", specialOfferReservationRoutes);
+app.use("/specialreservations", specialOfferReservationRoutes);
+console.log("Mounted route: /specialreservations");
 
 // Global error handler (JSON)
 app.use((req, res, next) => {

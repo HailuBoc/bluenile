@@ -104,45 +104,47 @@ export default function ReserveOfferPage() {
     setLoading(true);
 
     try {
-      const reservationData = {
-        offerId: offer._id,
-        offerTitle: offer.propertyName || offer.name,
-        startDate: new Date(checkIn).toISOString(),
-        endDate: new Date(checkOut).toISOString(),
-        days: daysDiff,
-        amount: totalPrice,
-        name: guestInfo.name,
-        email: guestInfo.email,
-        phone: guestInfo.phone,
-        paymentMethod: guestInfo.paymentMethod,
-      };
+      // Prepare formData
+      const formData = new FormData();
+      formData.append("offerId", offer._id);
+      formData.append("offerTitle", offer.propertyName || offer.name);
+      formData.append("startDate", new Date(checkIn).toISOString());
+      formData.append("endDate", new Date(checkOut).toISOString());
+      formData.append("days", daysDiff);
+      formData.append("amount", totalPrice);
+      formData.append("name", guestInfo.name);
+      formData.append("email", guestInfo.email);
+      formData.append("phone", guestInfo.phone);
+      formData.append("paymentMethod", guestInfo.paymentMethod);
+      if (guestInfo.paymentEvidence) {
+        formData.append("paymentEvidence", guestInfo.paymentEvidence);
+      }
 
+      // POST to backend
       const res = await axios.post(
-        `${API_URL}/specialoffers/reservations`,
-        reservationData,
-        { headers: { "Content-Type": "application/json" } }
+        `${API_URL}/specialreservations`, // matches backend route
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
       );
 
       const reservationId = res.data?.reservation?._id;
 
+      // Handle Chapa payment if selected
       if (guestInfo.paymentMethod === "chapa" && reservationId) {
-        try {
-          const payRes = await axios.post(`${API_URL}/bookings/pay/chapa`, {
-            amount: totalPrice,
-            email: guestInfo.email,
-            fullName: guestInfo.name,
-            bookingId: reservationId,
-          });
-          if (payRes.data.checkout_url) {
-            window.location.href = payRes.data.checkout_url;
-            return;
-          } else {
-            setErrorMessage("❌ Failed to initialize Chapa payment.");
-            return;
-          }
-        } catch (err) {
-          console.error("❌ Chapa error:", err);
-          setErrorMessage("Chapa payment error: " + err.message);
+        const payRes = await axios.post(`${API_URL}/bookings/pay/chapa`, {
+          amount: totalPrice,
+          email: guestInfo.email,
+          fullName: guestInfo.name,
+          bookingId: reservationId,
+        });
+
+        if (payRes.data.checkout_url) {
+          window.location.href = payRes.data.checkout_url;
+          return;
+        } else {
+          setErrorMessage("❌ Failed to initialize Chapa payment.");
           return;
         }
       }

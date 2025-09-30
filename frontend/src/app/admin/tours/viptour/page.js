@@ -1,8 +1,14 @@
 "use client";
+
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import axios from "axios";
 
 export default function AdminVipTours() {
+  const router = useRouter();
+  const [authorized, setAuthorized] = useState(false);
+  const [loading, setLoading] = useState(true);
+
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -16,7 +22,29 @@ export default function AdminVipTours() {
 
   const baseUrl = "http://localhost:10000/vip-post";
 
-  // Fetch VIP tours
+  // ---------------- Admin Authentication ----------------
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return router.push("/admin/login");
+
+    const verifyToken = async () => {
+      try {
+        await axios.get("http://localhost:10000/admin/verify-token", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setAuthorized(true);
+      } catch {
+        localStorage.removeItem("token");
+        router.push("/admin/login");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifyToken();
+  }, [router]);
+
+  // ---------------- Fetch VIP Tours ----------------
   const fetchTours = async () => {
     try {
       const res = await axios.get(baseUrl);
@@ -28,9 +56,10 @@ export default function AdminVipTours() {
   };
 
   useEffect(() => {
-    fetchTours();
-  }, []);
+    if (authorized) fetchTours();
+  }, [authorized]);
 
+  // ---------------- Form Handlers ----------------
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -75,10 +104,9 @@ export default function AdminVipTours() {
         res = await axios.post(baseUrl, fd, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        setTours((prev) => [res.data, ...prev]); // newest on top
+        setTours((prev) => [res.data, ...prev]);
       }
 
-      // Reset form
       setForm({ name: "", description: "", date: "", highlights: [] });
       setImgFile(null);
       setMessage({ type: "success", text: "VIP tour saved successfully!" });
@@ -119,6 +147,16 @@ export default function AdminVipTours() {
       setMessage({ type: "error", text: "Delete failed!" });
     }
   };
+
+  // ---------------- Render ----------------
+  if (loading)
+    return (
+      <p className="text-center mt-10 text-gray-700">
+        Checking admin access...
+      </p>
+    );
+  if (!authorized)
+    return <p className="text-center mt-10 text-red-600">Unauthorized</p>;
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
