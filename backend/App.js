@@ -36,7 +36,7 @@ import tours from "./routes/tours.js";
 import vipPostRoutes from "./routes/vipPostRoutes.js";
 import regularPostRoutes from "./routes/regularPostRoutes.js";
 import specialOfferRoutes from "./routes/specialOfferRoutes.js";
-import specialOfferLikeRoutes from "./routes/specialOfferLikeRoutes.js";
+import specialOfferReservationRoutes from "./routes/specialOfferReservationRoutes.js";
 
 dotenv.config();
 const PORT = process.env.PORT || 10000;
@@ -88,7 +88,7 @@ app.use("/api/tours", tours);
 app.use("/vip-post", vipPostRoutes);
 app.use("/regular-post", regularPostRoutes);
 app.use("/api/special-offers", specialOfferRoutes);
-app.use("/api/special-offerslike/like", specialOfferLikeRoutes);
+app.use("/api/special-offers/reservations", specialOfferReservationRoutes);
 
 // Global error handler (JSON)
 app.use((req, res, next) => {

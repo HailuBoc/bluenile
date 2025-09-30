@@ -39,7 +39,7 @@ export default function SpecialOfferCard({
   };
 
   return (
-    <Link href={`/sections/products?id=${_id}`} className="block">
+    <Link href={`/sections/specialOffer?id=${_id}`} className="block">
       <div className="relative bg-gradient-to-br from-yellow-50 to-white dark:from-gray-800 dark:to-gray-900 text-gray-800 dark:text-white rounded-2xl shadow-xl hover:shadow-2xl transition-all overflow-hidden border border-yellow-400">
         {/* 🏆 Top badge */}
         <div className="absolute top-3 left-3 flex items-center gap-1 text-xs font-bold bg-yellow-300 text-yellow-900 px-2 py-1 rounded-full z-10 shadow">

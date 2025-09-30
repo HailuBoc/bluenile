@@ -155,7 +155,7 @@ export default function ProductsSection() {
       {specialOffers.length > 0 && (
         <div className="mb-12">
           <h2 className="text-xl sm:text-3xl font-bold pb-6 text-center text-yellow-700 dark:text-yellow-300">
-            ✨ Special Offers From Admin
+            ✨ Top Rated Offers
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {specialOffers.slice(0, 3).map((offer) => (
