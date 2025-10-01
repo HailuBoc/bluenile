@@ -169,8 +169,9 @@ export default function ProductsSection() {
       {popularStays.length > 0 && (
         <div className="mb-10">
           <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
-            Hotel Rooms
+            🏨 Hotel Rooms
           </h2>
+
           {renderHorizontalScroll(popularStays, ProductCard)}
         </div>
       )}
