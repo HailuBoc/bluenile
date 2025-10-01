@@ -16,6 +16,7 @@ export default function AdminLayout({ children }) {
     { label: "Tours" }, // expandable
     { label: "Users", href: "/admin/users" },
     { label: "Payments", href: "/admin/payments" },
+    { label: "Cancellations", href: "/admin/cancellations" }, // ✅ new item
     { label: "Settings", href: "/admin/settings" },
   ];
 
