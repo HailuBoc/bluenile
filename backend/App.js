@@ -37,6 +37,7 @@ import vipPostRoutes from "./routes/vipPostRoutes.js";
 import regularPostRoutes from "./routes/regularPostRoutes.js";
 import specialOfferRoutes from "./routes/specialOfferRoutes.js";
 import specialOfferReservationRoutes from "./routes/specialOfferReservationRoutes.js";
+import cancellationRoutes from "./routes/cancellationRoutes.js";
 
 dotenv.config();
 const PORT = process.env.PORT || 10000;
@@ -89,6 +90,7 @@ app.use("/vip-post", vipPostRoutes);
 app.use("/regular-post", regularPostRoutes);
 app.use("/api/special-offers", specialOfferRoutes);
 app.use("/specialreservations", specialOfferReservationRoutes);
+app.use("/cancellations", cancellationRoutes);
 console.log("Mounted route: /specialreservations");
 
 // Global error handler (JSON)

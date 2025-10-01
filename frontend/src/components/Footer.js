@@ -117,7 +117,7 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="/auth/login" className="hover:underline">
+                <a href="/cancellation" className="hover:underline">
                   Cancellation options
                 </a>
               </li>

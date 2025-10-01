@@ -13,8 +13,6 @@ export const getVipTours = async (req, res) => {
 };
 
 // Create VIP tour
-// Create VIP tour
-// Create VIP tour
 export const createVipTour = async (req, res) => {
   try {
     const { name, description, date, highlights } = req.body;
@@ -73,14 +71,18 @@ export const deleteVipTour = async (req, res) => {
     const tour = await VipPost.findById(req.params.id);
     if (!tour) return res.status(404).json({ message: "Tour not found" });
 
+    // Delete image if exists
     if (tour.image) {
       const oldPath = path.join("uploads", tour.image);
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
     }
 
-    await tour.remove();
+    // ✅ Use deleteOne instead of remove()
+    await VipPost.deleteOne({ _id: req.params.id });
+
     res.json({ message: "Tour deleted successfully" });
   } catch (err) {
+    console.error("❌ Error deleting VIP tour:", err);
     res.status(500).json({ message: err.message });
   }
 };

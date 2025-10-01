@@ -134,7 +134,6 @@ export default function AdminVipTours() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this VIP tour?")) return;
     try {
       await axios.delete(`${baseUrl}/${id}`);
       setTours(tours.filter((t) => t._id !== id));
@@ -187,11 +186,9 @@ export default function AdminVipTours() {
           className="border p-2 rounded"
           required
         />
-
         <input
-          type="text"
+          type="date"
           name="date"
-          placeholder="Date Info"
           value={form.date}
           onChange={handleChange}
           className="border p-2 rounded"

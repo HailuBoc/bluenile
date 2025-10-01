@@ -6,16 +6,14 @@ import { useState } from "react";
 export default function AdminLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [toursOpen, setToursOpen] = useState(false); // Toggle for nested Tours
-  const [propertiesOpen, setPropertiesOpen] = useState(false); // ✅ Toggle for nested Properties
+  const [propertiesOpen, setPropertiesOpen] = useState(false); // Toggle for nested Properties
 
   const navItems = [
-    { label: "Dashboard", href: "/admin" },
-    { label: "Bookings", href: "/admin/bookings" },
-    { label: "Properties", href: null }, // ✅ now expandable
+    { label: "Properties" }, // expandable
     { label: "Property Rentals", href: "/admin/propertyrental" },
     { label: "Transport", href: "/admin/transport" },
     { label: "Sales", href: "/admin/sales" },
-    { label: "Tours", href: null }, // expandable
+    { label: "Tours" }, // expandable
     { label: "Users", href: "/admin/users" },
     { label: "Payments", href: "/admin/payments" },
     { label: "Settings", href: "/admin/settings" },
@@ -94,7 +92,7 @@ export default function AdminLayout({ children }) {
 
             return (
               <Link
-                key={item.href}
+                key={item.label}
                 href={item.href}
                 className="px-4 py-2 hover:bg-blue-600 rounded"
               >
