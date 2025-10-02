@@ -7,7 +7,7 @@ export default function Footer() {
     <footer className="bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-300 text-sm border-t border-gray-200 dark:border-gray-700 mt-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         {/* Top Section: Footer Columns */}
-        <div className="grid grid-cols-1 gap-8 pb-10 sm:grid-cols-2 lg:grid-cols-4 text-center sm:text-left">
+        <div className="grid grid-cols-2 gap-8 pb-10 sm:grid-cols-2 lg:grid-cols-4 text-center sm:text-left">
           {/* About */}
           <div>
             <h3 className="font-semibold text-gray-800 dark:text-white mb-3">

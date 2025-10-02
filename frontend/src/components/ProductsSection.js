@@ -154,10 +154,26 @@ export default function ProductsSection() {
       {/* ✅ Special Offers Section (from admin) */}
       {specialOffers.length > 0 && (
         <div className="mb-12">
-          <h2 className="text-xl sm:text-3xl font-bold pb-6 text-center text-yellow-700 dark:text-yellow-300">
+          <h2 className="text-xl sm:text-3xl font-bold pb-6 mt-12 sm:mt-6 text-center text-yellow-700 dark:text-yellow-300">
             ✨ Top Rated Offers
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          {/* 📱 Mobile: scrollable | 💻 Desktop: stays grid */}
+          <div className="block lg:hidden">
+            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth hide-scrollbar py-2">
+              {specialOffers.slice(0, 3).map((offer) => (
+                <div
+                  key={offer._id}
+                  className="snap-start flex-shrink-0 w-72 sm:w-80 md:w-96"
+                >
+                  <SpecialOfferCard {...offer} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 💻 Desktop grid view stays the same */}
+          <div className="hidden lg:grid lg:grid-cols-3 lg:gap-6">
             {specialOffers.slice(0, 3).map((offer) => (
               <SpecialOfferCard key={offer._id} {...offer} />
             ))}
