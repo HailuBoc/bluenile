@@ -121,7 +121,7 @@ export default function ProductsPage() {
   if (loading)
     return (
       <div className="flex flex-col min-h-screen items-center justify-center">
-        <p className="text-lg">Loading product...</p>
+        <p className="text-lg">Loading car...</p>
       </div>
     );
 
