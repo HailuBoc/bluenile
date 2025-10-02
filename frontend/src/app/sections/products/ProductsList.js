@@ -112,14 +112,14 @@ export default function ProductsPage() {
 
   if (loading)
     return (
-      <div className="flex flex-col min-h-screen items-center justify-center">
+      <div className="flex flex-col min-h-screen items-center justify-center p-4">
         <p className="text-lg">Loading product...</p>
       </div>
     );
 
   if (error)
     return (
-      <div className="flex flex-col min-h-screen items-center justify-center">
+      <div className="flex flex-col min-h-screen items-center justify-center p-4">
         <p className="text-lg text-red-600">{error}</p>
       </div>
     );
@@ -136,7 +136,7 @@ export default function ProductsPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-      <main className="flex-grow p-6 max-w-7xl mx-auto w-full">
+      <main className="flex-grow p-4 sm:p-6 max-w-7xl mx-auto w-full">
         <div className="flex flex-col md:flex-row gap-6">
           {/* Left side - Image */}
           <div className="md:w-1/2 relative rounded-xl overflow-hidden shadow-lg">
@@ -144,8 +144,8 @@ export default function ProductsPage() {
               <img
                 src={selectedProduct.imageUrl}
                 alt={selectedProduct.propertyName || "Property"}
-                className="w-full h-full object-cover rounded-xl"
-                style={{ minHeight: "400px" }}
+                className="w-full h-auto object-cover rounded-xl"
+                style={{ minHeight: "300px" }}
               />
             )}
 
@@ -172,7 +172,7 @@ export default function ProductsPage() {
 
           {/* Right side - Details */}
           <div className="md:w-1/2 flex flex-col justify-start">
-            <h1 className="text-3xl font-bold mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">
               {selectedProduct.propertyName}
             </h1>
 
@@ -191,14 +191,14 @@ export default function ProductsPage() {
             </div>
 
             {/* Price */}
-            <div className="text-xl font-semibold mb-4">
+            <div className="text-lg sm:text-xl font-semibold mb-4">
               {selectedProduct.price
                 ? `${selectedProduct.price} Br`
                 : "Price not available"}
             </div>
 
             {/* Description */}
-            <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-6 text-sm sm:text-base">
               {selectedProduct.description}
             </p>
 
@@ -207,7 +207,7 @@ export default function ProductsPage() {
               <h2 className="text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-2 sm:mb-3 text-gray-900 dark:text-white">
                 Stay Highlights
               </h2>
-              <ul className="grid grid-cols-2 gap-2 text-gray-700 dark:text-gray-300 text-sm sm:text-base">
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-gray-700 dark:text-gray-300 text-sm sm:text-base">
                 <li>✔ Free Wi-Fi</li>
                 <li>✔ Spacious Living Area</li>
                 <li>✔ Fully Equipped Kitchen</li>
@@ -220,7 +220,7 @@ export default function ProductsPage() {
             <Link
               href={`/sections/products/reserveProducts?id=${selectedProduct._id}`}
             >
-              <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200 mt-6">
+              <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200 mt-6 w-full sm:w-auto">
                 Reserve Now
               </button>
             </Link>
