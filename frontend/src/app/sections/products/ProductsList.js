@@ -199,7 +199,7 @@ export default function ProductsPage() {
 
             {/* Description */}
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
-              {selectedProduct.description || "No description available."}
+              {selectedProduct.description}
             </p>
 
             {/* Highlights */}

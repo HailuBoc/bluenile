@@ -15,7 +15,7 @@ const seedAdmin = async () => {
 
     // Check if admin already exists
     const existingAdmin = await Admin.findOne({
-      email: "hailegebrelyalember@gmail.com",
+      email: "bluenile66@gmail.com",
     });
     if (existingAdmin) {
       console.log("Admin already exists");
@@ -25,7 +25,7 @@ const seedAdmin = async () => {
     // Create new admin
     const newAdmin = await Admin.create({
       fullName: "Super Admin",
-      email: "hailegebrelyalember@gmail.com",
+      email: "bluenile66@gmail.com",
       password: "admin123", // will be hashed automatically
       role: "super-admin",
     });

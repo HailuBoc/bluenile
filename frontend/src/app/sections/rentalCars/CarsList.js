@@ -212,27 +212,26 @@ export default function ProductsPage() {
             )}
 
             {/* Highlights */}
-            {selectedProduct.category === "car" && (
-              <div>
-                <h2 className="text-lg sm:text-xl font-semibold mt-6 mb-2 sm:mb-3 text-gray-900 dark:text-white">
-                  Car Rental Highlights
-                </h2>
-                <ul className="grid grid-cols-2 gap-2 text-gray-700 dark:text-gray-300 text-sm sm:text-base">
-                  <li>✔ Unlimited Mileage</li>
-                  <li>✔ Comprehensive Insurance</li>
-                  <li>✔ Roadside Assistance</li>
-                  <li>✔ Flexible Booking Options</li>
-                  <li>✔ Free Cancellation</li>
-                  <li>✔ Latest Car Models</li>
-                </ul>
-              </div>
-            )}
+            {/* Highlights (always visible) */}
+            <div>
+              <h2 className="text-lg sm:text-xl font-semibold mt-6 mb-2 sm:mb-3 text-gray-900 dark:text-white">
+                Car Rental Highlights
+              </h2>
+              <ul className="grid grid-cols-2 gap-2 text-gray-700 dark:text-gray-300 text-sm sm:text-base">
+                <li>✔ Unlimited Mileage</li>
+                <li>✔ Comprehensive Insurance</li>
+                <li>✔ Roadside Assistance</li>
+                <li>✔ Flexible Booking Options</li>
+                <li>✔ Free Cancellation</li>
+                <li>✔ Latest Car Models</li>
+              </ul>
+            </div>
 
             <Link
               href={`/sections/rentalCars/reserveRental?id=${selectedProduct._id}`}
             >
               <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200 mt-6">
-                Reserve Now
+                Rent Now
               </button>
             </Link>
           </div>

@@ -8,18 +8,6 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// =======================
-// Properties Management
-// =======================
-
-// Get all properties
-
-// Create property (from ListPropertyPage or Admin form)
-
-// Update property status (approve/reject)
-
-// Delete property
-
 export const loginAdmin = async (req, res) => {
   const { email, password } = req.body;
 

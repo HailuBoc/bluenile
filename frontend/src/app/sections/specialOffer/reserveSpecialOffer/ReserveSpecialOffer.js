@@ -188,7 +188,7 @@ export default function ReserveOfferPage() {
     return (
       <>
         <main className="flex items-center justify-center min-h-screen p-4">
-          <p className="text-lg sm:text-xl text-red-600">
+          <p className="text-lg sm:text-xl text-blue-600">
             {error || "Loading..."}
           </p>
         </main>
@@ -388,8 +388,7 @@ export default function ReserveOfferPage() {
 
               <div className="border-t border-gray-300 dark:border-gray-600 pt-3 sm:pt-4 mt-3 sm:mt-4 text-center">
                 <div className="font-bold text-green-700 dark:text-green-400 text-base sm:text-lg">
-                  {daysDiff} {daysDiff === 1 ? "day" : "days"} × {offer.price}{" "}
-                  birr = {totalPrice} birr
+                  Total Price = {totalPrice} birr
                 </div>
               </div>
 
