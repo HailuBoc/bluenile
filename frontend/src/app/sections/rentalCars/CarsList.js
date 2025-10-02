@@ -17,7 +17,7 @@ export default function ProductsPage() {
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
   const BASE_URL =
-    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:10000";
+    process.env.NEXT_PUBLIC_BACKEND_URL || "https://bluenile.onrender.com";
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [likes, setLikes] = useState(0);
