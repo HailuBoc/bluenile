@@ -309,11 +309,6 @@ export default function Navbar() {
             icon: <Briefcase className="h-5 w-5 mb-1" />,
             label: "Services",
           },
-          {
-            href: "/profile",
-            icon: <User className="h-5 w-5 mb-1" />,
-            label: "Profile",
-          },
         ].map((item, i) => (
           <Link
             key={i}
