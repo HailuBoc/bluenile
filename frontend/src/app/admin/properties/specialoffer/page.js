@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 
 export default function AdminSpecialOffers() {
-  const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+  const BASE_URL =
+    process.env.NEXT_PUBLIC_API_BASE_URL || "https://bluenile.onrender.com";
 
   const [form, setForm] = useState({
     propertyName: "",

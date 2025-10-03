@@ -10,7 +10,8 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_API_BASE_URL || "https://bluenile.onrender.com";
 
   // Redirect to dashboard if already logged in
   useEffect(() => {

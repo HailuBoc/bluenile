@@ -45,7 +45,8 @@ export default function AdminPropertiesPage() {
     "Leather Seats",
   ];
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_API_BASE_URL || "https://bluenile.onrender.com";
 
   // Authenticate admin
   useEffect(() => {

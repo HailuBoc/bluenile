@@ -1,61 +1,55 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
 export default function AdminPropertyRentalPage() {
   const router = useRouter();
   const [authorized, setAuthorized] = useState(false);
-  const [form, setForm] = useState({
-    title: "",
-    type: "",
-    location: "",
-    price: "",
-  });
-  const [imgFile, setImgFile] = useState(null);
   const [properties, setProperties] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [approveLoadingId, setApproveLoadingId] = useState(null);
-  const [editingId, setEditingId] = useState(null);
+  const [filtered, setFiltered] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
 
-  const baseUrl = "http://localhost:10000/propertyrental";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_API_BASE_URL || "https://bluenile.onrender.com";
 
-  // ✅ Admin authentication
+  // ✅ Check authentication
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) return router.push("/admin/login");
+    if (!token) {
+      router.push("/admin/login");
+      return;
+    }
 
     const verifyToken = async () => {
       try {
-        await axios.get(`${baseUrl}/verify-token`, {
+        await axios.get(`${baseUrl}/admin/verify-token`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAuthorized(true);
-      } catch {
+      } catch (err) {
         localStorage.removeItem("token");
         router.push("/admin/login");
       }
     };
 
     verifyToken();
-  }, [router]);
+  }, [router, baseUrl]);
 
   // ✅ Fetch properties
   const fetchProperties = async () => {
-    if (!authorized) return;
+    setLoading(true);
     try {
-      setLoading(true);
       const token = localStorage.getItem("token");
-      const res = await axios.get(baseUrl, {
+      const res = await axios.get(`${baseUrl}/propertyrental`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setProperties(res.data);
+      setProperties(res.data || []);
+      setFiltered(res.data || []);
     } catch (err) {
-      console.error("❌ Failed to fetch properties:", err);
-      setErrorMessage("Failed to fetch properties");
+      console.error("❌ Error fetching properties:", err);
     } finally {
       setLoading(false);
     }
@@ -65,114 +59,47 @@ export default function AdminPropertyRentalPage() {
     if (authorized) fetchProperties();
   }, [authorized]);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleFileChange = (e) => {
-    setImgFile(e.target.files[0]);
-  };
-
-  // ✅ Add / Update property
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const data = new FormData();
-      data.append("title", form.title);
-      data.append("type", form.type);
-      data.append("location", form.location);
-      data.append("price", form.price);
-      if (imgFile) data.append("img", imgFile);
-
-      const token = localStorage.getItem("token");
-      let res;
-      if (editingId) {
-        res = await axios.put(`${baseUrl}/${editingId}`, data, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setProperties((prev) =>
-          prev.map((p) => (p._id === editingId ? res.data : p))
-        );
-        setEditingId(null);
-        setSuccessMessage("Property updated successfully!");
-      } else {
-        res = await axios.post(baseUrl, data, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setProperties([...properties, res.data]);
-        setSuccessMessage("Property added successfully!");
-      }
-
-      setForm({ title: "", type: "", location: "", price: "" });
-      setImgFile(null);
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (err) {
-      console.error("❌ Failed to save property:", err);
-      setErrorMessage("Failed to save property");
-      setTimeout(() => setErrorMessage(""), 3000);
-    }
-  };
-
-  const handleEdit = (property) => {
-    setForm({
-      title: property.title,
-      type: property.type,
-      location: property.location,
-      price: property.price,
-    });
-    setImgFile(null);
-    setEditingId(property._id);
-  };
-
-  const handleApprove = async (id) => {
-    try {
-      setApproveLoadingId(id);
-      const token = localStorage.getItem("token");
-      await axios.put(`${baseUrl}/${id}/approve`, null, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setProperties((prev) =>
-        prev.map((p) => (p._id === id ? { ...p, status: "approved" } : p))
+  // ✅ Search filter
+  useEffect(() => {
+    let temp = [...properties];
+    if (search) {
+      temp = temp.filter(
+        (p) =>
+          (p.title && p.title.toLowerCase().includes(search.toLowerCase())) ||
+          (p.location &&
+            p.location.toLowerCase().includes(search.toLowerCase())) ||
+          (p.type && p.type.toLowerCase().includes(search.toLowerCase()))
       );
-      setApproveLoadingId(null);
-    } catch (err) {
-      console.error("❌ Failed to approve property:", err);
-      setApproveLoadingId(null);
     }
-  };
+    setFiltered(temp);
+  }, [search, properties]);
 
-  const handleReject = async (id) => {
-    try {
-      setApproveLoadingId(id);
-      const token = localStorage.getItem("token");
-      await axios.put(`${baseUrl}/${id}/reject`, null, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setProperties((prev) =>
-        prev.map((p) => (p._id === id ? { ...p, status: "rejected" } : p))
-      );
-      setApproveLoadingId(null);
-    } catch (err) {
-      console.error("❌ Failed to reject property:", err);
-      setApproveLoadingId(null);
-    }
-  };
-
+  // ✅ Delete property
   const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete this property?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`${baseUrl}/${id}`, {
+      await axios.delete(`${baseUrl}/propertyrental/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setProperties(properties.filter((p) => p._id !== id));
+      fetchProperties();
     } catch (err) {
-      console.error("❌ Failed to delete property:", err);
+      console.error("❌ Error deleting property:", err);
+    }
+  };
+
+  // ✅ Approve / Reject
+  const handleApprove = async (id, action) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(
+        `${baseUrl}/propertyrental/${id}/${action}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      fetchProperties();
+    } catch (err) {
+      console.error(`❌ Error trying to ${action} property:`, err);
     }
   };
 
@@ -182,132 +109,113 @@ export default function AdminPropertyRentalPage() {
         Checking admin access...
       </p>
     );
-  if (loading) return <p className="text-center mt-10">Loading...</p>;
+
+  if (loading)
+    return <p className="text-center mt-10 text-gray-700">Loading...</p>;
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-bold mb-6">
-        Admin - Manage Property Rentals
+    <div className="min-h-screen bg-gray-100 p-6">
+      <h1 className="text-3xl font-bold text-center mb-6">
+        Manage Property Rentals
       </h1>
 
-      {successMessage && (
-        <p className="text-green-600 mb-4">{successMessage}</p>
-      )}
-      {errorMessage && <p className="text-red-600 mb-4">{errorMessage}</p>}
+      {/* 🔍 Search bar */}
+      <div className="bg-white rounded-lg shadow p-4 mb-6 flex gap-4">
+        <input
+          type="text"
+          placeholder="Search by title, type, or location"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="px-4 py-2 border rounded w-full"
+        />
+      </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-4 rounded shadow mb-6"
-      >
-        <input
-          type="text"
-          name="title"
-          placeholder="Title"
-          value={form.title}
-          onChange={handleChange}
-          className="border p-2 rounded"
-          required
-        />
-        <select
-          name="type"
-          value={form.type}
-          onChange={handleChange}
-          className="border p-2 rounded"
-          required
-        >
-          <option value="">Select Type</option>
-          <option value="House">House</option>
-          <option value="Apartment">Apartment</option>
-          <option value="Guesthouse">Guesthouse</option>
-          <option value="Hotel Apartment">Hotel Apartment</option>
-        </select>
-        <input
-          type="text"
-          name="location"
-          placeholder="Location"
-          value={form.location}
-          onChange={handleChange}
-          className="border p-2 rounded"
-          required
-        />
-        <input
-          type="text"
-          name="price"
-          placeholder="Price (e.g., 300 birr / night)"
-          value={form.price}
-          onChange={handleChange}
-          className="border p-2 rounded"
-          required
-        />
-        <input
-          type="file"
-          name="img"
-          onChange={handleFileChange}
-          className="border p-2 rounded"
-          accept="image/*"
-        />
-        <button
-          type="submit"
-          className="col-span-1 md:col-span-2 bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
-        >
-          {editingId ? "Update Property" : "Add Property"}
-        </button>
-      </form>
+      {/* 📋 Table */}
+      <div className="bg-white rounded-lg shadow overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              {[
+                "Title",
+                "Type",
+                "Location",
+                "Price",
+                "Status",
+                "Image",
+                "Actions",
+              ].map((header) => (
+                <th
+                  key={header}
+                  className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filtered.map((p) => (
+              <tr key={p._id}>
+                <td className="px-4 py-2 font-semibold">{p.title}</td>
+                <td className="px-4 py-2">{p.type}</td>
+                <td className="px-4 py-2">{p.location}</td>
+                <td className="px-4 py-2">{p.price}</td>
+                <td className="px-4 py-2">
+                  {p.status === "approved" ? (
+                    <span className="text-green-600 font-semibold">
+                      Approved
+                    </span>
+                  ) : p.status === "rejected" ? (
+                    <span className="text-red-600 font-semibold">Rejected</span>
+                  ) : (
+                    <span className="text-yellow-600 font-semibold">
+                      Pending
+                    </span>
+                  )}
+                </td>
+                <td className="px-4 py-2">
+                  {p.img ? (
+                    <img
+                      src={`${baseUrl}/uploads/${p.img}`}
+                      alt={p.title}
+                      className="h-16 w-24 object-cover rounded"
+                    />
+                  ) : (
+                    "-"
+                  )}
+                </td>
+                <td className="px-4 py-2 flex gap-2 flex-wrap">
+                  {p.status === "pending" && (
+                    <>
+                      <button
+                        onClick={() => handleApprove(p._id, "approve")}
+                        className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleApprove(p._id, "reject")}
+                        className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                      >
+                        Reject
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={() => handleDelete(p._id)}
+                    className="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Existing Properties</h2>
-        <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {properties.map((p) => (
-            <li key={p._id} className="border p-4 bg-white rounded shadow">
-              <p className="font-bold">{p.title}</p>
-              <p>{p.type}</p>
-              <p>{p.location}</p>
-              <p>{p.price}</p>
-              {p.img && (
-                <img
-                  src={`http://localhost:10000/uploads/${p.img}`}
-                  alt={p.title}
-                  className="w-full h-32 object-cover mt-2"
-                />
-              )}
-              <p className="mt-2 font-semibold">
-                Status: {p.status || "pending"}
-              </p>
-              <div className="flex gap-2 mt-2 flex-wrap">
-                {p.status === "pending" && (
-                  <>
-                    <button
-                      onClick={() => handleApprove(p._id)}
-                      disabled={approveLoadingId === p._id}
-                      className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                    >
-                      {approveLoadingId === p._id ? "..." : "Approve"}
-                    </button>
-                    <button
-                      onClick={() => handleReject(p._id)}
-                      disabled={approveLoadingId === p._id}
-                      className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-                    >
-                      {approveLoadingId === p._id ? "..." : "Reject"}
-                    </button>
-                  </>
-                )}
-                <button
-                  onClick={() => handleEdit(p)}
-                  className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(p._id)}
-                  className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700"
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        {filtered.length === 0 && (
+          <p className="text-center py-4 text-gray-500">No properties found.</p>
+        )}
       </div>
     </div>
   );

@@ -21,7 +21,8 @@ export default function AdminSalesPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const baseUrl = "http://localhost:10000/salepost";
+  // ✅ Use env variable for base API URL
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
   // ✅ Admin authentication
   useEffect(() => {
@@ -30,7 +31,7 @@ export default function AdminSalesPage() {
 
     const verifyToken = async () => {
       try {
-        await axios.get(`${baseUrl}/verify-token`, {
+        await axios.get(`${baseUrl}/admin/verify-token`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAuthorized(true);
@@ -41,7 +42,7 @@ export default function AdminSalesPage() {
     };
 
     verifyToken();
-  }, [router]);
+  }, [router, baseUrl]);
 
   // ✅ Fetch sales
   const fetchSales = async () => {
@@ -49,7 +50,7 @@ export default function AdminSalesPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const res = await axios.get(baseUrl, {
+      const res = await axios.get(`${baseUrl}/salepost`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSales(res.data);
@@ -73,6 +74,7 @@ export default function AdminSalesPage() {
     setImgFile(e.target.files[0]);
   };
 
+  // ✅ Add / Update sale
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -101,7 +103,7 @@ export default function AdminSalesPage() {
       let res;
 
       if (editingId) {
-        res = await axios.put(`${baseUrl}/${editingId}`, fd, {
+        res = await axios.put(`${baseUrl}/salepost/${editingId}`, fd, {
           headers: {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
@@ -113,7 +115,7 @@ export default function AdminSalesPage() {
         setEditingId(null);
         setSuccessMessage("Sale updated successfully!");
       } else {
-        res = await axios.post(baseUrl, fd, {
+        res = await axios.post(`${baseUrl}/salepost`, fd, {
           headers: {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
@@ -157,7 +159,7 @@ export default function AdminSalesPage() {
   const handleApprove = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.put(`${baseUrl}/${id}/approve`, null, {
+      const res = await axios.put(`${baseUrl}/salepost/${id}/approve`, null, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSales((prev) => prev.map((s) => (s._id === id ? res.data : s)));
@@ -169,7 +171,7 @@ export default function AdminSalesPage() {
   const handleReject = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.put(`${baseUrl}/${id}/reject`, null, {
+      const res = await axios.put(`${baseUrl}/salepost/${id}/reject`, null, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSales((prev) => prev.map((s) => (s._id === id ? res.data : s)));
@@ -181,7 +183,7 @@ export default function AdminSalesPage() {
   const handleDelete = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`${baseUrl}/${id}`, {
+      await axios.delete(`${baseUrl}/salepost/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSales(sales.filter((s) => s._id !== id));
@@ -294,11 +296,16 @@ export default function AdminSalesPage() {
               <p>Description: {s.description}</p>
               {s.img && (
                 <img
-                  src={`http://localhost:10000/${s.img}`}
+                  src={
+                    s.img.startsWith("http")
+                      ? s.img
+                      : `${baseUrl}${s.img.startsWith("/") ? "" : "/"}${s.img}`
+                  }
                   alt={s.title}
-                  className="w-full h-32 object-cover mt-2"
+                  className="w-full h-32 object-cover mt-2 rounded"
                 />
               )}
+
               <p className="mt-2 font-semibold">
                 Status: {s.status || "pending"}
               </p>
