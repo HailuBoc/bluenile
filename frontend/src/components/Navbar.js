@@ -121,21 +121,18 @@ export default function Navbar() {
                 <>
                   {/* Mobile layout: 2 + 2 + 1 */}
                   <div className="sm:hidden w-full">
-                    {/* First row: 2 items */}
                     <div className="grid grid-cols-2 gap-3 px-2">
                       {services.slice(0, 2).map((s) => (
                         <Tile key={s.label} {...s} />
                       ))}
                     </div>
 
-                    {/* Second row: 2 items */}
                     <div className="grid grid-cols-2 gap-3 px-2 mt-3">
                       {services.slice(2, 4).map((s) => (
                         <Tile key={s.label} {...s} />
                       ))}
                     </div>
 
-                    {/* Third row: Tourism only, centered horizontally */}
                     <div className="flex justify-center mt-3 px-2 gap-3">
                       {services.slice(4).map((s) => (
                         <Tile key={s.label} {...s} />
@@ -143,7 +140,6 @@ export default function Navbar() {
                     </div>
                   </div>
 
-                  {/* Desktop: 5 across */}
                   <div className="hidden sm:grid grid-cols-5 gap-4 sm:px-0">
                     {services.map((s) => (
                       <Tile key={s.label} {...s} />
@@ -154,8 +150,8 @@ export default function Navbar() {
             })()}
           </nav>
 
-          {/* Search Section */}
-          <div className="w-full max-w-6xl">
+          {/* Desktop Search Section */}
+          <div className="w-full max-w-6xl hidden sm:block">
             <div className="flex flex-col sm:flex-row items-stretch border justify-center text-center rounded-xl sm:rounded-full shadow-lg p-3 sm:px-8 sm:py-3 bg-white/90 dark:bg-gray-800/90 dark:border-gray-600 gap-y-3 sm:gap-y-0">
               {[
                 { label: "Services", href: "/services" },
@@ -167,8 +163,7 @@ export default function Navbar() {
                 { label: "Transport service", href: "/transport" },
                 { label: "Sales", href: "/sales" },
               ].map((field, i) => {
-                const [query, setQuery] = useState(""); // track input value per field
-
+                const [query, setQuery] = useState("");
                 return (
                   <div
                     key={i}
@@ -194,7 +189,7 @@ export default function Navbar() {
                 );
               })}
 
-              {/* === Single Search Button at the end === */}
+              {/* === Desktop Search Icon Button === */}
               <div className="flex items-center justify-center px-3">
                 <button
                   onClick={() => {
@@ -230,43 +225,15 @@ export default function Navbar() {
                       : targetHref;
                     window.location.href = url;
                   }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-3 py-2 rounded-full text-sm transition duration-200"
+                  className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full transition duration-200 flex items-center justify-center"
                 >
-                  <Search />
+                  <Search size={18} />
                 </button>
               </div>
             </div>
           </div>
         </div>
       </header>
-
-      {/* ==== Sticky Services Nav ==== */}
-      {showSticky && (
-        <div className="sticky top-0 z-50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-md animate-slideDown">
-          <nav className="flex overflow-x-auto sm:overflow-visible gap-4 sm:gap-8 py-3 px-4 sm:px-0 text-sm font-semibold text-gray-700 dark:text-gray-200">
-            {[
-              {
-                href: "/propertyrental",
-                icon: "🏠",
-                label: "Property Rentals",
-              },
-              { href: "/event", icon: "🎉", label: "Event Venues" },
-              { href: "/transport", icon: "🚗", label: "Transport" },
-              { href: "/sales", icon: "🏡", label: "Sales" },
-              { href: "/tourism", icon: "🌍", label: "Tourism" },
-            ].map((item, i) => (
-              <Link
-                key={i}
-                href={item.href}
-                className="flex items-center gap-1 flex-shrink-0 hover:text-blue-600 transition"
-              >
-                <span className="text-lg">{item.icon}</span>
-                <span>{item.label}</span>
-              </Link>
-            ))}
-          </nav>
-        </div>
-      )}
 
       {/* ==== Mobile Top Buttons ==== */}
       <div className="fixed top-4 right-4 flex gap-2 z-50 sm:hidden">
@@ -282,23 +249,60 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* ==== Mobile Search Slide ==== */}
-      {showMobileSearch && (
-        <div className="fixed top-0 left-0 w-full z-50 bg-white dark:bg-gray-900 border-b shadow px-4 py-3 flex items-center gap-2 sm:hidden animate-slideDown">
+      {/* ==== Mobile Search Bar with Search Icon === */}
+      <div className="sm:hidden w-full bg-white dark:bg-gray-900 border-b shadow px-4 py-3 sticky top-0 z-50">
+        <div className="flex items-center gap-2 mb-3">
           <input
             type="text"
-            autoFocus
-            placeholder="Where are you going?"
+            placeholder="Search..."
+            id="mobile-search-input"
             className="flex-grow bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2 outline-none text-sm text-gray-800 dark:text-white"
           />
           <button
-            onClick={() => setShowMobileSearch(false)}
-            className="text-gray-500 hover:text-red-500"
+            onClick={() => {
+              const queryInput = document.getElementById("mobile-search-input");
+              const queryValue = queryInput?.value.trim() || "";
+              if (queryValue) {
+                window.location.href = `/products?q=${encodeURIComponent(
+                  queryValue
+                )}`;
+              }
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full flex items-center justify-center transition"
           >
-            <X className="h-6 w-6" />
+            <Search size={18} />
           </button>
         </div>
-      )}
+
+        <div className="flex flex-wrap gap-2">
+          {[
+            { label: "Property Rentals", href: "/propertyrental" },
+            { label: "Events", href: "/event" },
+            { label: "Transport", href: "/transport" },
+            { label: "Sales", href: "/sales" },
+            { label: "Tourism", href: "/tourism" },
+          ].map((service) => (
+            <button
+              key={service.label}
+              onClick={() => {
+                const queryInput = document.getElementById(
+                  "mobile-search-input"
+                );
+                const queryValue = queryInput?.value.trim() || "";
+                const url = queryValue
+                  ? `${service.href}?q=${encodeURIComponent(queryValue)}`
+                  : service.href;
+                window.location.href = url;
+              }}
+              className="px-3 py-1 rounded-full border text-xs font-medium 
+                   text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 
+                   hover:bg-blue-600 hover:text-white transition"
+            >
+              {service.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* ==== Mobile Bottom Nav ==== */}
       <nav className="fixed bottom-0 z-50 w-full bg-white dark:bg-gray-900 border-t shadow-md flex justify-around items-center px-4 py-2 sm:hidden">
