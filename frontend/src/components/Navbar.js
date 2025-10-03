@@ -250,8 +250,8 @@ export default function Navbar() {
       </div>
 
       {/* ==== Mobile Search Bar with Search Icon === */}
-      <div className="sm:hidden w-full bg-white dark:bg-gray-900 border-b shadow px-4 py-3 sticky top-0 z-50">
-        <div className="flex items-center gap-2 mb-3">
+      <div className="sm:hidden w-full bg-white dark:bg-gray-900   border-b shadow px-4 py-3 sticky top-0 z-50">
+        <div className="flex items-center gap-1 mb-3">
           <input
             type="text"
             placeholder="Search..."
