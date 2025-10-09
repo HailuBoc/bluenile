@@ -1,7 +1,14 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Heart, Cake, GraduationCap, Briefcase } from "lucide-react";
+import {
+  Search,
+  Heart,
+  Cake,
+  GraduationCap,
+  Briefcase,
+  Crown,
+} from "lucide-react";
 
 export default function EventServices() {
   const [search, setSearch] = useState("");
@@ -153,6 +160,14 @@ export default function EventServices() {
         </div>
       </div>
 
+      <div className="flex justify-center mt-8">
+        <Link href={"/event/vipevent"}>
+          <button className="bg-yellow-400 text-gray-900 p-5 rounded-full shadow-lg hover:scale-110 transition flex items-center justify-center gap-1">
+            <Crown className="w-6 h-6" />
+            <span className="font-bold text-sm">VIP</span>
+          </button>
+        </Link>
+      </div>
       {/* Event Categories */}
       <section className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -183,19 +198,6 @@ export default function EventServices() {
             </Link>
           ))}
         </div>
-      </section>
-
-      {/* CTA */}
-      <section className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12 text-center">
-        <h2 className="text-3xl font-bold mb-3">Plan Your Perfect Event</h2>
-        <p className="mb-6">
-          Let our team handle every detail, from planning to execution.
-        </p>
-        <Link href={"/event/quote"}>
-          <button className="bg-white text-blue-700 px-8 py-3 rounded-lg font-bold hover:bg-gray-100 transition">
-            Get a Service
-          </button>
-        </Link>
       </section>
 
       {/* Footer */}
