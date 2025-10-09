@@ -1,28 +1,42 @@
 "use client";
 
-import { Cake, CheckCircle, XCircle } from "lucide-react";
+import { Heart, CheckCircle, XCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import axios from "axios";
 
-export default function BirthdayReservationPage() {
-  const eventName = "Luxury Birthday Parties";
-  const eventIcon = <Cake className="w-12 h-12 mx-auto mb-4 text-yellow-500" />;
+export default function WeddingBookingPage() {
+  const eventName = "Luxury Wedding Booking";
+  const eventIcon = <Heart className="w-12 h-12 mx-auto mb-4 text-pink-500" />;
 
-  const serviceOptions = [
-    { name: "Luxury Hall", price: 6000 },
-    { name: "Photography & Videography", price: 4000 },
-    { name: "Gourmet Catering", price: 400 }, // per guest
-    { name: "Premium Decoration", price: 3500 },
-    { name: "DJ & Entertainment", price: 3000 },
-    { name: "VIP Car Service", price: 2500 },
-    { name: "Guest Management", price: 1500 },
-  ];
+  const marriageTypes = {
+    Modern: [
+      { name: "Luxury Venue", price: 8000 },
+      { name: "Premium Decoration", price: 5000 },
+      { name: "Photography & Videography", price: 4000 },
+      { name: "Gourmet Catering", price: 600 }, // per guest
+      { name: "DJ & Entertainment", price: 3500 },
+    ],
+    Traditional: [
+      { name: "Cultural Venue", price: 6000 },
+      { name: "Traditional Decoration", price: 4000 },
+      { name: "Cultural Band", price: 3000 },
+      { name: "Traditional Food & Catering", price: 400 }, // per guest
+      { name: "Outfit Rental", price: 2500 },
+    ],
+    Religious: [
+      { name: "Religious Hall / Church", price: 5000 },
+      { name: "Decoration & Floral Setup", price: 3500 },
+      { name: "Choir & Ceremony Music", price: 2500 },
+      { name: "Catering & Reception", price: 500 },
+      { name: "Photography", price: 3000 },
+    ],
+  };
 
   const paymentMethods = [
     { name: "chapa", logo: "/chapa.png" },
     { name: "telebirr", logo: "/telebirr.png" },
-    { name: "mpesa", logo: "/mpesa.png" }, // M-Pesa added
+    { name: "mpesa", logo: "/mpesa.png" },
   ];
 
   const [formData, setFormData] = useState({
@@ -31,6 +45,7 @@ export default function BirthdayReservationPage() {
     email: "",
     date: "",
     guests: "",
+    marriageType: "",
     selectedServices: [],
     specialRequests: "",
     paymentMethod: "",
@@ -41,20 +56,24 @@ export default function BirthdayReservationPage() {
   const [totalAmount, setTotalAmount] = useState(0);
 
   const API_BASE =
-    process.env.NEXT_PUBLIC_API_BASE_URL || "https://bluenile.onrender.com";
+    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:10000";
 
-  // Calculate total price
+  // Calculate total
   useEffect(() => {
+    if (!formData.marriageType) return;
+    const selectedOptions = marriageTypes[formData.marriageType] || [];
+
     const total = formData.selectedServices.reduce((acc, sName) => {
-      const service = serviceOptions.find((s) => s.name === sName);
+      const service = selectedOptions.find((s) => s.name === sName);
       if (!service) return acc;
-      if (service.name.includes("Catering")) {
+      if (service.name.toLowerCase().includes("catering")) {
         return acc + (parseInt(formData.guests) || 0) * service.price;
       }
       return acc + service.price;
     }, 0);
+
     setTotalAmount(total);
-  }, [formData.selectedServices, formData.guests]);
+  }, [formData.selectedServices, formData.guests, formData.marriageType]);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -75,6 +94,7 @@ export default function BirthdayReservationPage() {
     if (!formData.email) errors.email = "Email is required";
     if (!formData.date) errors.date = "Date is required";
     if (!formData.guests) errors.guests = "Number of guests is required";
+    if (!formData.marriageType) errors.marriageType = "Choose marriage type";
     if (!formData.selectedServices.length)
       errors.services = "Select at least one service";
     if (!formData.paymentMethod)
@@ -96,7 +116,7 @@ export default function BirthdayReservationPage() {
 
     try {
       // 1️⃣ Create booking
-      const bookingRes = await axios.post(`${API_BASE}/vip/birthday`, {
+      const bookingRes = await axios.post(`${API_BASE}/vip/weddings`, {
         ...formData,
         selectedServices: formData.selectedServices,
         totalAmount,
@@ -105,15 +125,15 @@ export default function BirthdayReservationPage() {
       const booking = bookingRes.data.booking;
       const bookingId = booking._id;
 
-      // 2️⃣ Trigger selected payment dynamically
-      const method = formData.paymentMethod.toLowerCase(); // chapa, telebirr, mpesa
+      // 2️⃣ Trigger payment
+      const method = formData.paymentMethod.toLowerCase();
       const payRes = await axios.post(`${API_BASE}/bookings/pay/${method}`, {
         amount: totalAmount,
         currency: "ETB",
         email: formData.email,
         fullName: formData.name,
         bookingId,
-        phone: formData.phone, // required by Telebirr & M-Pesa
+        phone: formData.phone,
       });
 
       const payData = payRes.data;
@@ -136,17 +156,17 @@ export default function BirthdayReservationPage() {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <header className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-16 text-center px-4">
+      <header className="bg-gradient-to-r from-pink-500 to-red-500 text-white py-16 text-center px-4">
         {eventIcon}
         <h1 className="text-4xl font-bold">{eventName}</h1>
         <p className="mt-2 text-lg">
-          Plan and book your VIP birthday event with ease 🎉
+          Plan your dream wedding effortlessly with our elegant packages 💍
         </p>
       </header>
 
       <section className="bg-white py-12 px-4 max-w-3xl mx-auto shadow-lg rounded-xl -mt-8">
         <h2 className="text-2xl font-bold text-center mb-6 text-black">
-          Book Your Event
+          Book Your Wedding
         </h2>
 
         {status.text && (
@@ -207,28 +227,56 @@ export default function BirthdayReservationPage() {
             className="w-full p-3 border rounded-lg text-black"
           />
 
-          <div className="space-y-2">
-            <p className="font-medium text-black">Select Services:</p>
-            {serviceOptions.map((service) => (
-              <label
-                key={service.name}
-                className="flex items-center gap-2 border p-2 rounded-lg cursor-pointer text-black"
-              >
-                <input
-                  type="checkbox"
-                  checked={formData.selectedServices.includes(service.name)}
-                  onChange={() => toggleService(service.name)}
-                />
-                {service.name} —{" "}
-                {service.name.includes("Catering")
-                  ? `${service.price} ETB / guest`
-                  : `${service.price} ETB`}
-              </label>
-            ))}
+          <div>
+            <p className="font-medium mb-2 text-black">Marriage Type:</p>
+            <div className="flex gap-3 flex-wrap">
+              {Object.keys(marriageTypes).map((type) => (
+                <label
+                  key={type}
+                  className={`px-4 py-2 border rounded-lg cursor-pointer ${
+                    formData.marriageType === type
+                      ? "bg-pink-100 border-pink-400"
+                      : "border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="marriageType"
+                    value={type}
+                    checked={formData.marriageType === type}
+                    onChange={handleChange}
+                    className="hidden"
+                  />
+                  {type}
+                </label>
+              ))}
+            </div>
           </div>
 
+          {formData.marriageType && (
+            <div className="space-y-2">
+              <p className="font-medium text-black">Select Services:</p>
+              {marriageTypes[formData.marriageType].map((service) => (
+                <label
+                  key={service.name}
+                  className="flex items-center gap-2 border p-2 rounded-lg cursor-pointer text-black"
+                >
+                  <input
+                    type="checkbox"
+                    checked={formData.selectedServices.includes(service.name)}
+                    onChange={() => toggleService(service.name)}
+                  />
+                  {service.name} —{" "}
+                  {service.name.toLowerCase().includes("catering")
+                    ? `${service.price} ETB / guest`
+                    : `${service.price} ETB`}
+                </label>
+              ))}
+            </div>
+          )}
+
           {totalAmount > 0 && (
-            <div className="p-4 bg-yellow-100 border border-yellow-300 rounded-lg text-black font-semibold">
+            <div className="p-4 bg-pink-100 border border-pink-300 rounded-lg text-black font-semibold">
               💰 Total Payment: {totalAmount} ETB
             </div>
           )}
@@ -278,9 +326,9 @@ export default function BirthdayReservationPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-yellow-500 text-white py-3 rounded-lg font-bold hover:bg-yellow-600 transition disabled:opacity-50"
+            className="w-full bg-pink-500 text-white py-3 rounded-lg font-bold hover:bg-pink-600 transition disabled:opacity-50"
           >
-            {loading ? "Processing..." : "Submit Booking"}
+            {loading ? "Processing..." : "Submit Wedding Booking"}
           </button>
         </form>
       </section>

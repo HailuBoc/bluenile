@@ -21,7 +21,7 @@ export default function EventServices() {
       title: "Weddings",
       subtitle: "Traditional | Modern | Religious",
       icon: <Heart className="w-8 h-8 text-pink-500" />,
-      link: "/event/weddings",
+      link: "/event/wedding",
       services: [
         "Wedding Hall",
         "Photography & Videography",
