@@ -11,7 +11,7 @@ export default function WeddingsReservationPage() {
   const serviceOptions = [
     { name: "Exclusive Wedding Hall", price: 10000 },
     { name: "Professional Photography & Videography", price: 8000 },
-    { name: "Gourmet Catering", price: 500 },
+    { name: "Gourmet Catering", price: 500 }, // per guest
     { name: "Luxury Decoration", price: 6000 },
     { name: "DJ & Entertainment", price: 4000 },
     { name: "VIP Car Service", price: 3000 },
@@ -21,10 +21,11 @@ export default function WeddingsReservationPage() {
   const paymentMethods = [
     { name: "Chapa", logo: "/chapa.png" },
     { name: "Telebirr", logo: "/telebirr.png" },
-    { name: "CBE Birr", logo: "/cbe.png" },
+    { name: "Mpesa", logo: "/mpesa.png" },
   ];
 
   const [formData, setFormData] = useState({
+    marriageType: "",
     name: "",
     phone: "",
     email: "",
@@ -32,7 +33,7 @@ export default function WeddingsReservationPage() {
     guests: "",
     selectedServices: [],
     specialRequests: "",
-    paymentMethod: "Chapa", // default to Chapa
+    paymentMethod: "Chapa",
   });
 
   const [status, setStatus] = useState({ text: "", type: "" });
@@ -41,6 +42,7 @@ export default function WeddingsReservationPage() {
 
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
+  // Calculate total amount dynamically
   useEffect(() => {
     const total = formData.selectedServices.reduce((acc, sName) => {
       const service = serviceOptions.find((s) => s.name === sName);
@@ -67,6 +69,8 @@ export default function WeddingsReservationPage() {
 
   const validateForm = () => {
     const errors = {};
+    if (!formData.marriageType)
+      errors.marriageType = "Marriage type is required";
     if (!formData.name) errors.name = "Full name is required";
     if (!formData.phone) errors.phone = "Phone number is required";
     if (!formData.email) errors.email = "Email is required";
@@ -91,16 +95,16 @@ export default function WeddingsReservationPage() {
     setStatus({ text: "", type: "" });
 
     try {
-      const form = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        if (key === "selectedServices") form.append(key, JSON.stringify(value));
-        else if (value) form.append(key, value);
-      });
-      form.append("totalAmount", totalAmount);
+      const payload = {
+        ...formData,
+        totalAmount,
+      };
 
+      // Send JSON
       const res = await fetch(`${API_BASE}/vip/weddings`, {
         method: "POST",
-        body: form,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -108,16 +112,17 @@ export default function WeddingsReservationPage() {
 
       const bookingId = data.booking._id;
 
-      // Redirect all payment methods like Chapa
+      // Payment
       const payRes = await fetch(`${API_BASE}/bookings/pay/chapa`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          bookingId,
           amount: totalAmount,
           currency: "ETB",
           email: formData.email,
           fullName: formData.name,
-          bookingId,
+          paymentMethod: formData.paymentMethod.toLowerCase(),
         }),
       });
 
@@ -166,6 +171,19 @@ export default function WeddingsReservationPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Marriage Type */}
+          <select
+            name="marriageType"
+            value={formData.marriageType}
+            onChange={handleChange}
+            className="w-full p-3 border rounded-lg text-black"
+          >
+            <option value="">Select Marriage Type</option>
+            <option value="Religious">Religious</option>
+            <option value="Civil">Civil</option>
+            <option value="Traditional">Traditional</option>
+          </select>
+
           <input
             type="text"
             name="name"
@@ -206,6 +224,7 @@ export default function WeddingsReservationPage() {
             className="w-full p-3 border rounded-lg text-black"
           />
 
+          {/* Services */}
           <div className="space-y-2">
             <p className="font-medium text-black">Select Services:</p>
             {serviceOptions.map((service) => (
@@ -232,6 +251,7 @@ export default function WeddingsReservationPage() {
             </div>
           )}
 
+          {/* Payment Methods */}
           <div>
             <p className="font-medium mb-2">Select Payment Method:</p>
             <div className="flex gap-4">

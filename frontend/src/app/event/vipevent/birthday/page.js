@@ -3,6 +3,7 @@
 import { Cake, CheckCircle, XCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import axios from "axios";
 
 export default function BirthdayReservationPage() {
   const eventName = "Luxury Birthday Parties";
@@ -19,9 +20,9 @@ export default function BirthdayReservationPage() {
   ];
 
   const paymentMethods = [
-    { name: "Chapa", logo: "/chapa.png" },
-    { name: "Telebirr", logo: "/telebirr.png" },
-    { name: "CBE Birr", logo: "/cbe.png" },
+    { name: "chapa", logo: "/chapa.png" },
+    { name: "telebirr", logo: "/telebirr.png" },
+    { name: "mpesa", logo: "/mpesa.png" }, // M-Pesa added
   ];
 
   const [formData, setFormData] = useState({
@@ -39,8 +40,10 @@ export default function BirthdayReservationPage() {
   const [loading, setLoading] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:10000";
 
+  // Calculate total price
   useEffect(() => {
     const total = formData.selectedServices.reduce((acc, sName) => {
       const service = serviceOptions.find((s) => s.name === sName);
@@ -82,6 +85,7 @@ export default function BirthdayReservationPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errors = validateForm();
+
     if (Object.keys(errors).length > 0) {
       setStatus({ text: "❌ Please fill all required fields.", type: "error" });
       return;
@@ -91,45 +95,40 @@ export default function BirthdayReservationPage() {
     setStatus({ text: "", type: "" });
 
     try {
-      const form = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        if (key === "selectedServices") form.append(key, JSON.stringify(value));
-        else if (value) form.append(key, value);
-      });
-      form.append("totalAmount", totalAmount);
-
-      const res = await fetch(`${API_BASE}/vip/birthday`, {
-        method: "POST",
-        body: form,
+      // 1️⃣ Create booking
+      const bookingRes = await axios.post(`${API_BASE}/vip/birthday`, {
+        ...formData,
+        selectedServices: formData.selectedServices,
+        totalAmount,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Booking failed");
+      const booking = bookingRes.data.booking;
+      const bookingId = booking._id;
 
-      const bookingId = data.booking._id;
-
-      // All payment methods behave like Chapa
-      const payRes = await fetch(`${API_BASE}/bookings/pay/chapa`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: totalAmount,
-          currency: "ETB",
-          email: formData.email,
-          fullName: formData.name,
-          bookingId,
-        }),
+      // 2️⃣ Trigger selected payment dynamically
+      const method = formData.paymentMethod.toLowerCase(); // chapa, telebirr, mpesa
+      const payRes = await axios.post(`${API_BASE}/bookings/pay/${method}`, {
+        amount: totalAmount,
+        currency: "ETB",
+        email: formData.email,
+        fullName: formData.name,
+        bookingId,
+        phone: formData.phone, // required by Telebirr & M-Pesa
       });
 
-      const payData = await payRes.json();
+      const payData = payRes.data;
       if (payData?.checkout_url) {
+        setStatus({ text: "✅ Redirecting to payment...", type: "success" });
         window.location.href = payData.checkout_url;
-        return;
       } else {
-        throw new Error("❌ Failed to start payment");
+        throw new Error("Failed to start payment");
       }
     } catch (err) {
-      setStatus({ text: `❌ ${err.message}`, type: "error" });
+      console.error("Booking error:", err);
+      setStatus({
+        text: `❌ ${err.response?.data?.message || err.message}`,
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -141,12 +140,14 @@ export default function BirthdayReservationPage() {
         {eventIcon}
         <h1 className="text-4xl font-bold">{eventName}</h1>
         <p className="mt-2 text-lg">
-          Plan and book your VIP event with ease 🎉
+          Plan and book your VIP birthday event with ease 🎉
         </p>
       </header>
 
       <section className="bg-white py-12 px-4 max-w-3xl mx-auto shadow-lg rounded-xl -mt-8">
-        <h2 className="text-2xl font-bold text-center mb-6">Book Your Event</h2>
+        <h2 className="text-2xl font-bold text-center mb-6 text-black">
+          Book Your Event
+        </h2>
 
         {status.text && (
           <div
@@ -233,8 +234,10 @@ export default function BirthdayReservationPage() {
           )}
 
           <div>
-            <p className="font-medium mb-2">Select Payment Method:</p>
-            <div className="flex gap-4">
+            <p className="font-medium mb-2 text-black">
+              Select Payment Method:
+            </p>
+            <div className="flex gap-4 flex-wrap">
               {paymentMethods.map((method) => (
                 <label
                   key={method.name}
@@ -258,7 +261,7 @@ export default function BirthdayReservationPage() {
                     width={40}
                     height={40}
                   />
-                  {method.name}
+                  {method.name.toUpperCase()}
                 </label>
               ))}
             </div>

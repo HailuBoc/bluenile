@@ -1,15 +1,19 @@
 import express from "express";
 import {
+  createGraduationBooking,
   createPayment,
   verifyPayment,
-} from "../controllers/paymentController.js";
+} from "../controllers/vipGraduationController.js";
 
 const router = express.Router();
 
-// Initialize payment (any method: chapa, telebirr, mpesa)
+// Create Graduation Booking
+router.post("/", createGraduationBooking);
+
+// Payment initialization
 router.post("/:method", createPayment);
 
-// Verify payment (any method)
+// Payment verification
 router.get("/:method/verify/:bookingId", verifyPayment);
 
 export default router;

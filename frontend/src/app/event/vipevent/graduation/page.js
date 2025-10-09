@@ -3,6 +3,7 @@
 import { GraduationCap, CheckCircle, XCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import axios from "axios";
 
 export default function GraduationReservationPage() {
   const eventName = "Luxury Graduations";
@@ -23,7 +24,7 @@ export default function GraduationReservationPage() {
   const paymentMethods = [
     { name: "Chapa", logo: "/chapa.png" },
     { name: "Telebirr", logo: "/telebirr.png" },
-    { name: "CBE Birr", logo: "/cbe.png" },
+    { name: "M-Pesa", logo: "/mpesa.png" },
   ];
 
   const [formData, setFormData] = useState({
@@ -41,8 +42,10 @@ export default function GraduationReservationPage() {
   const [loading, setLoading] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
+  // Calculate total amount
   useEffect(() => {
     const total = formData.selectedServices.reduce((acc, sName) => {
       const service = serviceOptions.find((s) => s.name === sName);
@@ -93,45 +96,40 @@ export default function GraduationReservationPage() {
     setStatus({ text: "", type: "" });
 
     try {
-      const form = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        if (key === "selectedServices") form.append(key, JSON.stringify(value));
-        else if (value) form.append(key, value);
-      });
-      form.append("totalAmount", totalAmount);
-
-      const res = await fetch(`${API_BASE}/vip/graduation`, {
-        method: "POST",
-        body: form,
+      // 1️⃣ Create booking
+      const bookingRes = await axios.post(`${API_BASE}/vip/graduation`, {
+        ...formData,
+        totalAmount,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Booking failed");
+      const bookingId = bookingRes.data.booking._id;
 
-      const bookingId = data.booking._id;
-
-      // All payment methods behave like Chapa
-      const payRes = await fetch(`${API_BASE}/bookings/pay/chapa`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      // 2️⃣ Initialize payment based on selected method
+      const payRes = await axios.post(
+        `${API_BASE}/bookings/pay/${formData.paymentMethod.toLowerCase()}`,
+        {
           amount: totalAmount,
           currency: "ETB",
           email: formData.email,
           fullName: formData.name,
           bookingId,
-        }),
-      });
+          phone: formData.phone,
+        }
+      );
 
-      const payData = await payRes.json();
-      if (payData?.checkout_url) {
-        window.location.href = payData.checkout_url;
-        return;
+      const checkout_url = payRes.data.checkout_url;
+      if (checkout_url) {
+        setStatus({ text: "✅ Redirecting to payment...", type: "success" });
+        window.location.href = checkout_url;
       } else {
-        throw new Error("❌ Failed to start payment");
+        throw new Error("Failed to start payment");
       }
     } catch (err) {
-      setStatus({ text: `❌ ${err.message}`, type: "error" });
+      console.error("Booking error:", err);
+      setStatus({
+        text: `❌ ${err.response?.data?.message || err.message}`,
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -143,7 +141,7 @@ export default function GraduationReservationPage() {
         {eventIcon}
         <h1 className="text-4xl font-bold">{eventName}</h1>
         <p className="mt-2 text-lg">
-          Plan and book your VIP event with ease 🎓
+          Plan and book your VIP graduation event 🎓
         </p>
       </header>
 
@@ -229,6 +227,7 @@ export default function GraduationReservationPage() {
             ))}
           </div>
 
+          {/* Total */}
           {totalAmount > 0 && (
             <div className="p-4 bg-yellow-100 border border-yellow-300 rounded-lg text-black font-semibold">
               💰 Total Payment: {totalAmount} ETB

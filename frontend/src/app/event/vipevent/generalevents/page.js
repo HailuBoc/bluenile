@@ -3,6 +3,7 @@
 import { Briefcase, CheckCircle, XCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import axios from "axios";
 
 export default function GeneralEventsReservationPage() {
   const eventName = "Luxury Corporate & General Events";
@@ -24,7 +25,7 @@ export default function GeneralEventsReservationPage() {
   const paymentMethods = [
     { name: "Chapa", logo: "/chapa.png" },
     { name: "Telebirr", logo: "/telebirr.png" },
-    { name: "CBE Birr", logo: "/cbe.png" },
+    { name: "M-Pesa", logo: "/mpesa.png" },
   ];
 
   const [formData, setFormData] = useState({
@@ -44,7 +45,7 @@ export default function GeneralEventsReservationPage() {
 
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
-  // Calculate total amount
+  // Calculate total amount dynamically
   useEffect(() => {
     const total = formData.selectedServices.reduce((acc, sName) => {
       const service = serviceOptions.find((s) => s.name === sName);
@@ -95,45 +96,42 @@ export default function GeneralEventsReservationPage() {
     setStatus({ text: "", type: "" });
 
     try {
-      const form = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        if (key === "selectedServices") form.append(key, JSON.stringify(value));
-        else if (value) form.append(key, value);
-      });
-      form.append("totalAmount", totalAmount);
-
-      const res = await fetch(`${API_BASE}/vip/generalevents`, {
-        method: "POST",
-        body: form,
+      // 1️⃣ Create booking
+      const bookingRes = await axios.post(`${API_BASE}/vip/generalevents`, {
+        ...formData,
+        selectedServices: formData.selectedServices,
+        totalAmount,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Booking failed");
+      const booking = bookingRes.data.booking;
+      const bookingId = booking._id;
 
-      const bookingId = data.booking._id;
-
-      // All payment methods behave like Chapa
-      const payRes = await fetch(`${API_BASE}/bookings/pay/chapa`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      // 2️⃣ Trigger selected payment
+      const payRes = await axios.post(
+        `${API_BASE}/bookings/pay/${formData.paymentMethod.toLowerCase()}`,
+        {
           amount: totalAmount,
           currency: "ETB",
           email: formData.email,
           fullName: formData.name,
           bookingId,
-        }),
-      });
+          phone: formData.phone,
+        }
+      );
 
-      const payData = await payRes.json();
+      const payData = payRes.data;
       if (payData?.checkout_url) {
+        setStatus({ text: "✅ Redirecting to payment...", type: "success" });
         window.location.href = payData.checkout_url;
-        return;
       } else {
-        throw new Error("❌ Failed to start payment");
+        throw new Error("Failed to start payment");
       }
     } catch (err) {
-      setStatus({ text: `❌ ${err.message}`, type: "error" });
+      console.error("Booking error:", err);
+      setStatus({
+        text: `❌ ${err.response?.data?.error || err.message}`,
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
