@@ -31,12 +31,12 @@ export default function TourismPage() {
     paymentMethod: "",
     phone: "",
     email: "",
-    paymentProof: null,
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [vipPosts, setVipPosts] = useState([]);
   const [regularTours, setRegularTours] = useState([]);
+  const [paymentInstructions, setPaymentInstructions] = useState("");
 
   // ✅ Fetch VIP posts
   useEffect(() => {
@@ -78,7 +78,6 @@ export default function TourismPage() {
         : [...prev.extras, value],
     }));
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -86,6 +85,7 @@ export default function TourismPage() {
       setMessage({ type: "error", text: "⚠️ Please select a payment method!" });
       return;
     }
+
     if (!formData.phone || !formData.email) {
       setMessage({
         type: "error",
@@ -98,50 +98,43 @@ export default function TourismPage() {
     setMessage(null);
 
     try {
-      const formPayload = new FormData();
-      formPayload.append("destination", formData.destination);
-      formPayload.append("date", formData.date);
-      formPayload.append("extras", JSON.stringify(formData.extras));
-      formPayload.append("notes", formData.notes);
-      formPayload.append("paymentMethod", formData.paymentMethod);
-      formPayload.append("phone", formData.phone);
-      formPayload.append("email", formData.email);
-
-      if (
-        (formData.paymentMethod === "telebirr" ||
-          formData.paymentMethod === "cbe_birr") &&
-        formData.paymentProof
-      ) {
-        formPayload.append("paymentProof", formData.paymentProof);
-      }
-
       const res = await fetch(`${API_URL}/vip-bookings`, {
         method: "POST",
-        body: formPayload,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       });
 
-      const text = await res.text();
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        throw new Error(
-          "Unexpected server response. Expected JSON, got text/HTML:\n" + text
-        );
-      }
+      const data = await res.json();
 
-      if (!res.ok)
-        throw new Error(data.error || data.message || "Request failed");
+      if (!res.ok) throw new Error(data.error || "Booking failed");
 
-      if (formData.paymentMethod === "chapa" && data.paymentUrl) {
+      // ✅ Handle payment flow
+      if (formData.paymentMethod === "Chapa" && data.paymentUrl) {
+        // Redirect user to Chapa gateway
         window.location.href = data.paymentUrl;
+      } else if (formData.paymentMethod === "Mpesa") {
+        setMessage({
+          type: "success",
+          text: "✅ Booking submitted! Please complete payment using M-Pesa and wait for confirmation email.",
+        });
+      } else if (formData.paymentMethod === "Bank Transfer") {
+        setMessage({
+          type: "success",
+          text: "🏦 Booking submitted! Please complete payment by bank transfer using the provided details.",
+        });
+      } else if (formData.paymentMethod === "Cash") {
+        setMessage({
+          type: "success",
+          text: "💵 Booking submitted! You can pay in cash on arrival or at our office.",
+        });
       } else {
         setMessage({
           type: "success",
-          text: "🎉 " + (data.message || "Booking submitted successfully."),
+          text: "🎉 Booking submitted successfully!",
         });
       }
 
+      // Reset form
       setFormData({
         destination: "",
         date: "",
@@ -150,7 +143,6 @@ export default function TourismPage() {
         paymentMethod: "",
         phone: "",
         email: "",
-        paymentProof: null,
       });
     } catch (err) {
       setMessage({ type: "error", text: "❌ " + err.message });
@@ -198,7 +190,6 @@ export default function TourismPage() {
 
       {/* Content */}
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 md:py-12">
-        {/* ✅ Regular Tours (from Admin) */}
         {activeTab === "regular" && (
           <div>
             <div className="max-w-md mx-auto mb-6 md:mb-8 flex items-center bg-white rounded-lg shadow px-3">
@@ -250,10 +241,9 @@ export default function TourismPage() {
           </div>
         )}
 
-        {/* ✅ VIP Tours (unchanged) */}
+        {/* ✅ VIP Tours */}
         {activeTab === "vip" && (
           <div>
-            {/* VIP Posts dynamically fetched */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-12">
               {vipPosts.length > 0 ? (
                 vipPosts.map((tour) => (
@@ -303,14 +293,12 @@ export default function TourismPage() {
               )}
             </div>
 
-            {/* VIP Form (unchanged) */}
-            {/* ... keep your existing VIP form code here ... */}
+            {/* ✅ Clean VIP Booking Form */}
             <div className="bg-white shadow-lg rounded-2xl p-6 md:p-8">
               <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">
                 VIP Tour Customization Form
               </h3>
 
-              {/* Inline success/error message */}
               {message && (
                 <div
                   className={`mb-4 p-3 rounded-lg text-sm font-medium ${
@@ -346,7 +334,7 @@ export default function TourismPage() {
                   </select>
                 </div>
 
-                {/* Travel Date */}
+                {/* Date */}
                 <div>
                   <label className="block font-semibold mb-1 text-sm text-gray-800">
                     Travel Date
@@ -395,7 +383,7 @@ export default function TourismPage() {
                   />
                 </div>
 
-                {/* VIP Extras */}
+                {/* Extras */}
                 <div>
                   <label className="block font-semibold mb-1 text-sm text-gray-800">
                     Select VIP Extras
@@ -457,48 +445,61 @@ export default function TourismPage() {
                 </div>
 
                 {/* Payment Method */}
+                {/* Payment Method */}
                 <div>
                   <label className="block font-semibold mb-1 text-sm text-gray-800">
                     Payment Method
                   </label>
                   <select
+                    name="paymentMethod"
                     value={formData.paymentMethod}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        paymentMethod: e.target.value,
-                      })
-                    }
-                    className="w-full border border-gray-400 text-black rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData({ ...formData, paymentMethod: value });
+
+                      // 🧭 Show payment-specific instructions
+                      switch (value) {
+                        case "Chapa":
+                          setPaymentInstructions(
+                            "You’ll be redirected to Chapa’s secure payment gateway after submitting."
+                          );
+                          break;
+                        case "Mpesa":
+                          setPaymentInstructions(
+                            "📱 Please send your payment via M-Pesa to number: +254 7XX XXX XXX and keep your transaction ID handy."
+                          );
+                          break;
+                        case "Bank Transfer":
+                          setPaymentInstructions(
+                            "🏦 Please transfer the total amount to Bank of Abyssinia, Account: 123456789, Name: Explore Ethiopia Tours."
+                          );
+                          break;
+                        case "Cash":
+                          setPaymentInstructions(
+                            "💵 You can pay in cash upon arrival at our main office or to your assigned tour guide."
+                          );
+                          break;
+                        default:
+                          setPaymentInstructions("");
+                      }
+                    }}
+                    className="w-full border border-gray-300 rounded-lg p-2"
                   >
-                    <option value="">-- Select Payment --</option>
-                    <option value="chapa">Chapa</option>
-                    <option value="telebirr">Telebirr</option>
-                    <option value="cbe_birr">CBE Birr</option>
+                    <option value="">Select Payment Method</option>
+                    <option value="Chapa">Chapa</option>
+                    <option value="Tele-Birr">Mpesa</option>
+                    <option value="Mpesa">Bank Transfer</option>
+                    <option value="Cbe-Birr">Cash</option>
                   </select>
+
+                  {paymentInstructions && (
+                    <p className="text-gray-700 bg-yellow-50 border border-yellow-200 rounded-lg p-2 mt-2 text-sm">
+                      {paymentInstructions}
+                    </p>
+                  )}
                 </div>
 
-                {/* Upload Payment Proof if Telebirr or CBE */}
-                {(formData.paymentMethod === "telebirr" ||
-                  formData.paymentMethod === "cbe_birr") && (
-                  <div>
-                    <label className="block font-semibold mb-1 mt-3 text-sm text-gray-800">
-                      Upload Payment Proof
-                    </label>
-                    <input
-                      type="file"
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          paymentProof: e.target.files[0],
-                        })
-                      }
-                      className="w-full text-sm"
-                    />
-                  </div>
-                )}
-
-                {/* Submit Button with spacing */}
+                {/* Submit Button */}
                 <button
                   type="submit"
                   disabled={loading}
@@ -507,8 +508,6 @@ export default function TourismPage() {
                   {loading ? "Submitting..." : "Submit VIP Request"}
                 </button>
               </form>
-
-              {/* Footer Section */}
             </div>
           </div>
         )}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Heart, Cake, GraduationCap, Briefcase, Search } from "lucide-react";
+import Footer from "../../../components/Footer";
 
 export default function VIPEvents() {
   const [search, setSearch] = useState("");
@@ -147,7 +148,9 @@ export default function VIPEvents() {
           </button>
         </Link>
       </section>
-
+      <div>
+        <Footer />
+      </div>
       {/* Footer */}
       <footer className="bg-gray-800 text-gray-300 py-6 text-center text-sm md:text-base">
         &copy; {new Date().getFullYear()} VIP Event Services. All rights

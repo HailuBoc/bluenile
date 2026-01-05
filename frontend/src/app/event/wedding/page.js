@@ -6,7 +6,7 @@ import Image from "next/image";
 import axios from "axios";
 
 export default function WeddingBookingPage() {
-  const eventName = "Luxury Wedding Booking";
+  const eventName = " Wedding Booking";
   const eventIcon = <Heart className="w-12 h-12 mx-auto mb-4 text-pink-500" />;
 
   const marriageTypes = {
@@ -233,7 +233,7 @@ export default function WeddingBookingPage() {
               {Object.keys(marriageTypes).map((type) => (
                 <label
                   key={type}
-                  className={`px-4 py-2 border rounded-lg cursor-pointer ${
+                  className={`px-4 text-black py-2 border rounded-lg cursor-pointer ${
                     formData.marriageType === type
                       ? "bg-pink-100 border-pink-400"
                       : "border-gray-300"

@@ -42,6 +42,7 @@ import vipBirthdayRoutes from "./routes/vipBirthdayRoutes.js";
 import vipGraduationRoutes from "./routes/vipGraduationRoutes.js";
 import vipGeneralEventRoutes from "./routes/vipGeneralEventRoutes.js";
 import vipWeddingRoutes from "./routes/vipWeddingRoutes.js";
+import contactRoutes from "./routes/contactRoutes.js";
 
 dotenv.config();
 const PORT = process.env.PORT || 10000;
@@ -99,6 +100,7 @@ app.use("/vip/birthday", vipBirthdayRoutes);
 app.use("/vip/graduation", vipGraduationRoutes);
 app.use("/vip/generalevents", vipGeneralEventRoutes);
 app.use("/vip/weddings", vipWeddingRoutes);
+app.use("/api/contact", contactRoutes);
 
 console.log("Mounted route: /specialreservations");
 

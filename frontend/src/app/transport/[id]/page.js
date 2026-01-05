@@ -36,6 +36,7 @@ export default function TransportDetailPage() {
     { name: "Chapa", logo: "/chapa.png" },
     { name: "Telebirr", logo: "/telebirr.png" },
     { name: "CBE Birr", logo: "/cbebirr.png" },
+    { name: "Mpesa", logo: "/mpesa.png" }, // New payment method
   ];
 
   // Fetch transport from backend by ID
@@ -102,7 +103,7 @@ export default function TransportDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          car: transport.vehicleName, // ← now using vehicleName from backend
+          car: transport.vehicleName, // ← using vehicleName from backend
           amount: total,
         }),
       });
@@ -110,15 +111,17 @@ export default function TransportDetailPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to submit booking");
 
+      // ✅ Redirect for all payment methods if backend provides redirectUrl
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl;
+        return;
+      }
+
+      // Show success message if no redirect
       setMessage({
         text: "✅ Booking submitted! Confirmation sent to your email.",
         type: "success",
       });
-
-      if (formData.paymentMethod === "Chapa" && data.redirectUrl) {
-        window.location.href = data.redirectUrl;
-        return;
-      }
 
       // Reset form
       setFormData({
@@ -261,7 +264,7 @@ export default function TransportDetailPage() {
             {/* Payment Method */}
             <div>
               <h3 className="font-semibold mb-2">Select Payment Method</h3>
-              <div className="flex gap-4">
+              <div className="flex gap-4 flex-wrap">
                 {paymentOptions.map((method) => (
                   <label
                     key={method.name}

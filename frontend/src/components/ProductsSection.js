@@ -136,11 +136,11 @@ export default function ProductsSection() {
 
   const renderHorizontalScroll = (items, CardComponent) => (
     <div className="relative overflow-hidden">
-      <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth hide-scrollbar py-2">
+      <div className="flex gap-3 xs:gap-4 sm:gap-4 md:gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth hide-scrollbar py-2 px-1">
         {items.map((listing) => (
           <div
             key={listing._id}
-            className="snap-start flex-shrink-0 w-60 relative"
+            className="snap-start flex-shrink-0 w-56 xs:w-60 sm:w-64 md:w-72 lg:w-80 relative"
           >
             <CardComponent {...listing} />
           </div>
@@ -150,19 +150,22 @@ export default function ProductsSection() {
   );
 
   return (
-    <section className="px-4 sm:px-6 pt-6 pb-24 bg-gray-100 dark:bg-gray-900">
-      {/* ✅ Mobile Top Rated Offers (directly after search bar) */}
+    <section className="px-3 xs:px-4 sm:px-6 md:px-8 lg:px-12 pt-6 xs:pt-8 pb-20 xs:pb-24 bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      {/* ✅ Mobile & Tablet Top Rated Offers */}
       {specialOffers.length > 0 && (
-        <div className="mb-12 block lg:hidden">
-          <h2 className="text-xl sm:text-3xl font-bold pb-2 mt-0 text-center text-yellow-700 dark:text-yellow-300">
-            ✨ Top Rated Offers
-          </h2>
+        <div className="mb-6 xs:mb-16 block lg:hidden">
+          <div className="text-center mb-6 xs:mb-8 px-2">
+            <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-yellow-600 via-orange-500 to-red-500 bg-clip-text text-transparent mb-2">
+              ✨ Top Rated Offers
+            </h2>
+            <div className="w-20 xs:w-24 h-1 bg-gradient-to-r from-yellow-400 to-orange-500 mx-auto rounded-full"></div>
+          </div>
 
-          <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth hide-scrollbar py-2">
+          <div className="flex gap-3 xs:gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth hide-scrollbar py-2 px-1">
             {specialOffers.slice(0, 3).map((offer) => (
               <div
                 key={offer._id}
-                className="snap-start flex-shrink-0 w-72 sm:w-80 md:w-96"
+                className="snap-start flex-shrink-0 w-64 xs:w-72 sm:w-80 md:w-96"
               >
                 <SpecialOfferCard {...offer} />
               </div>
@@ -171,58 +174,80 @@ export default function ProductsSection() {
         </div>
       )}
 
-      {/* Desktop Special Offers remain unchanged */}
+      {/* Desktop Special Offers */}
       {specialOffers.length > 0 && (
-        <div className="mb-12 hidden lg:grid lg:grid-cols-3 lg:gap-6">
-          {specialOffers.slice(0, 3).map((offer) => (
-            <SpecialOfferCard key={offer._id} {...offer} />
-          ))}
+        <div className="mb-16 hidden lg:block">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-yellow-600 via-orange-500 to-red-500 bg-clip-text text-transparent mb-4">
+              ✨ Top Rated Offers
+            </h2>
+            <div className="w-32 h-1 bg-gradient-to-r from-yellow-400 to-orange-500 mx-auto rounded-full"></div>
+          </div>
+          <div className="grid lg:grid-cols-3 gap-8">
+            {specialOffers.slice(0, 3).map((offer) => (
+              <SpecialOfferCard key={offer._id} {...offer} />
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Other sections unchanged */}
+      {/* Other sections */}
       {popularStays.length > 0 && (
-        <div className="mb-10">
-          <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
-            🏨 Hotel Rooms
-          </h2>
-
+        <div className="mb-12 xs:mb-16">
+          <div className="mb-6 xs:mb-8 px-2">
+            <h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              🏨 Hotel Rooms
+            </h2>
+            <div className="w-16 xs:w-20 h-1 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full"></div>
+          </div>
           {renderHorizontalScroll(popularStays, ProductCard)}
         </div>
       )}
 
       {carsForRent.length > 0 && (
-        <div className="mb-10">
-          <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
-            🔍 Cars for Rental
-          </h2>
+        <div className="mb-12 xs:mb-16">
+          <div className="mb-6 xs:mb-8 px-2">
+            <h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
+              🔍 Cars for Rental
+            </h2>
+            <div className="w-16 xs:w-20 h-1 bg-gradient-to-r from-green-400 to-blue-500 rounded-full"></div>
+          </div>
           {renderHorizontalScroll(carsForRent, CarsCard)}
         </div>
       )}
 
       {tourismSites.length > 0 && (
-        <div className="mb-10">
-          <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
-            🏞️ Tourism Sites in Ethiopia
-          </h2>
+        <div className="mb-12 xs:mb-16">
+          <div className="mb-6 xs:mb-8 px-2">
+            <h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
+              🏞️ Tourism Sites in Ethiopia
+            </h2>
+            <div className="w-16 xs:w-20 h-1 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full"></div>
+          </div>
           {renderHorizontalScroll(tourismSites, TourismCard)}
         </div>
       )}
 
       {housesForSale.length > 0 && (
-        <div className="mb-10">
-          <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
-            🏠 Houses for Sale
-          </h2>
+        <div className="mb-12 xs:mb-16">
+          <div className="mb-6 xs:mb-8 px-2">
+            <h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-2">
+              🏠 Houses for Sale
+            </h2>
+            <div className="w-16 xs:w-20 h-1 bg-gradient-to-r from-orange-400 to-red-500 rounded-full"></div>
+          </div>
           {renderHorizontalScroll(housesForSale, HousesCard)}
         </div>
       )}
 
       {carsForSale.length > 0 && (
-        <div className="mb-10">
-          <h2 className="text-lg sm:text-2xl font-semibold pb-4 text-blue-800 dark:text-blue-200">
-            🚗 Cars for Sale
-          </h2>
+        <div className="mb-12 xs:mb-16">
+          <div className="mb-6 xs:mb-8 px-2">
+            <h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              🚗 Cars for Sale
+            </h2>
+            <div className="w-16 xs:w-20 h-1 bg-gradient-to-r from-indigo-400 to-purple-500 rounded-full"></div>
+          </div>
           {renderHorizontalScroll(carsForSale, CarSalecard)}
         </div>
       )}

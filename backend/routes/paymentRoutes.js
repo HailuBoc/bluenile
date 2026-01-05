@@ -6,10 +6,25 @@ import {
 
 const router = express.Router();
 
-// Initialize payment (any method: chapa, telebirr, mpesa)
+/**
+ * @route POST /bookings/pay/:method
+ * @desc Initialize payment (Chapa, Telebirr, M-Pesa)
+ * @access Public
+ */
 router.post("/:method", createPayment);
 
-// Verify payment (any method)
+/**
+ * @route GET /bookings/pay/:method/verify/:bookingId
+ * @desc Verify payment status (Chapa, Telebirr)
+ * @access Public
+ */
 router.get("/:method/verify/:bookingId", verifyPayment);
+
+/**
+ * @route POST /bookings/pay/:method/verify/:bookingId
+ * @desc Handle M-Pesa callback
+ * @access Public
+ */
+router.post("/:method/verify/:bookingId", verifyPayment);
 
 export default router;
