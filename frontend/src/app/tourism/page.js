@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Map,
   Landmark,
@@ -13,8 +14,15 @@ import {
   Plane,
   Car,
   User,
+  Sparkles,
+  Home,
 } from "lucide-react";
 import Link from "next/link";
+import Footer from "../../components/Footer";
+import DarkModeToggle from "../../components/DarkModeToggle";
+import AnimatedCard from "../../components/AnimatedCard";
+import CustomButton from "../../components/CustomButton";
+import { DarkModeProvider } from "../../contexts/DarkModeContext";
 
 const iconMap = { Map, Landmark, Building, Calendar, Shield, BedDouble };
 
@@ -151,90 +159,161 @@ export default function TourismPage() {
     }
   };
 
+  const filteredRegularTours = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return regularTours;
+    return regularTours.filter((tour) =>
+      (tour.category || "").toLowerCase().includes(q)
+    );
+  }, [regularTours, search]);
+
   return (
-    <div className="bg-gray-50 min-h-screen">
-      {/* Hero */}
-      <header className="bg-gradient-to-r from-red-700 to-yellow-600 text-white py-12 px-4 text-center">
-        <h1 className="text-3xl md:text-4xl font-bold">
-          Explore Ethiopian Tourism
-        </h1>
-        <p className="mt-4 text-base md:text-lg max-w-2xl mx-auto px-2">
-          Choose between Regular and VIP tourism packages to plan your perfect
-          Ethiopian journey.
-        </p>
-      </header>
-
-      {/* Tabs */}
-      <div className="flex justify-center mt-6 md:mt-8 gap-3 md:gap-4 flex-wrap px-3">
-        <button
-          onClick={() => setActiveTab("regular")}
-          className={`px-4 md:px-6 py-2 rounded-lg font-semibold transition text-sm md:text-base ${
-            activeTab === "regular"
-              ? "bg-yellow-600 text-white shadow-lg"
-              : "bg-white text-gray-800 border"
-          }`}
+    <DarkModeProvider>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
+        <motion.nav
+          className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700"
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          Regular Tourism
-        </button>
-        <button
-          onClick={() => setActiveTab("vip")}
-          className={`px-4 md:px-6 py-2 rounded-lg font-semibold transition text-sm md:text-base ${
-            activeTab === "vip"
-              ? "bg-yellow-600 text-white shadow-lg"
-              : "bg-white text-gray-800 border"
-          }`}
-        >
-          VIP Tourism
-        </button>
-      </div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <motion.div
+                className="flex items-center gap-3"
+                initial={{ x: -50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Tourism Services
+                </h1>
+              </motion.div>
 
-      {/* Content */}
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 md:py-12">
+              <motion.div
+                initial={{ x: 50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="flex items-center gap-3"
+              >
+                <Link
+                  href="/"
+                  className="hidden sm:flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                >
+                  <Home className="w-4 h-4" />
+                  Home
+                </Link>
+                <DarkModeToggle />
+              </motion.div>
+            </div>
+          </div>
+        </motion.nav>
+
+        <motion.header
+          className="relative overflow-hidden py-16 xs:py-20 sm:py-24"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 via-orange-500/10 to-green-500/10 dark:from-yellow-500/20 dark:via-orange-500/20 dark:to-green-500/20" />
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <motion.div
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+            >
+              <h1 className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-yellow-600 via-orange-600 to-green-600 bg-clip-text text-transparent mb-4">
+                Explore Ethiopian Tourism
+              </h1>
+              <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+                Choose between Regular and VIP tourism packages to plan your
+                perfect Ethiopian journey.
+              </p>
+            </motion.div>
+          </div>
+        </motion.header>
+
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+          <motion.div
+            className="max-w-6xl mx-auto mb-10"
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+          >
+            <AnimatedCard className="p-6 sm:p-8">
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <CustomButton
+                    onClick={() => setActiveTab("regular")}
+                    variant={activeTab === "regular" ? "accent" : "secondary"}
+                    size="sm"
+                    className="w-full sm:w-auto"
+                  >
+                    Regular Tourism
+                  </CustomButton>
+                  <CustomButton
+                    onClick={() => setActiveTab("vip")}
+                    variant={activeTab === "vip" ? "accent" : "secondary"}
+                    size="sm"
+                    className="w-full sm:w-auto"
+                    icon={<Crown className="w-4 h-4" />}
+                  >
+                    VIP Tourism
+                  </CustomButton>
+                </div>
+
+                {activeTab === "regular" && (
+                  <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3">
+                    <Search className="w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search regular packages..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="flex-1 bg-transparent outline-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    />
+                  </div>
+                )}
+              </div>
+            </AnimatedCard>
+          </motion.div>
+
+          <div className="max-w-6xl mx-auto">
         {activeTab === "regular" && (
           <div>
-            <div className="max-w-md mx-auto mb-6 md:mb-8 flex items-center bg-white rounded-lg shadow px-3">
-              <Search className="w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search regular packages..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="flex-1 px-2 py-2 text-sm md:text-base outline-none"
-              />
-            </div>
-
             {regularTours.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                {regularTours
-                  .filter((tour) =>
-                    tour.category?.toLowerCase().includes(search.toLowerCase())
-                  )
-                  .map((tour) => {
+                <AnimatePresence>
+                  {filteredRegularTours.map((tour, idx) => {
                     const IconComponent = iconMap[tour.icon] || Map;
                     return (
-                      <div
-                        key={tour._id}
-                        className="bg-white p-4 md:p-6 rounded-xl shadow hover:shadow-lg transition"
-                      >
-                        <div className="flex items-center gap-2 mb-3">
-                          <IconComponent className="w-6 h-6 text-yellow-600" />
-                          <h3 className="text-base md:text-lg font-bold">
-                            {tour.category}
-                          </h3>
+                      <AnimatedCard key={tour._id} delay={idx * 0.05}>
+                        <div className="p-5">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg">
+                              <IconComponent className="w-5 h-5 text-white" />
+                            </div>
+                            <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-white">
+                              {tour.category}
+                            </h3>
+                          </div>
+                          {tour.destinations && (
+                            <ul className="list-disc list-inside text-gray-600 dark:text-gray-400 text-sm md:text-base">
+                              {tour.destinations.map((d, i) => (
+                                <li key={i}>{d}</li>
+                              ))}
+                            </ul>
+                          )}
                         </div>
-                        {tour.destinations && (
-                          <ul className="list-disc list-inside text-gray-600 text-sm md:text-base">
-                            {tour.destinations.map((d, i) => (
-                              <li key={i}>{d}</li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
+                      </AnimatedCard>
                     );
                   })}
+                </AnimatePresence>
               </div>
             ) : (
-              <p className="text-center text-gray-500">
+              <p className="text-center text-gray-500 dark:text-gray-400">
                 No regular tours available.
               </p>
             )}
@@ -246,56 +325,60 @@ export default function TourismPage() {
           <div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-12">
               {vipPosts.length > 0 ? (
-                vipPosts.map((tour) => (
-                  <div
-                    key={tour._id}
-                    className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition relative"
-                  >
-                    <div className="absolute top-2 left-2 md:top-3 md:left-3 bg-yellow-500 text-white px-2 md:px-3 py-1 rounded-full flex items-center gap-1 text-xs md:text-sm font-semibold shadow-lg">
-                      <Crown className="w-3 h-3 md:w-4 md:h-4" /> VIP Tour
-                    </div>
+                <AnimatePresence>
+                  {vipPosts.map((tour, idx) => (
+                    <AnimatedCard key={tour._id} delay={idx * 0.05} className="relative overflow-hidden">
+                      <div className="relative">
+                        <div className="absolute top-3 left-3 bg-yellow-500 text-white px-3 py-1 rounded-full flex items-center gap-1 text-xs font-semibold shadow-lg z-10">
+                          <Crown className="w-4 h-4" /> VIP Tour
+                        </div>
 
-                    {tour.image && (
-                      <img
-                        src={`${API_URL}/uploads/${tour.image}`}
-                        alt={tour.name}
-                        className="w-full h-52 md:h-64 object-cover"
-                      />
-                    )}
-                    <div className="p-4 md:p-6">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 md:mb-4 gap-2">
-                        <h2 className="text-xl md:text-2xl font-bold text-gray-800">
-                          {tour.name}
-                        </h2>
-                        <div className="flex items-center text-gray-600 text-xs md:text-sm">
-                          <Calendar className="w-4 h-4 mr-1 text-yellow-600" />
-                          {tour.date}
+                        {tour.image && (
+                          <img
+                            src={`${API_URL}/uploads/${tour.image}`}
+                            alt={tour.name}
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-56 md:h-64 object-cover"
+                          />
+                        )}
+
+                        <div className="p-5">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                            <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                              {tour.name}
+                            </h2>
+                            <div className="flex items-center text-gray-600 dark:text-gray-400 text-sm">
+                              <Calendar className="w-4 h-4 mr-1 text-yellow-600" />
+                              {tour.date}
+                            </div>
+                          </div>
+                          <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base mb-4">
+                            {tour.description}
+                          </p>
+                          <ul className="space-y-2 text-gray-700 dark:text-gray-300 text-sm md:text-base">
+                            {tour.highlights?.map((item, i) => (
+                              <li key={i} className="flex items-start gap-2">
+                                <CheckCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       </div>
-                      <p className="text-gray-600 text-sm md:text-base mb-3 md:mb-4">
-                        {tour.description}
-                      </p>
-                      <ul className="space-y-2 text-gray-700 mb-5 text-sm md:text-base">
-                        {tour.highlights?.map((item, i) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-yellow-600 mt-0.5" />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                ))
+                    </AnimatedCard>
+                  ))}
+                </AnimatePresence>
               ) : (
-                <p className="text-center text-gray-500 col-span-2">
+                <p className="text-center text-gray-500 dark:text-gray-400 col-span-2">
                   No VIP posts available.
                 </p>
               )}
             </div>
 
             {/* ✅ Clean VIP Booking Form */}
-            <div className="bg-white shadow-lg rounded-2xl p-6 md:p-8">
-              <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">
+            <AnimatedCard className="p-6 md:p-8">
+              <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-4">
                 VIP Tour Customization Form
               </h3>
 
@@ -314,7 +397,7 @@ export default function TourismPage() {
               <form className="space-y-4" onSubmit={handleSubmit}>
                 {/* Destination */}
                 <div>
-                  <label className="block font-semibold mb-1 text-sm text-gray-800">
+                  <label className="block font-semibold mb-1 text-sm text-gray-900 dark:text-gray-200">
                     Choose Destination
                   </label>
                   <select
@@ -322,7 +405,7 @@ export default function TourismPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, destination: e.target.value })
                     }
-                    className="w-full border border-gray-400 text-black rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
                   >
                     <option value="">-- Select a place --</option>
                     <option value="lalibela">Lalibela</option>
@@ -336,7 +419,7 @@ export default function TourismPage() {
 
                 {/* Date */}
                 <div>
-                  <label className="block font-semibold mb-1 text-sm text-gray-800">
+                  <label className="block font-semibold mb-1 text-sm text-gray-900 dark:text-gray-200">
                     Travel Date
                   </label>
                   <input
@@ -345,13 +428,13 @@ export default function TourismPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, date: e.target.value })
                     }
-                    className="w-full border border-gray-400 text-black rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
                   />
                 </div>
 
                 {/* Phone */}
                 <div>
-                  <label className="block font-semibold mb-1 text-sm text-gray-800">
+                  <label className="block font-semibold mb-1 text-sm text-gray-900 dark:text-gray-200">
                     Phone Number
                   </label>
                   <input
@@ -360,7 +443,7 @@ export default function TourismPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value })
                     }
-                    className="w-full border border-gray-400 text-black rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
                     placeholder="Enter your phone number"
                     required
                   />
@@ -368,7 +451,7 @@ export default function TourismPage() {
 
                 {/* Email */}
                 <div>
-                  <label className="block font-semibold mb-1 text-sm text-gray-800">
+                  <label className="block font-semibold mb-1 text-sm text-gray-900 dark:text-gray-200">
                     Email Address
                   </label>
                   <input
@@ -377,7 +460,7 @@ export default function TourismPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
                     }
-                    className="w-full border border-gray-400 text-black rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
                     placeholder="Enter your email"
                     required
                   />
@@ -385,10 +468,10 @@ export default function TourismPage() {
 
                 {/* Extras */}
                 <div>
-                  <label className="block font-semibold mb-1 text-sm text-gray-800">
+                  <label className="block font-semibold mb-1 text-sm text-gray-900 dark:text-gray-200">
                     Select VIP Extras
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-black">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-gray-900 dark:text-gray-200">
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
@@ -430,7 +513,7 @@ export default function TourismPage() {
 
                 {/* Notes */}
                 <div>
-                  <label className="block font-semibold mb-1 text-sm text-gray-800">
+                  <label className="block font-semibold mb-1 text-sm text-gray-900 dark:text-gray-200">
                     Additional Notes / Requests
                   </label>
                   <textarea
@@ -439,7 +522,7 @@ export default function TourismPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, notes: e.target.value })
                     }
-                    className="w-full border border-gray-400 text-black rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
                     placeholder="Enter special requests here..."
                   />
                 </div>
@@ -447,7 +530,7 @@ export default function TourismPage() {
                 {/* Payment Method */}
                 {/* Payment Method */}
                 <div>
-                  <label className="block font-semibold mb-1 text-sm text-gray-800">
+                  <label className="block font-semibold mb-1 text-sm text-gray-900 dark:text-gray-200">
                     Payment Method
                   </label>
                   <select
@@ -483,7 +566,7 @@ export default function TourismPage() {
                           setPaymentInstructions("");
                       }
                     }}
-                    className="w-full border border-gray-300 rounded-lg p-2"
+                    className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg p-2"
                   >
                     <option value="">Select Payment Method</option>
                     <option value="Chapa">Chapa</option>
@@ -493,47 +576,41 @@ export default function TourismPage() {
                   </select>
 
                   {paymentInstructions && (
-                    <p className="text-gray-700 bg-yellow-50 border border-yellow-200 rounded-lg p-2 mt-2 text-sm">
+                    <p className="text-gray-700 dark:text-gray-200 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-2 mt-2 text-sm">
                       {paymentInstructions}
                     </p>
                   )}
                 </div>
 
                 {/* Submit Button */}
-                <button
-                  type="submit"
+                <CustomButton
                   disabled={loading}
-                  className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-2 rounded-lg font-semibold shadow-md transition mb-8"
+                  variant="accent"
+                  size="md"
+                  className="w-full"
                 >
                   {loading ? "Submitting..." : "Submit VIP Request"}
-                </button>
+                </CustomButton>
               </form>
-            </div>
+            </AnimatedCard>
           </div>
         )}
-      </div>
+          </div>
 
-      <section className="bg-green-700 text-white py-10 md:py-12">
-        <div className="max-w-4xl mx-auto text-center px-4 md:px-6">
-          <h2 className="text-2xl md:text-3xl font-bold mb-3">
-            Ready to Start Your Adventure?
-          </h2>
-          <p className="mb-6 text-base md:text-lg">
-            Choose your ideal package and let us guide you through Ethiopia’s
-            breathtaking landscapes and rich history.
-          </p>
-          <Link href={"/tourism/Booktour"}>
-            <button className="bg-white text-green-700 font-bold py-2 md:py-3 px-6 md:px-8 rounded-lg shadow hover:bg-gray-100 transition text-sm md:text-base">
+          <motion.div
+            className="flex justify-center mt-12"
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.9 }}
+          >
+            <CustomButton href={"/tourism/Booktour"} variant="primary" size="lg">
               Book Now
-            </button>
-          </Link>
-        </div>
-      </section>
+            </CustomButton>
+          </motion.div>
+        </section>
 
-      <footer className="bg-gray-800 text-gray-300 py-5 md:py-6 text-center text-xs md:text-sm">
-        &copy; {new Date().getFullYear()} Explore Ethiopia Tours. All rights
-        reserved.
-      </footer>
-    </div>
+        <Footer />
+      </div>
+    </DarkModeProvider>
   );
 }

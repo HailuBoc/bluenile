@@ -2,10 +2,59 @@
 "use client";
 
 import Image from "next/image";
+import { motion } from "framer-motion";
+import { Home, Info, Sparkles } from "lucide-react";
+import Link from "next/link";
+import AnimatedCard from "../../components/AnimatedCard";
+import CustomButton from "../../components/CustomButton";
+import DarkModeToggle from "../../components/DarkModeToggle";
+import Footer from "../../components/Footer";
+import { DarkModeProvider } from "../../contexts/DarkModeContext";
 
-export default function AboutPage() {
+function AboutContent() {
   return (
-    <div className="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
+      <motion.nav
+        className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700"
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <motion.div
+              className="flex items-center gap-3"
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                About Us
+              </h1>
+            </motion.div>
+
+            <motion.div
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex items-center gap-3"
+            >
+              <Link
+                href="/"
+                className="hidden sm:flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >
+                <Home className="w-4 h-4" />
+                Home
+              </Link>
+              <DarkModeToggle />
+            </motion.div>
+          </div>
+        </div>
+      </motion.nav>
+
       {/* Hero Section */}
       {/* Hero Section */}
       <section className="relative w-full h-[300px] sm:h-[400px] md:h-[480px] lg:h-[520px] xl:h-[560px] overflow-hidden rounded-b-xl">
@@ -30,19 +79,13 @@ export default function AboutPage() {
               Connecting travelers and hosts across the globe — effortless,
               affordable, and unforgettable stays.
             </p>
-            <div className="mt-6 flex justify-center gap-3">
-              <a
-                href="/contact"
-                className="inline-block bg-white text-blue-700 font-medium py-2.5 px-5 rounded-full shadow-md hover:shadow-xl transform hover:-translate-y-0.5 transition"
-              >
+            <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+              <CustomButton href="/contact" variant="primary" size="md">
                 Contact Us
-              </a>
-              <a
-                href="/listProperty"
-                className="inline-block bg-transparent border border-white/60 text-white/90 py-2.5 px-5 rounded-full hover:bg-white/10 transition"
-              >
+              </CustomButton>
+              <CustomButton href="/listProperty" variant="ghost" size="md">
                 List Your Property
-              </a>
+              </CustomButton>
             </div>
           </div>
         </div>
@@ -50,7 +93,7 @@ export default function AboutPage() {
 
       {/* Company Intro */}
       <section className="max-w-6xl mx-auto px-6 py-16 md:py-20">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 md:p-10 transition hover:shadow-2xl">
+        <AnimatedCard className="p-6 md:p-10" hoverEffect={false}>
           <h2 className="text-2xl sm:text-3xl font-semibold mb-4 text-gray-900 dark:text-white text-center">
             Who We Are
           </h2>
@@ -61,13 +104,13 @@ export default function AboutPage() {
             exploring new destinations effortless, affordable, and
             unforgettable.
           </p>
-        </div>
+        </AnimatedCard>
       </section>
 
       {/* Our Mission */}
-      <section className="bg-blue-50 dark:bg-gray-800 py-16">
+      <section className="py-16">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 md:p-10">
+          <AnimatedCard className="p-6 md:p-10" hoverEffect={false}>
             <h2 className="text-2xl sm:text-3xl font-semibold mb-4 text-center text-gray-900 dark:text-white">
               Our Mission
             </h2>
@@ -78,7 +121,7 @@ export default function AboutPage() {
               From cozy city apartments to serene countryside escapes, we
               connect you to a world of possibilities.
             </p>
-          </div>
+          </AnimatedCard>
         </div>
       </section>
 
@@ -105,10 +148,7 @@ export default function AboutPage() {
               icon: "💡",
             },
           ].map((value, index) => (
-            <div
-              key={index}
-              className="bg-white dark:bg-gray-700 shadow-lg hover:shadow-2xl transition-shadow rounded-xl p-6 md:p-8 text-center border border-gray-100 dark:border-gray-600"
-            >
+            <AnimatedCard key={index} className="p-6 md:p-8 text-center" hoverEffect={true}>
               <div className="text-5xl mb-4 transform transition-transform hover:scale-105">
                 {value.icon}
               </div>
@@ -118,35 +158,42 @@ export default function AboutPage() {
               <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                 {value.desc}
               </p>
-            </div>
+            </AnimatedCard>
           ))}
         </div>
       </section>
 
       {/* Contact */}
-      <section className="bg-gradient-to-r from-blue-600 to-indigo-600 py-16">
-        <div className="max-w-4xl mx-auto px-6 text-center text-white">
-          <h2 className="text-2xl sm:text-3xl font-semibold mb-4">
-            Get in Touch
-          </h2>
-          <p className="mb-6 text-lg max-w-2xl mx-auto">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <AnimatedCard className="p-8 text-center" hoverEffect={false}>
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
+              <Info className="w-5 h-5 text-white" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-white">
+              Get in Touch
+            </h2>
+          </div>
+          <p className="mb-6 text-lg max-w-2xl mx-auto text-gray-600 dark:text-gray-300">
             Have questions, feedback, or partnership inquiries? We’re here to
             help. Drop us a message and we’ll get back to you soon.
           </p>
-          <a
-            href="/contact"
-            className="inline-block bg-white text-blue-600 px-6 py-3 rounded-full hover:bg-white/90 transition font-medium shadow"
-          >
+          <CustomButton href="/contact" variant="primary" size="lg">
             Contact Us
-          </a>
-        </div>
+          </CustomButton>
+        </AnimatedCard>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 text-center py-6">
-        <p>© {new Date().getFullYear()} Blue Nile plc. All rights reserved.</p>
-      </footer>
+      <Footer />
     </div>
+  );
+}
+
+export default function AboutPage() {
+  return (
+    <DarkModeProvider>
+      <AboutContent />
+    </DarkModeProvider>
   );
 }
 // ...existing code...

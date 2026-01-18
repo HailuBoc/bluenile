@@ -1,30 +1,162 @@
 "use client";
 import { Menu, Search, Briefcase, User, X, Home } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { throttle } from "../utils/performance";
+import OptimizedImage from "./OptimizedImage";
 
 export default function Navbar() {
   const [navOpen, setNavOpen] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
   const [showLearnModal, setShowLearnModal] = useState(false);
+  const [showMobileServiceButtons, setShowMobileServiceButtons] = useState(false);
+
+  // ✅ Memoized services array to prevent recreation
+  const services = useMemo(() => [
+    {
+      href: "/propertyrental",
+      icon: "🏠",
+      label: "Property Rentals & Bookings",
+    },
+    { href: "/event", icon: "🎉", label: "Event Venues" },
+    { href: "/transport", icon: "🚗", label: "Transport Services" },
+    { href: "/sales", icon: "🏡", label: "Sales Section" },
+    { href: "/tourism", icon: "🌍", label: "Tourism Services" },
+  ], []);
+
+  // ✅ Memoized search fields
+  const searchFields = useMemo(() => [
+    { label: "Services", href: "/services" },
+    {
+      label: "Property Rental & Bookings",
+      href: "/propertyrental",
+    },
+    { label: "Events", href: "/event" },
+    { label: "Transport service", href: "/transport" },
+    { label: "Sales", href: "/sales" },
+  ], []);
+
+  // ✅ Memoized mobile service buttons
+  const mobileServiceButtons = useMemo(() => [
+    { label: "Property Rentals", href: "/propertyrental" },
+    { label: "Events", href: "/event" },
+    { label: "Transport", href: "/transport" },
+    { label: "Sales", href: "/sales" },
+    { label: "Tourism", href: "/tourism" },
+  ], []);
+
+  // ✅ Memoized bottom nav items
+  const bottomNavItems = useMemo(() => [
+    { href: "/", icon: <Home className="h-5 w-5 mb-1" />, label: "Home" },
+    {
+      href: "/services",
+      icon: <Briefcase className="h-5 w-5 mb-1" />,
+      label: "Services",
+    },
+    {
+      href: "/auth/profile",
+      icon: <User className="h-5 w-5 mb-1" />,
+      label: "Account",
+    },
+  ], []);
+
+  // ✅ Optimized scroll handler with throttle
+  const handleScroll = useCallback(
+    throttle(() => {
+      const scrollY = window.scrollY;
+      const isMobile = window.innerWidth < 640; // sm breakpoint
+      
+      if (scrollY > window.innerHeight * 0.7) {
+        setShowSticky(true);
+        // Show mobile service buttons only on mobile when scrolling down
+        if (isMobile) {
+          setShowMobileServiceButtons(true);
+        }
+      } else {
+        setShowSticky(false);
+        // Hide mobile service buttons when not scrolling
+        setShowMobileServiceButtons(false);
+      }
+    }, 100),
+    []
+  );
 
   useEffect(() => {
     document.documentElement.classList.add("dark");
-
-    const handleScroll = () => {
-      if (window.scrollY > window.innerHeight * 0.7) {
-        setShowSticky(true);
-      } else {
-        setShowSticky(false);
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
+
+  // ✅ Memoized close function
+  const closeMobileMenu = useCallback(() => setNavOpen(false), []);
+
+  // ✅ Memoized search handlers
+  const handleDesktopSearch = useCallback(() => {
+    let targetHref = "/services";
+    let queryParam = "";
+
+    for (const field of searchFields) {
+      const input = document.getElementById(
+        `search-${field.label.toLowerCase().replace(/\s+/g, "-")}`
+      );
+      if (input && input.value.trim() !== "") {
+        targetHref = field.href;
+        queryParam = input.value.trim();
+        break;
+      }
+    }
+
+    const url = queryParam
+      ? `${targetHref}?q=${encodeURIComponent(queryParam)}`
+      : targetHref;
+    window.location.href = url;
+  }, [searchFields]);
+
+  const handleMobileSearch = useCallback(() => {
+    const queryInput = document.getElementById("mobile-search-input");
+    const queryValue = queryInput?.value.trim() || "";
+    if (queryValue) {
+      window.location.href = `/products?q=${encodeURIComponent(queryValue)}`;
+    }
   }, []);
 
-  const closeMobileMenu = () => setNavOpen(false);
+  const handleMobileServiceClick = useCallback((service) => {
+    const queryInput = document.getElementById("mobile-search-input");
+    const queryValue = queryInput?.value.trim() || "";
+    const url = queryValue
+      ? `${service.href}?q=${encodeURIComponent(queryValue)}`
+      : service.href;
+    window.location.href = url;
+  }, []);
+
+  // ✅ Memoized Tile component
+  const Tile = useMemo(() => {
+    return ({ href, icon, label }) => (
+      <Link
+        href={href}
+        className="group flex flex-col items-center justify-center 
+         p-4 h-32 w-full rounded-2xl 
+         bg-white/5 backdrop-blur-md 
+         border border-white/10 shadow-lg
+         hover:bg-white/15 hover:shadow-2xl hover:border-white/30
+         hover:scale-105 active:scale-95
+         transition-all duration-300 ease-out 
+         relative overflow-hidden"
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div className="relative z-10 flex flex-col items-center justify-center h-full gap-2">
+          <span className="text-3xl md:text-4xl filter drop-shadow-md group-hover:scale-110 transition-transform duration-300 pb-1">
+            {icon}
+          </span>
+          <span className="text-xs md:text-sm font-medium text-white/90 text-center leading-tight px-1 group-hover:text-white transition-colors">
+            {label}
+          </span>
+        </div>
+      </Link>
+    );
+  }, []);
 
   return (
     <>
@@ -152,42 +284,20 @@ export default function Navbar() {
 
               return (
                 <>
-                  {/* Mobile layout: 2 + 2 + 1 */}
-                  <div className="sm:hidden w-full px-2">
-                    <div className="grid grid-cols-2 gap-3 xs:gap-4">
-                      {services.slice(0, 2).map((s) => (
-                        <Tile key={s.label} {...s} />
-                      ))}
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-3 xs:gap-4 mt-3 xs:mt-4">
-                      {services.slice(2, 4).map((s) => (
-                        <Tile key={s.label} {...s} />
-                      ))}
-                    </div>
-
-                    <div className="flex justify-center mt-3 xs:mt-4 gap-3 xs:gap-4">
-                      {services.slice(4).map((s) => (
-                        <Tile key={s.label} {...s} />
+                  {/* ==== Mobile Layout: Horizontal Scroll (Carousel) ==== */}
+                  <div className="sm:hidden w-full px-0 mt-4">
+                    <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth hide-scrollbar px-4 pb-4">
+                      {services.map((s) => (
+                        <div key={s.label} className="snap-center flex-shrink-0 w-36 xs:w-40">
+                          <Tile {...s} />
+                        </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Tablet layout: 3 columns */}
-                  <div className="hidden sm:grid md:hidden grid-cols-3 gap-4 sm:px-0">
-                    {services.slice(0, 3).map((s) => (
-                      <Tile key={s.label} {...s} />
-                    ))}
-                    <div className="col-span-2">
-                      <Tile {...services[3]} />
-                    </div>
-                    <div className="col-span-3">
-                      <Tile {...services[4]} />
-                    </div>
-                  </div>
-
-                  {/* Desktop layout: 5 columns */}
-                  <div className="hidden md:grid grid-cols-5 gap-4 lg:gap-6">
+                  {/* Desktop Layout: Grid */}
+                  <div className="hidden sm:grid grid-cols-3 md:grid-cols-5 gap-4 lg:gap-6 w-full">
                     {services.map((s) => (
                       <Tile key={s.label} {...s} />
                     ))}
@@ -342,14 +452,20 @@ export default function Navbar() {
       </div>
 
       {/* ==== Mobile Search Bar with Search Icon ==== */}
-      <div className="sm:hidden w-full bg-transparent backdrop-blur-xl border-b border-transparent shadow-none px-0 py-0 mt-6">
-        <div className="flex items-center gap-2 mb-3">
+      <div className="sm:hidden w-full px-4 mt-6">
+        <div className="relative flex items-center group">
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Search for properties, events..."
             id="mobile-search-input"
-            className="flex-grow bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full px-4 py-3 outline-none text-sm text-gray-800 dark:text-white border border-gray-200/50 dark:border-gray-700/50 focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300"
+            className="w-full bg-white/10 backdrop-blur-md rounded-2xl px-5 py-3.5 
+                     pl-12 outline-none text-base text-white placeholder-white/60 
+                     border border-white/20 shadow-lg
+                     focus:bg-white/20 focus:border-white/40 focus:ring-1 focus:ring-white/30 
+                     transition-all duration-300"
           />
+          <Search className="absolute left-4 text-white/70 w-5 h-5 pointer-events-none" />
+          
           <button
             onClick={() => {
               const queryInput = document.getElementById("mobile-search-input");
@@ -360,43 +476,52 @@ export default function Navbar() {
                 )}`;
               }
             }}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white p-3 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-lg"
+            className="absolute right-2 p-2 bg-white/20 hover:bg-white/30 rounded-xl text-white 
+                     transition-all duration-300 hover:scale-105 active:scale-95"
           >
             <Search size={18} />
           </button>
         </div>
-
-        {/* ==== Quick Service Buttons ==== */}
-        <div className="flex flex-wrap gap-2">
-          {[
-            { label: "Property Rentals", href: "/propertyrental" },
-            { label: "Events", href: "/event" },
-            { label: "Transport", href: "/transport" },
-            { label: "Sales", href: "/sales" },
-            { label: "Tourism", href: "/tourism" },
-          ].map((service) => (
-            <button
-              key={service.label}
-              onClick={() => {
-                const queryInput = document.getElementById(
-                  "mobile-search-input"
-                );
-                const queryValue = queryInput?.value.trim() || "";
-                const url = queryValue
-                  ? `${service.href}?q=${encodeURIComponent(queryValue)}`
-                  : service.href;
-                window.location.href = url;
-              }}
-              className="px-4 py-2 rounded-full border text-xs font-medium 
-                   text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 
-                   hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white 
-                   hover:border-transparent transition-all duration-300 hover:scale-105"
-            >
-              {service.label}
-            </button>
-          ))}
-        </div>
       </div>
+
+        {/* ==== Quick Service Buttons (Scrollable) ==== */}
+        {/* Only show on mobile when scrolling down */}
+        <div className={`sm:hidden w-full px-4 mt-4 transition-all duration-300 ${
+          showMobileServiceButtons 
+            ? 'opacity-100 translate-y-0' 
+            : 'opacity-0 -translate-y-4 pointer-events-none'
+        }`}>
+          <div className="flex gap-2.5 overflow-x-auto hide-scrollbar pb-2">
+            {[
+              { label: "Property Rentals", href: "/propertyrental" },
+              { label: "Events", href: "/event" },
+              { label: "Transport", href: "/transport" },
+              { label: "Sales", href: "/sales" },
+              { label: "Tourism", href: "/tourism" },
+            ].map((service) => (
+              <button
+                key={service.label}
+                onClick={() => {
+                  const queryInput = document.getElementById(
+                    "mobile-search-input"
+                  );
+                  const queryValue = queryInput?.value.trim() || "";
+                  const url = queryValue
+                    ? `${service.href}?q=${encodeURIComponent(queryValue)}`
+                    : service.href;
+                  window.location.href = url;
+                }}
+                className="px-4 py-2 rounded-xl backdrop-blur-md bg-white/10 border border-white/20 
+                         text-xs font-medium text-white whitespace-nowrap
+                         hover:bg-white/20 hover:border-white/40
+                         active:scale-95 transition-all duration-300"
+              >
+                {service.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
 
       {/* ==== Mobile Bottom Navigation ==== */}
       <nav className="fixed bottom-0 z-50 w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-700/50 shadow-lg flex justify-around items-center px-4 py-3 sm:hidden">

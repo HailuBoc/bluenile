@@ -1,12 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { MapPin } from "lucide-react";
-import { Search } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { MapPin, Search, Sparkles, Home } from "lucide-react";
 import Link from "next/link";
 import Footer from "../../components/Footer";
+import DarkModeToggle from "../../components/DarkModeToggle";
+import CustomButton from "../../components/CustomButton";
+import AnimatedCard from "../../components/AnimatedCard";
+import { DarkModeProvider } from "../../contexts/DarkModeContext";
 
-export default function PropertyRentalPage() {
+function PropertyRentalContent() {
   const [properties, setProperties] = useState([]);
   const [destination, setDestination] = useState("");
   const [propertyType, setPropertyType] = useState("");
@@ -40,138 +44,227 @@ export default function PropertyRentalPage() {
   }, []);
 
   // ✅ Filter properties by destination and type
-  const filteredProperties = properties.filter(
-    (property) =>
-      (property.title.toLowerCase().includes(destination.toLowerCase()) ||
-        property.location.toLowerCase().includes(destination.toLowerCase())) &&
-      (propertyType
-        ? property.type.toLowerCase() === propertyType.toLowerCase()
-        : true)
-  );
+  const filteredProperties = useMemo(() => {
+    const destinationQuery = destination.trim().toLowerCase();
+    const typeQuery = propertyType.trim().toLowerCase();
+
+    return properties.filter((property) => {
+      const title = (property.title || "").toLowerCase();
+      const location = (property.location || "").toLowerCase();
+      const type = (property.type || "").toLowerCase();
+
+      const matchesDestination =
+        !destinationQuery ||
+        title.includes(destinationQuery) ||
+        location.includes(destinationQuery);
+
+      const matchesType = !typeQuery || type === typeQuery;
+
+      return matchesDestination && matchesType;
+    });
+  }, [properties, destination, propertyType]);
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      {/* Hero Section */}
-      <header className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white py-10 sm:py-16 px-4 sm:px-8 text-center">
-        <h1 className="text-2xl sm:text-5xl font-bold">
-          Property Rentals & Bookings
-        </h1>
-        <p className="mt-2 sm:mt-4 text-sm sm:text-xl">
-          Houses, apartments, guesthouses, hotel apartments — all in one place.
-        </p>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
+      <motion.nav
+        className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700"
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <motion.div
+              className="flex items-center gap-3"
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                Property Rentals
+              </h1>
+            </motion.div>
 
-      <section className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-12">
-        {/* Search Bar */}
-        <h2 className="text-xl sm:text-3xl font-semibold mb-4 sm:mb-8 text-gray-800">
-          Find Your Perfect Stay
-        </h2>
-
-        <div className="w-full max-w-5xl mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center border rounded-2xl shadow-lg px-4 sm:px-6 py-3 bg-white bg-opacity-90 gap-3 sm:gap-0">
-            {/* Destination */}
-            <div className="flex flex-col flex-1 sm:border-r border-gray-300 pr-0 sm:pr-4">
-              <label className="text-xs text-gray-500 font-semibold">
-                Where is your property?
-              </label>
-              <input
-                type="text"
-                placeholder="City, landmark, or address"
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-                className="bg-transparent outline-none text-xs sm:text-sm text-gray-700 placeholder-gray-400"
-              />
-            </div>
-
-            {/* Property Type */}
-            <div className="flex flex-col flex-1 sm:border-r border-gray-300 pr-0 sm:pr-4">
-              <label className="text-xs text-gray-500 font-semibold">
-                Property Type
-              </label>
-              <select
-                value={propertyType}
-                onChange={(e) => setPropertyType(e.target.value)}
-                className="bg-transparent outline-none text-xs sm:text-sm text-gray-700"
+            <motion.div
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex items-center gap-3"
+            >
+              <Link
+                href="/"
+                className="hidden sm:flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
-                <option value="">Any</option>
-                <option value="House">House</option>
-                <option value="Apartment">Apartment</option>
-                <option value="Guesthouse">Guesthouse</option>
-                <option value="Hotel Apartment">Hotel Apartment</option>
-              </select>
-            </div>
-
-            {/* Search Button */}
-            <div className="flex items-center justify-center sm:pl-4">
-              <button
-                onClick={() =>
-                  console.log("Searching:", { destination, propertyType })
-                }
-                className="flex items-center gap-1 bg-blue-600 text-white px-3 sm:px-5 py-2 rounded-full text-xs sm:text-sm hover:bg-blue-700 transition"
-              >
-                <Search className="h-4 w-4 sm:h-5 sm:w-5" />
-                Search
-              </button>
-            </div>
+                <Home className="w-4 h-4" />
+                Home
+              </Link>
+              <DarkModeToggle />
+            </motion.div>
           </div>
         </div>
+      </motion.nav>
+
+      {/* Hero Section */}
+      <motion.header
+        className="relative overflow-hidden py-16 xs:py-20 sm:py-24"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-indigo-500/10 dark:from-blue-500/20 dark:via-purple-500/20 dark:to-indigo-500/20" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            <h1 className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+              Property Rentals & Bookings
+            </h1>
+            <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+              Houses, apartments, guesthouses, hotel apartments — all in one
+              place.
+            </p>
+          </motion.div>
+        </div>
+      </motion.header>
+
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <motion.div
+          className="max-w-6xl mx-auto mb-10"
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+        >
+          {/* Search Bar */}
+          <AnimatedCard className="p-6 sm:p-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  Destination
+                </label>
+                <input
+                  type="text"
+                  placeholder="City, landmark, or address"
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Property Type
+                </label>
+                <select
+                  value={propertyType}
+                  onChange={(e) => setPropertyType(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-gray-900 dark:text-white"
+                >
+                  <option value="">Any</option>
+                  <option value="House">House</option>
+                  <option value="Apartment">Apartment</option>
+                  <option value="Guesthouse">Guesthouse</option>
+                  <option value="Hotel Apartment">Hotel Apartment</option>
+                </select>
+              </div>
+
+              <div className="flex items-end">
+                <CustomButton
+                  onClick={() =>
+                    console.log("Searching:", { destination, propertyType })
+                  }
+                  variant="primary"
+                  size="md"
+                  className="w-full"
+                  icon={<Search className="w-5 h-5" />}
+                >
+                  Search
+                </CustomButton>
+              </div>
+            </div>
+          </AnimatedCard>
+        </motion.div>
 
         {/* Property Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
-          {filteredProperties.length > 0 ? (
-            filteredProperties.map((property) => (
-              <div
-                key={property._id}
-                className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition"
-              >
-                {property.img ? (
-                  <img
-                    src={property.img}
-                    alt={property.title}
-                    className="w-full h-28 sm:h-48 object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-28 sm:h-48 bg-gray-300 dark:bg-gray-700 flex items-center justify-center text-gray-500">
-                    No Image
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+          <AnimatePresence>
+            {filteredProperties.length > 0 ? (
+              filteredProperties.map((property, index) => (
+                <AnimatedCard
+                  key={property._id}
+                  delay={index * 0.05}
+                  className="h-full"
+                  hoverEffect={true}
+                >
+                  <div className="h-full flex flex-col">
+                    {property.img ? (
+                      <img
+                        src={property.img}
+                        alt={property.title}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-40 object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-40 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                        No Image
+                      </div>
+                    )}
+
+                    <div className="p-5 flex-1 flex flex-col">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {property.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {property.type}
+                      </p>
+
+                      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                        <MapPin className="w-4 h-4" />
+                        {property.location}
+                      </p>
+
+                      <p className="text-blue-600 dark:text-blue-400 font-bold mt-3">
+                        {property.price}
+                      </p>
+
+                      <div className="mt-4">
+                        <CustomButton
+                          href={`/propertyrental/${property._id}`}
+                          variant="primary"
+                          size="sm"
+                          className="w-full"
+                        >
+                          Book Now
+                        </CustomButton>
+                      </div>
+                    </div>
                   </div>
-                )}
-
-                <div className="p-3 sm:p-5">
-                  <h3 className="text-sm sm:text-lg font-semibold text-gray-800">
-                    {property.title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-gray-500">
-                    {property.type}
-                  </p>
-
-                  {/* Location with icon */}
-                  <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1">
-                    <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" />
-                    {property.location}
-                  </p>
-
-                  <p className="text-blue-600 font-bold mt-1 sm:mt-2 text-sm sm:text-base">
-                    {property.price}
-                  </p>
-
-                  {/* ✅ Navigate to booking page */}
-                  <Link href={`/propertyrental/${property._id}`}>
-                    <button className="mt-2 sm:mt-4 w-full bg-blue-600 text-white text-xs sm:text-sm py-1.5 sm:py-2 rounded-lg hover:bg-blue-700 transition">
-                      Book Now
-                    </button>
-                  </Link>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="col-span-full text-center text-gray-500 mt-10">
-              No rental properties found.
-            </p>
-          )}
+                </AnimatedCard>
+              ))
+            ) : (
+              <p className="col-span-full text-center text-gray-500 dark:text-gray-400 mt-10">
+                No rental properties found.
+              </p>
+            )}
+          </AnimatePresence>
         </div>
       </section>
 
       <Footer />
     </div>
+  );
+}
+
+export default function PropertyRentalPage() {
+  return (
+    <DarkModeProvider>
+      <PropertyRentalContent />
+    </DarkModeProvider>
   );
 }

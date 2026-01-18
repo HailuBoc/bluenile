@@ -3,13 +3,17 @@ export const dynamic = "force-dynamic";
 
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import Footer from "../../../../components/Footer";
 import axios from "axios";
-import { MapPin, Star, StarHalf, Star as StarOutline } from "lucide-react";
+import { MapPin, Star, StarHalf, Star as StarOutline, Heart } from "lucide-react";
 
 export default function ReserveTourismPage() {
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const [tourism, setTourism] = useState(null);
+  const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
   const [error, setError] = useState(null);
 
   const [guestInfo, setGuestInfo] = useState({
@@ -57,6 +61,22 @@ export default function ReserveTourismPage() {
           : null;
 
         setTourism({ ...res.data, imageUrl: imageSrc });
+        
+        // Fetch like status if user is logged in
+        if (session?.user?.id) {
+          try {
+            const likeRes = await axios.get(`${API_URL}/tourismlike/${id}?userId=${session.user.id}`);
+            setLiked(likeRes.data.userLiked || false);
+            setLikesCount(likeRes.data.likes || 0);
+          } catch (likeErr) {
+            console.error("❌ Error fetching like status:", likeErr);
+            setLiked(false);
+            setLikesCount(res.data.likes || 0);
+          }
+        } else {
+          setLiked(false);
+          setLikesCount(res.data.likes || 0);
+        }
       } catch (err) {
         console.error("❌ Error fetching tourism:", err);
         setError("Tourism service not found or failed to load.");
@@ -64,7 +84,40 @@ export default function ReserveTourismPage() {
     };
 
     fetchTourism();
-  }, [searchParams, API_URL]);
+  }, [searchParams, API_URL, session?.user?.id]); // Added session dependency
+
+  // Toggle like function
+  const handleToggleLike = async () => {
+    if (!tourism) return;
+    
+    // Check if user is authenticated
+    if (!session?.user?.id) {
+      // Redirect to login with return URL
+      const currentPath = window.location.pathname + window.location.search;
+      window.location.href = `/auth/login?callbackUrl=${encodeURIComponent(currentPath)}`;
+      return;
+    }
+    
+    try {
+      const newLiked = !liked;
+      setLiked(newLiked);
+      setLikesCount((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
+
+      const res = await axios.post(`${API_URL}/tourismlike/${id}/like`, {
+        userId: session.user.id,
+      });
+
+      setLiked(res.data.userLiked ?? newLiked);
+      setLikesCount(
+        res.data.likes ?? (newLiked ? likesCount + 1 : likesCount - 1)
+      );
+    } catch (err) {
+      console.error("❌ Failed to toggle tourism like:", err);
+      // rollback
+      setLiked((prev) => !prev);
+      setLikesCount((prev) => (liked ? Math.max(prev - 1, 0) : prev + 1));
+    }
+  };
 
   // Auto-hide messages
   useEffect(() => {
@@ -218,18 +271,28 @@ export default function ReserveTourismPage() {
 
         <div className="max-w-6xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 p-4 sm:p-6">
           <section className="md:col-span-2 flex flex-col gap-4 sm:gap-6">
-            <img
-              src={tourism.imageUrl}
-              alt={tourism.propertyName || tourism.name}
-              className="rounded-lg w-full h-56 sm:h-80 object-cover shadow"
-            />
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-white">
-                {tourism.propertyName || tourism.name}
-              </h1>
-
-              <p className="flex items-center text-blue-600 dark:text-blue-400 text-sm mt-1">
-                <MapPin className="w-4 h-4 mr-1" />
+            <div className="relative rounded-xl overflow-hidden">
+              <img
+                src={tourism.imageUrl}
+                alt={tourism.propertyName || tourism.name}
+                className="rounded-lg w-full h-56 sm:h-80 object-cover shadow"
+              />
+              
+              {/* Like Button */}
+              <button
+                onClick={handleToggleLike}
+                className="absolute top-4 right-4 bg-white/90 hover:bg-white p-1.5 rounded-full shadow flex items-center"
+                aria-pressed={liked}
+                aria-label={liked ? "Unlike" : "Like"}
+                type="button"
+              >
+                <Heart
+                  className={`w-4 h-4 ${
+                    liked ? "text-red-500 fill-red-500" : "text-gray-500"
+                  }`}
+                />
+                <span className="ml-1 text-xs font-semibold text-gray-700">
+                  {likesCount}
                 {tourism.address}
               </p>
 

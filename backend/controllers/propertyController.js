@@ -132,15 +132,51 @@ export const verifyProperty = async (req, res) => {
   }
 };
 
-// Get properties (filter by status)
+// Get properties (filter by status) with performance optimizations
 export const getProperties = async (req, res) => {
   try {
-    const { status } = req.query;
-    const filter = status ? { status } : {};
-    const properties = await Property.find(filter);
-    res.json(properties);
+    const { status, limit = 50, page = 1, serviceType, listingType } = req.query;
+    
+    // ✅ Build filter object with validation
+    const filter = {};
+    if (status && ['unverified', 'pending', 'approved', 'rejected'].includes(status)) {
+      filter.status = status;
+    }
+    if (serviceType) {
+      filter.serviceType = serviceType.toLowerCase();
+    }
+    if (listingType) {
+      filter.listingType = listingType.toLowerCase();
+    }
+
+    // ✅ Optimized query with lean() for better performance
+    const query = Property.find(filter)
+      .lean() // Returns plain JavaScript objects instead of Mongoose documents
+      .sort({ createdAt: -1 }) // Sort by newest first
+      .limit(Math.min(parseInt(limit), 100)); // Limit to prevent excessive data
+
+    // ✅ Add pagination if requested
+    if (page > 1) {
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      query.skip(skip);
+    }
+
+    const properties = await query;
+    
+    // ✅ Add caching headers
+    res.set('Cache-Control', 'public, max-age=300'); // 5 minutes cache
+    
+    res.json({
+      properties,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: properties.length
+      }
+    });
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch properties" });
+    console.error('Failed to fetch properties:', err);
+    res.status(500).json({ error: 'Failed to fetch properties' });
   }
 };
 

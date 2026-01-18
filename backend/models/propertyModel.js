@@ -30,4 +30,15 @@ const propertySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// ✅ Performance indexes for faster queries
+propertySchema.index({ status: 1 }); // For filtering by status
+propertySchema.index({ serviceType: 1, listingType: 1 }); // For service filtering
+propertySchema.index({ rating: -1 }); // For sorting by rating (high to low)
+propertySchema.index({ createdAt: -1 }); // For sorting by newest
+propertySchema.index({ userEmail: 1 }); // For user-specific queries
+propertySchema.index({ verificationToken: 1 }); // For verification queries
+
+// ✅ Compound index for common queries
+propertySchema.index({ status: 1, serviceType: 1, listingType: 1 });
+
 export const Property = mongoose.model("listProperty", propertySchema);

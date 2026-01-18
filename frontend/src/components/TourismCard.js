@@ -2,14 +2,12 @@
 
 import Link from "next/link";
 import {
-  Heart,
   Star,
   StarHalf,
   Star as StarOutline,
   MapPin,
 } from "lucide-react";
-import { useState, useEffect } from "react";
-import axios from "axios";
+import LikeButton from "./LikeButton";
 
 export default function TourismCard({
   _id,
@@ -20,43 +18,10 @@ export default function TourismCard({
   price,
   rating = 0,
   guestFavorite,
+  likes = 0,
+  liked = false,
 }) {
   const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-  const [likes, setLikes] = useState(0);
-  const [liked, setLiked] = useState(false);
-
-  useEffect(() => {
-    async function fetchLikes() {
-      try {
-        const res = await axios.get(`${BASE_URL}/tourismlike/${_id}`);
-        setLikes(res.data.likes || 0);
-      } catch (err) {
-        console.error("❌ Failed to fetch tourism likes:", err);
-      }
-    }
-    fetchLikes();
-  }, [_id, BASE_URL]);
-
-  const handleLike = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    try {
-      const newLiked = !liked;
-
-      setLikes((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
-      setLiked(newLiked);
-
-      const res = await axios.post(`${BASE_URL}/tourismlike/${_id}/like`, {
-        liked: newLiked,
-      });
-      setLikes(res.data.likes);
-    } catch (err) {
-      console.error("❌ Failed to like tourism:", err);
-      setLiked((prev) => !prev);
-      setLikes((prev) => (liked ? Math.max(prev - 1, 0) : prev + 1));
-    }
-  };
 
   const firstImage =
     Array.isArray(imageUrl) && imageUrl.length > 0
@@ -96,19 +61,13 @@ export default function TourismCard({
           </div>
         )}
 
-        <button
-          onClick={handleLike}
-          className="absolute top-2 right-2 p-2 bg-white dark:bg-gray-900 rounded-full z-10 shadow-sm flex items-center gap-1"
-        >
-          <Heart
-            className={`h-5 w-5 ${liked ? "text-red-500" : "text-gray-500"}`}
-            fill={liked ? "red" : "none"}
-            strokeWidth={2}
-          />
-          <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
-            {likes}
-          </span>
-        </button>
+        <LikeButton
+          itemId={_id}
+          itemType="tourism"
+          initialLiked={liked}
+          initialLikes={likes}
+          className="absolute top-2 right-2 z-10"
+        />
 
         <img
           src={imageSrc}

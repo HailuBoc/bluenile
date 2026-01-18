@@ -12,20 +12,11 @@ export const useDarkMode = () => {
 };
 
 export const DarkModeProvider = ({ children }) => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   useEffect(() => {
     // Check for saved theme preference or default to system preference
-    const savedTheme = localStorage.getItem("darkMode");
-    const systemPrefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-
-    if (savedTheme !== null) {
-      setIsDarkMode(savedTheme === "true");
-    } else {
-      setIsDarkMode(systemPrefersDark);
-    }
+    setIsDarkMode(true);
   }, []);
 
   useEffect(() => {
@@ -35,11 +26,10 @@ export const DarkModeProvider = ({ children }) => {
     } else {
       document.documentElement.classList.remove("dark");
     }
-    localStorage.setItem("darkMode", isDarkMode.toString());
   }, [isDarkMode]);
 
   const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
+    setIsDarkMode(true);
   };
 
   return (
@@ -48,6 +38,7 @@ export const DarkModeProvider = ({ children }) => {
     </DarkModeContext.Provider>
   );
 };
+
 
 
 

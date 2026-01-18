@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import axios from "axios";
 import ProductCard from "./ProductCard";
 import HousesCard from "./HousesCard";
@@ -8,6 +8,13 @@ import CarsCard from "./CarsCard";
 import CarSalecard from "./CarSalecard";
 import TourismCard from "./TourismCard";
 import SpecialOfferCard from "./SpecialOfferCard";
+
+// ✅ Performance optimizations:
+// - useCallback for stable function references
+// - useMemo for expensive calculations
+// - Reduced polling interval from 10s to 30s
+// - Added error boundaries and loading states
+// - Optimized image processing
 
 export default function ProductsSection() {
   const [properties, setProperties] = useState([]);
@@ -17,137 +24,185 @@ export default function ProductsSection() {
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
-  // ✅ Fetch all properties
-  const fetchProperties = async () => {
+  // ✅ Optimized image processing with memoization
+  const processImageUrl = useCallback((item) => {
+    if (!item.imageUrl) return null;
+    
+    let firstImage = Array.isArray(item.imageUrl) && item.imageUrl.length > 0
+      ? item.imageUrl[0]
+      : typeof item.imageUrl === "string"
+      ? item.imageUrl
+      : null;
+
+    if (!firstImage) return null;
+    
+    return firstImage.startsWith("http")
+      ? firstImage
+      : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`;
+  }, [baseUrl]);
+
+  // ✅ Fetch properties with error handling
+  const fetchProperties = useCallback(async () => {
     try {
-      const res = await axios.get(`${baseUrl}/admin/properties`);
+      const res = await axios.get(`${baseUrl}/admin/properties`, {
+        timeout: 10000, // 10 second timeout
+      });
       const data = Array.isArray(res.data)
         ? res.data
         : res.data?.properties || [];
 
-      const formattedData = data.map((item) => {
-        let firstImage =
-          Array.isArray(item.imageUrl) && item.imageUrl.length > 0
-            ? item.imageUrl[0]
-            : typeof item.imageUrl === "string"
-            ? item.imageUrl
-            : null;
-
-        const imageSrc = firstImage
-          ? firstImage.startsWith("http")
-            ? firstImage
-            : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
-          : null;
-
-        return { ...item, imageUrl: imageSrc };
-      });
+      const formattedData = data.map((item) => ({
+        ...item,
+        imageUrl: processImageUrl(item),
+      }));
 
       setProperties(formattedData);
       setError(null);
     } catch (err) {
       console.error("❌ Error fetching properties:", err);
       setProperties([]);
-      setError("Unable to fetch properties. Please try again later.");
+      setError(err.code === 'ECONNABORTED' 
+        ? "Request timeout. Please check your connection."
+        : "Unable to fetch properties. Please try again later.");
     }
-  };
+  }, [baseUrl, processImageUrl]);
 
-  // ✅ Fetch admin-posted special offers
-  const fetchSpecialOffers = async () => {
+  // ✅ Fetch special offers with error handling
+  const fetchSpecialOffers = useCallback(async () => {
     try {
-      const res = await axios.get(`${baseUrl}/api/special-offers`);
+      const res = await axios.get(`${baseUrl}/api/special-offers`, {
+        timeout: 10000,
+      });
       const data = Array.isArray(res.data) ? res.data : [];
 
       const formattedData = data
-        .filter((offer) => offer.status === "approved") // show only approved offers
-        .map((item) => {
-          let firstImage =
-            Array.isArray(item.imageUrl) && item.imageUrl.length > 0
-              ? item.imageUrl[0]
-              : typeof item.imageUrl === "string"
-              ? item.imageUrl
-              : null;
-
-          const imageSrc = firstImage
-            ? firstImage.startsWith("http")
-              ? firstImage
-              : `${baseUrl}${
-                  firstImage.startsWith("/") ? "" : "/"
-                }${firstImage}`
-            : null;
-
-          return { ...item, imageUrl: imageSrc };
-        })
-        // ✅ Sort offers by rating (high → low)
+        .filter((offer) => offer.status === "approved")
+        .map((item) => ({
+          ...item,
+          imageUrl: processImageUrl(item),
+        }))
         .sort((a, b) => (b.rating || 0) - (a.rating || 0));
 
       setSpecialOffers(formattedData);
     } catch (err) {
       console.error("❌ Error fetching special offers:", err);
+      setSpecialOffers([]);
     }
-  };
+  }, [baseUrl, processImageUrl]);
 
+  // ✅ Optimized data fetching with proper cleanup
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchData = async () => {
+      if (!isMounted) return;
+      setLoading(true);
       await Promise.all([fetchProperties(), fetchSpecialOffers()]);
-      setLoading(false);
+      if (isMounted) setLoading(false);
     };
+    
     fetchData();
 
-    const interval = setInterval(fetchData, 10000);
-    return () => clearInterval(interval);
+    // ✅ Reduced polling interval from 10s to 30s for better performance
+    const interval = setInterval(fetchData, 30000);
+    
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [fetchProperties, fetchSpecialOffers]);
+
+  // ✅ Memoized filtered data to prevent unnecessary recalculations
+  const filteredData = useMemo(() => {
+    const popularStays = properties.filter(
+      (p) =>
+        ["apartment", "villa", "guesthouse"].includes(
+          p.serviceType?.toLowerCase()
+        ) && p.status === "approved"
+    );
+
+    const carsForRent = properties.filter(
+      (p) =>
+        p.serviceType?.toLowerCase() === "car" &&
+        p.listingType === "rent" &&
+        p.status === "approved"
+    );
+
+    const tourismSites = properties.filter(
+      (p) => p.serviceType?.toLowerCase() === "tourism" && p.status === "approved"
+    );
+
+    const housesForSale = properties.filter(
+      (p) =>
+        p.serviceType?.toLowerCase() === "house" &&
+        p.listingType === "sale" &&
+        p.status === "approved"
+    );
+
+    const carsForSale = properties.filter(
+      (p) =>
+        p.serviceType?.toLowerCase() === "car" &&
+        p.listingType === "sale" &&
+        p.status === "approved"
+    );
+
+    return {
+      popularStays,
+      carsForRent,
+      tourismSites,
+      housesForSale,
+      carsForSale,
+    };
+  }, [properties]);
+
+  // ✅ Memoized render function to prevent recreations
+  const renderHorizontalScroll = useCallback((items, CardComponent) => {
+    if (items.length === 0) return null;
+    
+    return (
+      <div className="relative overflow-hidden">
+        <div className="flex gap-3 xs:gap-4 sm:gap-4 md:gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth hide-scrollbar py-2 px-1">
+          {items.map((listing) => (
+            <div
+              key={listing._id}
+              className="snap-start flex-shrink-0 w-56 xs:w-60 sm:w-64 md:w-72 lg:w-80 relative"
+            >
+              <CardComponent {...listing} />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }, []);
 
-  if (loading)
-    return <p className="text-center mt-10">Loading properties...</p>;
-  if (error) return <p className="text-center text-red-600">{error}</p>;
-
-  // ✅ Filters for other sections
-  const popularStays = properties.filter(
-    (p) =>
-      ["apartment", "villa", "guesthouse"].includes(
-        p.serviceType?.toLowerCase()
-      ) && p.status === "approved"
-  );
-
-  const carsForRent = properties.filter(
-    (p) =>
-      p.serviceType?.toLowerCase() === "car" &&
-      p.listingType === "rent" &&
-      p.status === "approved"
-  );
-
-  const tourismSites = properties.filter(
-    (p) => p.serviceType?.toLowerCase() === "tourism" && p.status === "approved"
-  );
-
-  const housesForSale = properties.filter(
-    (p) =>
-      p.serviceType?.toLowerCase() === "house" &&
-      p.listingType === "sale" &&
-      p.status === "approved"
-  );
-
-  const carsForSale = properties.filter(
-    (p) =>
-      p.serviceType?.toLowerCase() === "car" &&
-      p.listingType === "sale" &&
-      p.status === "approved"
-  );
-
-  const renderHorizontalScroll = (items, CardComponent) => (
-    <div className="relative overflow-hidden">
-      <div className="flex gap-3 xs:gap-4 sm:gap-4 md:gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth hide-scrollbar py-2 px-1">
-        {items.map((listing) => (
-          <div
-            key={listing._id}
-            className="snap-start flex-shrink-0 w-56 xs:w-60 sm:w-64 md:w-72 lg:w-80 relative"
+  // ✅ Loading state with skeleton
+  if (loading) {
+    return (
+      <section className="px-3 xs:px-4 sm:px-6 md:px-8 lg:px-12 pt-6 xs:pt-8 pb-20 xs:pb-24 bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="text-center mt-10">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading amazing properties...</p>
+        </div>
+      </section>
+    );
+  }
+  
+  if (error) {
+    return (
+      <section className="px-3 xs:px-4 sm:px-6 md:px-8 lg:px-12 pt-6 xs:pt-8 pb-20 xs:pb-24 bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="text-center mt-10">
+          <div className="text-red-600 mb-4">⚠️</div>
+          <p className="text-red-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            <CardComponent {...listing} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+            Try Again
+          </button>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="px-3 xs:px-4 sm:px-6 md:px-8 lg:px-12 pt-6 xs:pt-8 pb-20 xs:pb-24 bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -191,8 +246,8 @@ export default function ProductsSection() {
         </div>
       )}
 
-      {/* Other sections */}
-      {popularStays.length > 0 && (
+      {/* Other sections using filtered data */}
+      {filteredData.popularStays.length > 0 && (
         <div className="mb-12 xs:mb-16">
           <div className="mb-6 xs:mb-8 px-2">
             <h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
@@ -200,11 +255,11 @@ export default function ProductsSection() {
             </h2>
             <div className="w-16 xs:w-20 h-1 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full"></div>
           </div>
-          {renderHorizontalScroll(popularStays, ProductCard)}
+          {renderHorizontalScroll(filteredData.popularStays, ProductCard)}
         </div>
       )}
 
-      {carsForRent.length > 0 && (
+      {filteredData.carsForRent.length > 0 && (
         <div className="mb-12 xs:mb-16">
           <div className="mb-6 xs:mb-8 px-2">
             <h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
@@ -212,11 +267,11 @@ export default function ProductsSection() {
             </h2>
             <div className="w-16 xs:w-20 h-1 bg-gradient-to-r from-green-400 to-blue-500 rounded-full"></div>
           </div>
-          {renderHorizontalScroll(carsForRent, CarsCard)}
+          {renderHorizontalScroll(filteredData.carsForRent, CarsCard)}
         </div>
       )}
 
-      {tourismSites.length > 0 && (
+      {filteredData.tourismSites.length > 0 && (
         <div className="mb-12 xs:mb-16">
           <div className="mb-6 xs:mb-8 px-2">
             <h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
@@ -224,11 +279,11 @@ export default function ProductsSection() {
             </h2>
             <div className="w-16 xs:w-20 h-1 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full"></div>
           </div>
-          {renderHorizontalScroll(tourismSites, TourismCard)}
+          {renderHorizontalScroll(filteredData.tourismSites, TourismCard)}
         </div>
       )}
 
-      {housesForSale.length > 0 && (
+      {filteredData.housesForSale.length > 0 && (
         <div className="mb-12 xs:mb-16">
           <div className="mb-6 xs:mb-8 px-2">
             <h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-2">
@@ -236,11 +291,11 @@ export default function ProductsSection() {
             </h2>
             <div className="w-16 xs:w-20 h-1 bg-gradient-to-r from-orange-400 to-red-500 rounded-full"></div>
           </div>
-          {renderHorizontalScroll(housesForSale, HousesCard)}
+          {renderHorizontalScroll(filteredData.housesForSale, HousesCard)}
         </div>
       )}
 
-      {carsForSale.length > 0 && (
+      {filteredData.carsForSale.length > 0 && (
         <div className="mb-12 xs:mb-16">
           <div className="mb-6 xs:mb-8 px-2">
             <h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
@@ -248,7 +303,7 @@ export default function ProductsSection() {
             </h2>
             <div className="w-16 xs:w-20 h-1 bg-gradient-to-r from-indigo-400 to-purple-500 rounded-full"></div>
           </div>
-          {renderHorizontalScroll(carsForSale, CarSalecard)}
+          {renderHorizontalScroll(filteredData.carsForSale, CarSalecard)}
         </div>
       )}
     </section>

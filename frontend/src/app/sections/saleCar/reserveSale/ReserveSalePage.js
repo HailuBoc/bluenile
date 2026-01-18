@@ -2,17 +2,29 @@
 export const dynamic = "force-dynamic";
 
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import Footer from "../../../../components/Footer";
+import { motion } from "framer-motion";
+import { Home, MapPin, Sparkles, Star, StarHalf, Star as StarOutline, Heart } from "lucide-react";
+import Link from "next/link";
+import AnimatedCard from "../../../../components/AnimatedCard";
+import CustomButton from "../../../../components/CustomButton";
+import DarkModeToggle from "../../../../components/DarkModeToggle";
+import { DarkModeProvider } from "../../../../contexts/DarkModeContext";
+import LikeButton from "../../../../components/LikeButton";
 import axios from "axios";
-import { MapPin, Star, StarHalf, Star as StarOutline } from "lucide-react";
 
-export default function ReservationPage() {
+function SaleCarReservationContent() {
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const backendUrl =
     process.env.NEXT_PUBLIC_BACKEND_URL || "https://bluenile.onrender.com";
 
   const [listing, setListing] = useState(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
   const [error, setError] = useState(null);
   const [guestInfo, setGuestInfo] = useState({
     name: "",
@@ -32,20 +44,38 @@ export default function ReservationPage() {
     const fetchCar = async () => {
       try {
         const res = await axios.get(`${backendUrl}/admin/properties/${id}`);
-        const baseUrl = backendUrl;
-        const firstImage =
-          Array.isArray(res.data.imageUrl) && res.data.imageUrl.length > 0
-            ? res.data.imageUrl[0]
-            : typeof res.data.imageUrl === "string"
-            ? res.data.imageUrl
-            : null;
-        const imageSrc = firstImage
-          ? firstImage.startsWith("http")
-            ? firstImage
-            : `${baseUrl}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
-          : null;
+        const rawImages = Array.isArray(res.data.imageUrl)
+          ? res.data.imageUrl
+          : typeof res.data.imageUrl === "string" && res.data.imageUrl
+          ? [res.data.imageUrl]
+          : [];
 
-        setListing({ ...res.data, imageUrl: imageSrc });
+        const images = rawImages
+          .filter(Boolean)
+          .map((img) =>
+            img.startsWith("http")
+              ? img
+              : `${backendUrl}${img.startsWith("/") ? "" : "/"}${img}`
+          );
+
+        setListing({ ...res.data, imageUrl: images[0] || null, images });
+        
+        // Fetch like status if user is logged in
+        if (session?.user?.id) {
+          try {
+            const likeRes = await axios.get(`${backendUrl}/carsalelike/${id}?userId=${session.user.id}`);
+            setLiked(likeRes.data.userLiked || false);
+            setLikesCount(likeRes.data.likes || 0);
+          } catch (likeErr) {
+            console.error("❌ Error fetching like status:", likeErr);
+            setLiked(false);
+            setLikesCount(res.data.likes || 0);
+          }
+        } else {
+          setLiked(false);
+          setLikesCount(res.data.likes || 0);
+        }
+        setActiveImageIndex(0);
       } catch (err) {
         console.error("❌ Error fetching car:", err);
         setError("Car not found or failed to load.");
@@ -53,7 +83,40 @@ export default function ReservationPage() {
     };
 
     fetchCar();
-  }, [searchParams, backendUrl]);
+  }, [searchParams, backendUrl, session?.user?.id]); // Added session dependency
+
+  // Toggle like function
+  const handleToggleLike = async () => {
+    if (!listing) return;
+    
+    // Check if user is authenticated
+    if (!session?.user?.id) {
+      // Redirect to login with return URL
+      const currentPath = window.location.pathname + window.location.search;
+      window.location.href = `/auth/login?callbackUrl=${encodeURIComponent(currentPath)}`;
+      return;
+    }
+    
+    try {
+      const newLiked = !liked;
+      setLiked(newLiked);
+      setLikesCount((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
+
+      const res = await axios.post(`${backendUrl}/carsalelike/${id}/like`, {
+        userId: session.user.id,
+      });
+
+      setLiked(res.data.userLiked ?? newLiked);
+      setLikesCount(
+        res.data.likes ?? (newLiked ? likesCount + 1 : likesCount - 1)
+      );
+    } catch (err) {
+      console.error("❌ Failed to toggle car sale like:", err);
+      // rollback
+      setLiked((prev) => !prev);
+      setLikesCount((prev) => (liked ? Math.max(prev - 1, 0) : prev + 1));
+    }
+  };
 
   // Auto-hide messages
   useEffect(() => {
@@ -121,202 +184,255 @@ export default function ReservationPage() {
     return stars;
   };
 
+  const imageUrls = useMemo(() => {
+    if (!listing) return [];
+    if (Array.isArray(listing.images) && listing.images.length > 0)
+      return listing.images;
+    return listing.imageUrl ? [listing.imageUrl] : [];
+  }, [listing]);
+
+  const activeImage = imageUrls[activeImageIndex] || imageUrls[0] || null;
+
   if (!listing) {
     return (
-      <>
-        <main className="flex items-center justify-center min-h-screen p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
+        <main className="flex items-center justify-center min-h-[70vh] p-4">
           <p className="text-lg sm:text-xl text-red-600">
             {error || "Loading car..."}
           </p>
         </main>
         <Footer />
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 flex justify-center relative">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
+      <motion.nav
+        className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700"
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                Reserve Car
+              </h1>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Link
+                href="/"
+                className="hidden sm:flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >
+                <Home className="w-4 h-4" />
+                Home
+              </Link>
+              <DarkModeToggle />
+            </div>
+          </div>
+        </div>
+      </motion.nav>
+
+      <motion.header
+        className="relative overflow-hidden py-12 sm:py-16"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-indigo-500/10 dark:from-blue-500/20 dark:via-purple-500/20 dark:to-indigo-500/20" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
+            {listing.carName || listing.propertyName}
+          </h2>
+          <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-gray-400" />
+              <span>{listing.location || listing.address}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {renderStars(listing.rating || 0)}
+              <span className="text-sm">({listing.rating?.toFixed(1) || "N/A"})</span>
+            </div>
+          </div>
+        </div>
+      </motion.header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         {(successMessage || errorMessage) && (
           <div
-            className={`fixed top-4 left-1/2 transform -translate-x-1/2 px-4 sm:px-6 py-2 sm:py-3 rounded shadow-lg text-sm sm:text-base z-50 ${
+            className={`fixed top-4 left-1/2 transform -translate-x-1/2 px-4 sm:px-6 py-2 sm:py-3 rounded-xl shadow-lg text-sm sm:text-base z-50 border ${
               successMessage
-                ? "bg-green-600 text-white"
-                : "bg-red-600 text-white"
+                ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-200 border-green-200 dark:border-green-700"
+                : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-200 border-red-200 dark:border-red-700"
             }`}
           >
             {successMessage || errorMessage}
           </div>
         )}
 
-        <div className="max-w-6xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 p-4 sm:p-6">
-          {/* Left: Car Info */}
-          <section className="md:col-span-2 flex flex-col gap-4 sm:gap-6">
-            <img
-              src={listing.imageUrl}
-              alt={listing.carName || listing.propertyName}
-              className="rounded-lg w-full h-56 sm:h-80 object-cover shadow"
-            />
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-white">
-                {listing.carName || listing.propertyName}
-              </h1>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <section className="lg:col-span-7 space-y-6">
+            <AnimatedCard className="p-4 sm:p-5" hoverEffect={false}>
+              <div className="relative rounded-xl overflow-hidden">
+                      className={`rounded-lg overflow-hidden border transition ${
+                        idx === activeImageIndex
+                          ? "border-blue-500"
+                          : "border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                      }`}
+                      aria-label={`View image ${idx + 1}`}
+                    >
+                      <img
+                        src={src}
+                        alt=""
+                        className="w-full h-14 object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </AnimatedCard>
 
-              <p className="flex items-center text-blue-600 dark:text-blue-400 text-sm mt-1">
-                <MapPin className="w-4 h-4 mr-1" />
-                {listing.location || listing.address}
-              </p>
+            {listing.description && (
+              <AnimatedCard className="p-6" hoverEffect={false}>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Description
+                </h3>
+                <p className="mt-3 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {listing.description}
+                </p>
+              </AnimatedCard>
+            )}
 
-              <div className="flex items-center mt-2 space-x-2">
-                {renderStars(listing.rating || 0)}
-                <span className="text-sm text-gray-500 dark:text-gray-300">
-                  ({listing.rating?.toFixed(1) || "N/A"})
-                </span>
-              </div>
+            <AnimatedCard className="p-6" hoverEffect={false}>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Car Features
+              </h3>
+              <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-gray-700 dark:text-gray-300 text-sm sm:text-base">
+                <li>✔ Low Mileage</li>
+                <li>✔ Accident Free</li>
+                <li>✔ Full Service History</li>
+                <li>✔ Fuel Efficient</li>
+                <li>✔ Air Conditioning</li>
+                <li>✔ Modern Safety Features</li>
+              </ul>
+            </AnimatedCard>
 
-              <p className="mt-3 sm:mt-4 text-gray-700 dark:text-gray-300 text-sm sm:text-base leading-relaxed">
-                {listing.description}
-              </p>
-
-              {/* Features */}
-              <div className="mt-4 sm:mt-6">
-                <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-gray-900 dark:text-white">
-                  Car Features
-                </h2>
-                <ul className="grid grid-cols-2 gap-2 text-gray-700 dark:text-gray-300 text-sm sm:text-base">
-                  <li>✔ Low Mileage</li>
-                  <li>✔ Accident Free</li>
-                  <li>✔ Full Service History</li>
-                  <li>✔ Fuel Efficient</li>
-                  <li>✔ Air Conditioning</li>
-                  <li>✔ Modern Safety Features</li>
-                </ul>
-              </div>
-
-              {/* Map */}
-              <div className="mt-4 sm:mt-6">
-                <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-gray-900 dark:text-white">
-                  Location
-                </h2>
+            <AnimatedCard className="p-6" hoverEffect={false}>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Location
+              </h3>
+              <div className="mt-3 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                 <iframe
                   title="Map"
                   src={`https://www.google.com/maps?q=${encodeURIComponent(
                     listing.location || listing.address || "Ethiopia"
                   )}&output=embed`}
-                  className="w-full h-48 sm:h-60 rounded-lg shadow"
+                  className="w-full h-56"
                   allowFullScreen
                   loading="lazy"
                 />
               </div>
-            </div>
+            </AnimatedCard>
           </section>
 
-          {/* Right: Reservation Form */}
-          <aside className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 sm:p-6 flex flex-col justify-between shadow-lg">
-            <form
-              onSubmit={handleSubmit}
-              className="flex flex-col gap-3 sm:gap-4"
-            >
-              <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-4 text-gray-900 dark:text-white">
-                Your Reservation
-              </h2>
-
-              {/* Guest Info */}
-              {["name", "email", "phone"].map((field) => (
-                <div key={field}>
-                  <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm sm:text-base font-medium capitalize">
-                    {field === "name"
-                      ? "Full Name"
-                      : field === "email"
-                      ? "Email Address"
-                      : "Phone Number"}
-                  </label>
-                  <input
-                    type={
-                      field === "email"
-                        ? "email"
-                        : field === "phone"
-                        ? "tel"
-                        : "text"
-                    }
-                    name={field}
-                    value={guestInfo[field]}
-                    onChange={handleChange}
-                    required
-                    className="w-full p-2 sm:p-3 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm sm:text-base"
-                  />
+          <aside className="lg:col-span-5">
+            <div className="lg:sticky lg:top-24 space-y-6">
+              <AnimatedCard className="p-6" hoverEffect={false}>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  Car Price
                 </div>
-              ))}
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {listing.price} birr
+                </div>
 
-              {/* Payment Method */}
-              <fieldset className="border border-gray-300 dark:border-gray-600 rounded-md p-3 sm:p-4 max-h-40 sm:max-h-48 overflow-auto">
-                <legend className="text-gray-700 dark:text-gray-300 font-medium text-sm sm:text-base mb-1 sm:mb-2">
-                  Payment Method
-                </legend>
-                {[
-                  { value: "bank_transfer", label: "Bank Transfer" },
-                  { value: "cash_cheque", label: "Cash / Cheque" },
-                ].map(({ value, label }) => (
-                  <label
-                    key={value}
-                    className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2 cursor-pointer"
+                <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+                  {["name", "email", "phone"].map((field) => (
+                    <div key={field} className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        {field === "name"
+                          ? "Full Name"
+                          : field === "email"
+                          ? "Email Address"
+                          : "Phone Number"}
+                      </label>
+                      <input
+                        type={
+                          field === "email"
+                            ? "email"
+                            : field === "phone"
+                            ? "tel"
+                            : "text"
+                        }
+                        name={field}
+                        value={guestInfo[field]}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-gray-900 dark:text-white"
+                      />
+                    </div>
+                  ))}
+
+                  <fieldset className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 max-h-56 overflow-auto">
+                    <legend className="px-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Payment Method
+                    </legend>
+                    <div className="mt-2 space-y-2">
+                      {[
+                        { value: "bank_transfer", label: "Bank Transfer" },
+                        { value: "cash_cheque", label: "Cash / Cheque" },
+                      ].map(({ value, label }) => (
+                        <label
+                          key={value}
+                          className="flex items-center gap-3 cursor-pointer text-gray-700 dark:text-gray-200"
+                        >
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value={value}
+                            checked={guestInfo.paymentMethod === value}
+                            onChange={handleChange}
+                            required
+                            className="accent-blue-600"
+                          />
+                          <span>{label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+
+                  <CustomButton
+                    type="submit"
+                    disabled={loading}
+                    variant="primary"
+                    size="lg"
+                    className="w-full"
                   >
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value={value}
-                      checked={guestInfo.paymentMethod === value}
-                      onChange={handleChange}
-                      className="form-radio text-blue-600"
-                      required
-                    />
-                    <span className="text-sm sm:text-base">{label}</span>
-                  </label>
-                ))}
-              </fieldset>
-
-              {/* Price */}
-              <div className="border-t border-gray-300 dark:border-gray-600 pt-3 sm:pt-4 mt-3 sm:mt-4">
-                <div className="font-bold text-green-700 dark:text-green-400 text-base sm:text-lg text-center">
-                  Car Price = {listing.price} birr
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="mt-4 sm:mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 rounded-md transition duration-200 text-sm sm:text-base"
-              >
-                {loading ? "Processing..." : "Confirm Reservation"}
-              </button>
-            </form>
-
-            {/* Help Section */}
-            <div className="mt-4 sm:mt-6 text-xs sm:text-sm text-gray-600 dark:text-gray-300 text-center">
-              <p>Need help with your booking?</p>
-              <p>
-                Call us at{" "}
-                <a
-                  href="tel:+251900000000"
-                  className="text-blue-600 dark:text-blue-400 underline"
-                >
-                  +251 900 000 000
-                </a>
-              </p>
-              <p>
-                or email{" "}
-                <a
-                  href="mailto:support@example.com"
-                  className="text-blue-600 dark:text-blue-400 underline"
-                >
-                  support@example.com
-                </a>
-              </p>
+                    {loading ? "Processing..." : "Confirm Reservation"}
+                  </CustomButton>
+                </form>
+              </AnimatedCard>
             </div>
           </aside>
         </div>
       </main>
+
       <Footer />
-    </>
+    </div>
+  );
+}
+
+export default function ReservationPage() {
+  return (
+    <DarkModeProvider>
+      <SaleCarReservationContent />
+    </DarkModeProvider>
   );
 }

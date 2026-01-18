@@ -11,9 +11,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Footer from "../../../components/Footer";
+import LikeButton from "../../../components/LikeButton";
+import { useSession } from "next-auth/react";
 import axios from "axios";
 
 export default function TourismPage() {
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
   const BASE_URL =
@@ -69,7 +72,9 @@ export default function TourismPage() {
 
     const fetchLikes = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/tourismlike/${idParam}`);
+        const userId = session?.user?.id;
+        const query = userId ? `?userId=${userId}` : "";
+        const res = await axios.get(`${BASE_URL}/tourismlike/${idParam}${query}`);
         setLikes(res.data.likes || 0);
         setLiked(res.data.userLiked || false);
       } catch (err) {
@@ -78,17 +83,25 @@ export default function TourismPage() {
     };
 
     fetchLikes();
-  }, [idParam, BASE_URL]);
+  }, [idParam, BASE_URL, session]);
 
   // Toggle like
   const handleLike = async () => {
+    // Check if user is authenticated
+    if (!session?.user?.id) {
+      // Redirect to login with return URL
+      const currentPath = window.location.pathname + window.location.search;
+      window.location.href = `/auth/login?callbackUrl=${encodeURIComponent(currentPath)}`;
+      return;
+    }
+    
     try {
       const newLiked = !liked;
       setLiked(newLiked);
       setLikes((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
 
       const res = await axios.post(`${BASE_URL}/tourismlike/${idParam}/like`, {
-        liked: newLiked,
+        userId: session.user.id,
       });
 
       setLikes(res.data.likes);

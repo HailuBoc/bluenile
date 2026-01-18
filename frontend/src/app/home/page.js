@@ -7,6 +7,7 @@ import { Instagram, Linkedin, Youtube } from "lucide-react";
 import { FaTiktok } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import { Menu, Search, Briefcase, User, X, Home } from "lucide-react";
+import { useSession } from "next-auth/react"; // Added for authentication
 
 /* Product cards (assumed present in same project) */
 import ProductCard from "../../components/ProductCard";
@@ -484,6 +485,7 @@ function Navbar() {
    (unchanged logic, placed here)
    ========================= */
 function ProductsSection() {
+  const { data: session } = useSession();
   const [properties, setProperties] = useState([]);
   const [specialOffers, setSpecialOffers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -498,7 +500,38 @@ function ProductsSection() {
         ? res.data
         : res.data?.properties || [];
 
-      const formattedData = data.map((item) => {
+      // Fetch like data for each property if user is logged in
+      let propertiesWithLikes = data;
+      if (session?.user?.id) {
+        propertiesWithLikes = await Promise.all(
+          data.map(async (item) => {
+            try {
+              const likeRes = await axios.get(`${baseUrl}/houselike/${item._id}?userId=${session.user.id}`);
+              return {
+                ...item,
+                liked: likeRes.data.userLiked || false,
+                likes: likeRes.data.likes || 0
+              };
+            } catch (likeErr) {
+              console.error("❌ Error fetching like status for property:", item._id, likeErr);
+              return {
+                ...item,
+                liked: false,
+                likes: item.likes || 0
+              };
+            }
+          })
+        );
+      } else {
+        // If not logged in, just use existing likes data
+        propertiesWithLikes = data.map(item => ({
+          ...item,
+          liked: false,
+          likes: item.likes || 0
+        }));
+      }
+
+      const formattedData = propertiesWithLikes.map((item) => {
         let firstImage =
           Array.isArray(item.imageUrl) && item.imageUrl.length > 0
             ? item.imageUrl[0]
@@ -566,7 +599,7 @@ function ProductsSection() {
 
     const interval = setInterval(fetchData, 10000);
     return () => clearInterval(interval);
-  }, []);
+  }, [session?.user?.id]); // Added session dependency
 
   if (loading)
     return <p className="text-center mt-10">Loading properties...</p>;
