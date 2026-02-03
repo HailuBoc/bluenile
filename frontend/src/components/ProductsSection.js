@@ -8,6 +8,9 @@ import CarsCard from "./CarsCard";
 import CarSalecard from "./CarSalecard";
 import TourismCard from "./TourismCard";
 import SpecialOfferCard from "./SpecialOfferCard";
+import SkeletonLoader, { SkeletonProductGrid } from "./SkeletonLoader";
+import { cn } from "../utils/cn";
+import { useResponsive } from "./ResponsiveLayout";
 
 // ✅ Performance optimizations:
 // - useCallback for stable function references
@@ -17,10 +20,12 @@ import SpecialOfferCard from "./SpecialOfferCard";
 // - Optimized image processing
 
 export default function ProductsSection() {
+  const { isMobile, isTablet, isDesktop } = useResponsive();
   const [properties, setProperties] = useState([]);
   const [specialOffers, setSpecialOffers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
@@ -175,13 +180,42 @@ export default function ProductsSection() {
     );
   }, []);
 
-  // ✅ Loading state with skeleton
+  // ✅ Enhanced loading state with responsive skeleton
   if (loading) {
     return (
       <section className="px-3 xs:px-4 sm:px-6 md:px-8 lg:px-12 pt-6 xs:pt-8 pb-20 xs:pb-24 bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="text-center mt-10">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading amazing properties...</p>
+        <div className="space-y-12 xs:space-y-16">
+          {/* Skeleton for special offers */}
+          <div className="space-y-6">
+            <div className="text-center space-y-4">
+              <div className="skeleton h-8 w-48 mx-auto rounded-lg" />
+              <div className="skeleton h-1 w-24 mx-auto rounded-full" />
+            </div>
+            <div className="flex gap-4 overflow-x-auto hide-scrollbar">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex-shrink-0 w-72">
+                  <SkeletonLoader.SkeletonCard />
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Skeleton for other sections */}
+          {["Hotel Rooms", "Cars for Rental", "Tourism Sites"].map((title) => (
+            <div key={title} className="space-y-6">
+              <div className="space-y-2">
+                <div className="skeleton h-6 w-40 rounded" />
+                <div className="skeleton h-1 w-20 rounded" />
+              </div>
+              <div className="flex gap-4 overflow-x-auto hide-scrollbar">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex-shrink-0 w-64">
+                    <SkeletonLoader.SkeletonCard />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
     );
@@ -190,15 +224,29 @@ export default function ProductsSection() {
   if (error) {
     return (
       <section className="px-3 xs:px-4 sm:px-6 md:px-8 lg:px-12 pt-6 xs:pt-8 pb-20 xs:pb-24 bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="text-center mt-10">
-          <div className="text-red-600 mb-4">⚠️</div>
-          <p className="text-red-600 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Try Again
-          </button>
+        <div className="text-center mt-10 max-w-md mx-auto">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            Oops! Something went wrong
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button 
+              onClick={() => {
+                setRetryCount(prev => prev + 1);
+                window.location.reload();
+              }}
+              className="btn-primary"
+            >
+              Try Again
+            </button>
+            <button 
+              onClick={() => setError(null)}
+              className="btn-secondary"
+            >
+              Dismiss
+            </button>
+          </div>
         </div>
       </section>
     );

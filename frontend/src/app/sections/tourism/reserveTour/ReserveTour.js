@@ -293,6 +293,10 @@ export default function ReserveTourismPage() {
                 />
                 <span className="ml-1 text-xs font-semibold text-gray-700">
                   {likesCount}
+                </span>
+              </button>
+              
+              <p className="text-sm text-gray-600 mt-2">
                 {tourism.address}
               </p>
 

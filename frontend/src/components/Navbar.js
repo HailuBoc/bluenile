@@ -1,17 +1,22 @@
 "use client";
-import { Menu, Search, Briefcase, User, X, Home } from "lucide-react";
+import { Menu, Search, Briefcase, User, X, Home, ChevronDown, Phone, Mail, MapPin } from "lucide-react";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { throttle } from "../utils/performance";
 import OptimizedImage from "./OptimizedImage";
+import { cn } from "../utils/cn";
+import { useResponsive } from "./ResponsiveLayout";
 
 export default function Navbar() {
+  const { isMobile, isTablet, isDesktop } = useResponsive();
   const [navOpen, setNavOpen] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
   const [showLearnModal, setShowLearnModal] = useState(false);
   const [showMobileServiceButtons, setShowMobileServiceButtons] = useState(false);
+  const [activeServiceDropdown, setActiveServiceDropdown] = useState(null);
+  const [scrolled, setScrolled] = useState(false);
 
   // ✅ Memoized services array to prevent recreation
   const services = useMemo(() => [
@@ -62,25 +67,25 @@ export default function Navbar() {
     },
   ], []);
 
-  // ✅ Optimized scroll handler with throttle
+  // ✅ Enhanced scroll handler with better mobile detection
   const handleScroll = useCallback(
     throttle(() => {
       const scrollY = window.scrollY;
-      const isMobile = window.innerWidth < 640; // sm breakpoint
+      const scrollThreshold = isMobile ? window.innerHeight * 0.3 : window.innerHeight * 0.7;
       
-      if (scrollY > window.innerHeight * 0.7) {
+      setScrolled(scrollY > 50);
+      
+      if (scrollY > scrollThreshold) {
         setShowSticky(true);
-        // Show mobile service buttons only on mobile when scrolling down
         if (isMobile) {
           setShowMobileServiceButtons(true);
         }
       } else {
         setShowSticky(false);
-        // Hide mobile service buttons when not scrolling
         setShowMobileServiceButtons(false);
       }
     }, 100),
-    []
+    [isMobile]
   );
 
   useEffect(() => {
@@ -160,8 +165,11 @@ export default function Navbar() {
 
   return (
     <>
-      {/* ==== FULL HEADER ==== */}
-      <header className="relative flex w-full top-0 z-40 flex-col overflow-hidden">
+      {/* ==== ENHANCED FULL HEADER ==== */}
+      <header className={cn(
+        "relative flex w-full top-0 z-40 flex-col overflow-hidden transition-all duration-300",
+        scrolled && "navbar-enhanced shadow-lg"
+      )}>
         {/* Background with modern overlay */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-fixed"

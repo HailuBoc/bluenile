@@ -280,24 +280,25 @@ function SaleCarReservationContent() {
           <section className="lg:col-span-7 space-y-6">
             <AnimatedCard className="p-4 sm:p-5" hoverEffect={false}>
               <div className="relative rounded-xl overflow-hidden">
-                      className={`rounded-lg overflow-hidden border transition ${
-                        idx === activeImageIndex
-                          ? "border-blue-500"
-                          : "border-transparent hover:border-gray-200 dark:hover:border-gray-700"
-                      }`}
-                      aria-label={`View image ${idx + 1}`}
-                    >
-                      <img
-                        src={src}
-                        alt=""
-                        className="w-full h-14 object-cover"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
+                {imageUrls.map((src, idx) => (
+                  <button
+                    className={`rounded-lg overflow-hidden border transition ${
+                      idx === activeImageIndex
+                        ? "border-blue-500"
+                        : "border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                    }`}
+                    aria-label={`View image ${idx + 1}`}
+                  >
+                    <img
+                      src={src}
+                      alt=""
+                      className="w-full h-14 object-cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </button>
+                ))}
+              </div>
             </AnimatedCard>
 
             {listing.description && (
