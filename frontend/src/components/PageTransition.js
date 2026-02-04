@@ -237,27 +237,40 @@ export function AnimatedBackground({ children, className }) {
       />
       
       {/* Floating elements */}
-      {[...Array(6)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-32 h-32 bg-gradient-to-br from-primary-400/20 to-secondary-400/20 rounded-full blur-xl"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-          }}
-          animate={{
-            y: [0, -30, 0],
-            x: [0, 20, 0],
-            scale: [1, 1.1, 1],
-          }}
-          transition={{
-            duration: 3 + Math.random() * 2,
-            repeat: Infinity,
-            repeatType: "reverse",
-            delay: Math.random() * 2,
-          }}
-        />
-      ))}
+      {[...Array(6)].map((_, i) => {
+        // Use deterministic positions based on index to avoid hydration mismatch
+        const positions = [
+          { left: 10, top: 20 },
+          { left: 80, top: 10 },
+          { left: 25, top: 60 },
+          { left: 70, top: 80 },
+          { left: 45, top: 40 },
+          { left: 90, top: 50 },
+        ];
+        const position = positions[i % positions.length];
+        
+        return (
+          <motion.div
+            key={i}
+            className="absolute w-32 h-32 bg-gradient-to-br from-primary-400/20 to-secondary-400/20 rounded-full blur-xl"
+            style={{
+              left: `${position.left}%`,
+              top: `${position.top}%`,
+            }}
+            animate={{
+              y: [0, -30, 0],
+              x: [0, 20, 0],
+              scale: [1, 1.1, 1],
+            }}
+            transition={{
+              duration: 3 + (i * 0.5),
+              repeat: Infinity,
+              repeatType: "reverse",
+              delay: i * 0.3,
+            }}
+          />
+        );
+      })}
       
       {children}
     </motion.div>

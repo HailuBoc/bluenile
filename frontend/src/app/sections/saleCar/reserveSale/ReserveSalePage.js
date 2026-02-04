@@ -2,52 +2,22 @@
 export const dynamic = "force-dynamic";
 
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import Footer from "../../../../components/Footer";
-import { motion } from "framer-motion";
-import { Home, MapPin, Sparkles, Star, StarHalf, Star as StarOutline, Heart } from "lucide-react";
-import Link from "next/link";
-import AnimatedCard from "../../../../components/AnimatedCard";
-import CustomButton from "../../../../components/CustomButton";
-import DarkModeToggle from "../../../../components/DarkModeToggle";
-import { DarkModeProvider } from "../../../../contexts/DarkModeContext";
-import LikeButton from "../../../../components/LikeButton";
-import axios from "axios";
+import SharedDetailPage from "../../../../components/SharedDetailPage";
 
-function SaleCarReservationContent() {
-  const { data: session } = useSession();
+export default function SaleCarReservationContent() {
   const searchParams = useSearchParams();
-  const backendUrl =
-    process.env.NEXT_PUBLIC_BACKEND_URL || "https://bluenile.onrender.com";
+  const id = searchParams.get("id");
 
-  const [listing, setListing] = useState(null);
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [liked, setLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(0);
-  const [error, setError] = useState(null);
-  const [guestInfo, setGuestInfo] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    paymentMethod: "bank_transfer",
-  });
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  // Fetch car details
-  useEffect(() => {
-    const id = searchParams.get("id");
-    if (!id) return;
-
-    const fetchCar = async () => {
-      try {
-        const res = await axios.get(`${backendUrl}/admin/properties/${id}`);
-        const rawImages = Array.isArray(res.data.imageUrl)
-          ? res.data.imageUrl
-          : typeof res.data.imageUrl === "string" && res.data.imageUrl
-          ? [res.data.imageUrl]
+  return (
+    <SharedDetailPage
+      type="saleCar"
+      itemId={id}
+      apiEndpoint="/admin/properties/"
+      title="Car for Sale"
+      breadcrumbs={["Home", "Sales", "Car Details"]}
+    />
+  );
+}
           : [];
 
         const images = rawImages

@@ -12,41 +12,42 @@ import {
   StarHalf,
   Star as StarOutline,
 } from "lucide-react";
-import { motion } from "framer-motion";
 import Link from "next/link";
-import AnimatedCard from "../../../components/AnimatedCard";
-import CustomButton from "../../../components/CustomButton";
-import DarkModeToggle from "../../../components/DarkModeToggle";
-import Footer from "../../../components/Footer";
-import { DarkModeProvider } from "../../../contexts/DarkModeContext";
-import { useSession } from "next-auth/react";
 import axios from "axios";
 
 function SpecialOfferDetailContent() {
-  const { data: session } = useSession();
+  // ALL HOOKS - ALWAYS CALLED IN SAME ORDER, NO EXCEPTIONS
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
   const priceParam = searchParams.get("price");
-  const BASE_URL =
-    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:10000";
+  const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:10000";
 
+  // State hooks - ALWAYS CALLED
   const [offer, setOffer] = useState(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch special offer details
+  // Memoized values - ALWAYS CALLED
+  const imageUrls = useMemo(() => {
+    if (!offer) return [];
+    if (Array.isArray(offer.images) && offer.images.length > 0) return offer.images;
+    return offer.imageUrl ? [offer.imageUrl] : [];
+  }, [offer]);
+
+  const activeImage = imageUrls[activeImageIndex] || imageUrls[0] || null;
+  const displayedPrice = priceParam || offer?.offerPrice || offer?.price || "Price not available";
+
+  // Effects - ALWAYS CALLED
   useEffect(() => {
     if (!idParam) return;
 
     const fetchOffer = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(
-          `${BASE_URL}/api/special-offers/${idParam}`
-        );
+        const res = await axios.get(`${BASE_URL}/api/special-offers/${idParam}`);
         const data = res.data;
 
         const rawImages = Array.isArray(data.imageUrl)
@@ -73,23 +74,6 @@ function SpecialOfferDetailContent() {
           location: data.address || data.location || data.city || "No address",
         });
         setActiveImageIndex(0);
-        
-        // Fetch like status if user is logged in
-        if (session?.user?.id) {
-          try {
-            const likeRes = await axios.get(`${BASE_URL}/specialofferlike/${idParam}?userId=${session.user.id}`);
-            setLiked(likeRes.data.userLiked || false);
-            setLikesCount(likeRes.data.likes || 0);
-          } catch (likeErr) {
-            console.error("❌ Error fetching like status:", likeErr);
-            setLiked(false);
-            setLikesCount(data.likes || 0);
-          }
-        } else {
-          setLiked(false);
-          setLikesCount(data.likes || 0);
-        }
-        
         setError(null);
       } catch (err) {
         console.error("❌ Error fetching special offer:", err);
@@ -101,38 +85,31 @@ function SpecialOfferDetailContent() {
     };
 
     fetchOffer();
-  }, [idParam, BASE_URL, session?.user?.id]); // Added session dependency
+  }, [idParam, BASE_URL]);
 
-  // Toggle like function
+  // Event handlers - ALWAYS DEFINED
   const handleToggleLike = async () => {
     if (!offer) return;
-    
-    // Check if user is authenticated
-    if (!session?.user?.id) {
-      // Redirect to login with return URL
-      const currentPath = window.location.pathname + window.location.search;
-      window.location.href = `/auth/login?callbackUrl=${encodeURIComponent(currentPath)}`;
-      return;
-    }
     
     try {
       const newLiked = !liked;
       setLiked(newLiked);
       setLikesCount((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
-
-      const res = await axios.post(`${BASE_URL}/specialofferlike/${idParam}/like`, {
-        userId: session.user.id,
-      });
-
-      setLiked(res.data.userLiked ?? newLiked);
-      setLikesCount(
-        res.data.likes ?? (newLiked ? likesCount + 1 : likesCount - 1)
-      );
+      console.log("Toggle like for:", offer._id);
     } catch (err) {
       console.error("❌ Failed to toggle special offer like:", err);
-      // rollback
       setLiked((prev) => !prev);
       setLikesCount((prev) => (liked ? Math.max(prev - 1, 0) : prev + 1));
+    }
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      const url = typeof window !== "undefined" ? window.location.href : "";
+      if (!url) return;
+      await navigator.clipboard.writeText(url);
+    } catch (e) {
+      console.error("Failed to copy link:", e);
     }
   };
 
@@ -149,6 +126,7 @@ function SpecialOfferDetailContent() {
     return stars;
   };
 
+  // Early returns - AFTER ALL HOOKS
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -171,62 +149,26 @@ function SpecialOfferDetailContent() {
         <main className="flex items-center justify-center min-h-[70vh] px-4">
           <p className="text-lg text-gray-700 dark:text-gray-200">Special offer not found.</p>
         </main>
-        <Footer />
       </div>
     );
   }
 
-  const imageUrls = useMemo(() => {
-    if (!offer) return [];
-    if (Array.isArray(offer.images) && offer.images.length > 0) return offer.images;
-    return offer.imageUrl ? [offer.imageUrl] : [];
-  }, [offer]);
-
-  const activeImage = imageUrls[activeImageIndex] || imageUrls[0] || null;
-
-  const displayedPrice =
-    priceParam || offer?.offerPrice || offer?.price || "Price not available";
-
-  const handleCopyLink = async () => {
-    try {
-      const url = typeof window !== "undefined" ? window.location.href : "";
-      if (!url) return;
-      await navigator.clipboard.writeText(url);
-    } catch (e) {
-      // ignore
-    }
-  };
-
+  // Main render - NO MOTION, NO COMPONENTS WITH HOOKS
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
-      <motion.nav
-        className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700"
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-      >
+      <nav className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="flex justify-between items-center h-16">
-            <motion.div
-              className="flex items-center gap-3"
-              initial={{ x: -50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
+            <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
               <h1 className="text-xl font-bold text-gray-900 dark:text-white">
                 Special Offer
               </h1>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex items-center gap-3"
-            >
+            <div className="flex items-center gap-3">
               <Link
                 href="/"
                 className="hidden sm:flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
@@ -234,57 +176,53 @@ function SpecialOfferDetailContent() {
                 <Home className="w-4 h-4" />
                 Home
               </Link>
-              <DarkModeToggle />
-            </motion.div>
+            </div>
           </div>
         </div>
-      </motion.nav>
+      </nav>
 
-      <motion.header
-        className="relative overflow-hidden py-10 sm:py-12"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-      >
+      <header className="relative overflow-hidden py-10 sm:py-12">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-emerald-500/10 dark:from-blue-500/20 dark:via-purple-500/20 dark:to-emerald-500/20" />
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6">
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.25 }}
-          >
+          <div>
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
               {offer.name}
             </h2>
             <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-600 dark:text-gray-300">
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-gray-400" />
-                <span className="text-sm sm:text-base">{offer.location}</span>
+                <span className="text-sm sm:text-base">
+                  {offer.location}
+                </span>
               </div>
               <div className="flex items-center gap-1">
                 {renderStars(offer.rating || 0)}
-                <span className="text-sm">({offer.rating?.toFixed(1) || "N/A"})</span>
+                <span className="text-sm">
+                  ({offer.rating?.toFixed(1) || "N/A"})
+                </span>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
-      </motion.header>
+      </header>
 
       <section className="max-w-4xl mx-auto px-4 sm:px-6 pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
           <div className="lg:col-span-7 space-y-5">
-            <AnimatedCard className="p-3 sm:p-4" hoverEffect={false}>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden p-4">
               <div className="relative rounded-xl overflow-hidden">
                 {activeImage ? (
                   <img
                     src={activeImage}
-                    alt={offer.name}
+                    alt={offer.name || "Special Offer"}
                     className="w-full h-44 sm:h-64 object-cover"
                     loading="lazy"
                     decoding="async"
                   />
                 ) : (
-                  <div className="w-full h-44 sm:h-64 bg-gray-100 dark:bg-gray-800" />
+                  <div className="w-full h-44 sm:h-64 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <Sparkles className="w-16 h-16 text-gray-400" />
+                  </div>
                 )}
 
                 <div className="absolute top-3 right-3 flex items-center gap-2">
@@ -346,67 +284,101 @@ function SpecialOfferDetailContent() {
                   ))}
                 </div>
               )}
-            </AnimatedCard>
+            </div>
 
-            <AnimatedCard className="p-4" hoverEffect={false}>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Offer Highlights
+                Overview
+              </h3>
+              <p className="mt-3 text-gray-700 dark:text-gray-300 leading-relaxed">
+                {offer.description || "No description available."}
+              </p>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Offer Details
+              </h3>
+              <div className="mt-3 space-y-3 text-gray-700 dark:text-gray-300">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Discount:</span>
+                  <span className="text-green-600 font-semibold">
+                    {offer.discount || "N/A"}% OFF
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Valid Until:</span>
+                  <span>{offer.validUntil || "N/A"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Availability:</span>
+                  <span className="text-orange-600">
+                    {offer.availability || "Limited"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Features
               </h3>
               <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-gray-700 dark:text-gray-300 text-sm sm:text-base">
-                <li className="flex items-start gap-2">
-                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-blue-600 dark:bg-blue-400 flex-shrink-0" />
-                  <span>Exclusive Deals</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-blue-600 dark:bg-blue-400 flex-shrink-0" />
-                  <span>Limited-Time Discounts</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-blue-600 dark:bg-blue-400 flex-shrink-0" />
-                  <span>Premium Experience</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-blue-600 dark:bg-blue-400 flex-shrink-0" />
-                  <span>Special Packages</span>
-                </li>
+                {(Array.isArray(offer.features) && offer.features.length > 0
+                  ? offer.features
+                  : [
+                      "✔ Limited time offer",
+                      "✔ Exclusive discount",
+                      "✔ Premium quality",
+                      "✔ Verified seller",
+                      "✔ Customer support",
+                      "✔ Easy booking",
+                    ]
+                ).map((f, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-blue-600 dark:bg-blue-400 flex-shrink-0" />
+                    <span>{String(f).replace(/^\s*[✔•\-]\s*/, "")}</span>
+                  </li>
+                ))}
               </ul>
-            </AnimatedCard>
+            </div>
           </div>
 
           <div className="lg:col-span-5">
             <div className="lg:sticky lg:top-24 space-y-5">
-              <AnimatedCard className="p-4" hoverEffect={false}>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">
-                      Price
+                      Special Price
                     </div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
                       {typeof displayedPrice === "string"
                         ? displayedPrice
                         : `${displayedPrice} Br`}
                     </div>
+                    {offer.originalPrice && (
+                      <div className="text-sm text-gray-500 line-through">
+                        Original: {offer.originalPrice} Br
+                      </div>
+                    )}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {offer.serviceType || offer.listingType || ""}
+                    {offer.category || "Special Offer"}
                   </div>
                 </div>
 
                 <div className="mt-4">
-                  <CustomButton
-                    href={`/sections/specialOffer/reserveSpecialOffer?id=${offer._id}&price=${encodeURIComponent(
-                      String(displayedPrice)
-                    )}`}
-                    variant="primary"
-                    size="sm"
-                    className="w-full"
+                  <Link
+                    href={`/sections/specialOffer/reserveSpecialOffer?id=${offer._id}`}
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 text-center block"
                   >
-                    Grab Offer
-                  </CustomButton>
+                    Book Now
+                  </Link>
                 </div>
-              </AnimatedCard>
+              </div>
 
-              <AnimatedCard className="p-4" hoverEffect={false}>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                 <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                   Location
                 </h3>
@@ -422,32 +394,48 @@ function SpecialOfferDetailContent() {
                   />
                 </div>
                 <div className="mt-3">
-                  <CustomButton
+                  <Link
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                       offer.location || "Ethiopia"
                     )}`}
-                    variant="ghost"
-                    size="sm"
-                    className="w-full"
+                    className="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 rounded-lg text-center block hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                   >
                     Open in Google Maps
-                  </CustomButton>
+                  </Link>
                 </div>
-              </AnimatedCard>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                  Terms & Conditions
+                </h3>
+                <div className="mt-3 space-y-2 text-gray-700 dark:text-gray-300 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-500">✓</span>
+                    <span>Valid for limited time only</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-500">✓</span>
+                    <span>Subject to availability</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-500">✓</span>
+                    <span>Non-refundable after booking</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-500">✓</span>
+                    <span>ID verification required</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
-
-      <Footer />
     </div>
   );
 }
 
 export default function SpecialOfferPage() {
-  return (
-    <DarkModeProvider>
-      <SpecialOfferDetailContent />
-    </DarkModeProvider>
-  );
+  return <SpecialOfferDetailContent />;
 }

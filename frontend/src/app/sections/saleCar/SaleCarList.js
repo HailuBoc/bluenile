@@ -12,9 +12,7 @@ import {
   Star,
   Star as StarOutline,
   StarHalf,
-  Plane,
-  Calendar,
-  Users,
+  Car,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -25,38 +23,38 @@ import Footer from "../../../components/Footer";
 import { DarkModeProvider } from "../../../contexts/DarkModeContext";
 import axios from "axios";
 
-function TourismDetailContent() {
+function SaleCarDetailContent() {
   const searchParams = useSearchParams();
   const { data: session } = useSession();
   const idParam = searchParams.get("id");
   const BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE_URL || "https://bluenile.onrender.com";
 
-  const [selectedTourism, setSelectedTourism] = useState(null);
+  const [selectedCar, setSelectedCar] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch tourism details
+  // Fetch car details
   useEffect(() => {
     if (!idParam) {
-      setSelectedTourism(null);
+      setSelectedCar(null);
       setLoading(false);
       return;
     }
 
-    const fetchTourism = async () => {
+    const fetchCar = async () => {
       try {
         setLoading(true);
         const res = await axios.get(`${BASE_URL}/admin/properties/${idParam}`);
-        const tourism = res.data;
+        const car = res.data;
 
-        const rawImages = Array.isArray(tourism.imageUrl)
-          ? tourism.imageUrl
-          : typeof tourism.imageUrl === "string"
-          ? [tourism.imageUrl]
+        const rawImages = Array.isArray(car.imageUrl)
+          ? car.imageUrl
+          : typeof car.imageUrl === "string"
+          ? [car.imageUrl]
           : [];
 
         const images = rawImages
@@ -69,23 +67,23 @@ function TourismDetailContent() {
 
         const imageSrc = images[0] || null;
 
-        setSelectedTourism({
-          ...tourism,
+        setSelectedCar({
+          ...car,
           imageUrl: imageSrc,
           images,
         });
         setActiveImageIndex(0);
         setError(null);
       } catch (err) {
-        console.error("❌ Error fetching tourism:", err);
-        setError("Failed to load tourism details.");
-        setSelectedTourism(null);
+        console.error("❌ Error fetching car:", err);
+        setError("Failed to load car details.");
+        setSelectedCar(null);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTourism();
+    fetchCar();
   }, [idParam, BASE_URL]);
 
   // Fetch likes
@@ -96,11 +94,11 @@ function TourismDetailContent() {
       try {
         const userId = session?.user?.id;
         const query = userId ? `?userId=${userId}` : "";
-        const res = await axios.get(`${BASE_URL}/tourismlike/${idParam}${query}`);
+        const res = await axios.get(`${BASE_URL}/salecarlike/${idParam}${query}`);
         setLikesCount(res.data.likes || 0);
         setLiked(res.data.userLiked || false);
       } catch (err) {
-        console.error("❌ Failed to fetch tourism likes:", err);
+        console.error("❌ Failed to fetch car likes:", err);
       }
     };
 
@@ -109,7 +107,7 @@ function TourismDetailContent() {
 
   // Toggle like function
   const handleToggleLike = async () => {
-    if (!selectedTourism) return;
+    if (!selectedCar) return;
     
     // Check if user is authenticated
     if (!session?.user?.id) {
@@ -124,7 +122,7 @@ function TourismDetailContent() {
       setLiked(newLiked);
       setLikesCount((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
 
-      const res = await axios.post(`${BASE_URL}/tourismlike/${idParam}/like`, {
+      const res = await axios.post(`${BASE_URL}/salecarlike/${idParam}/like`, {
         userId: session.user.id,
       });
 
@@ -133,7 +131,7 @@ function TourismDetailContent() {
         res.data.likes ?? (newLiked ? likesCount + 1 : likesCount - 1)
       );
     } catch (err) {
-      console.error("❌ Failed to toggle tourism like:", err);
+      console.error("❌ Failed to toggle car like:", err);
       // rollback
       setLiked((prev) => !prev);
       setLikesCount((prev) => (liked ? Math.max(prev - 1, 0) : prev + 1));
@@ -154,17 +152,17 @@ function TourismDetailContent() {
   };
 
   const imageUrls = useMemo(() => {
-    if (!selectedTourism) return [];
-    if (Array.isArray(selectedTourism.images) && selectedTourism.images.length > 0)
-      return selectedTourism.images;
-    return selectedTourism.imageUrl ? [selectedTourism.imageUrl] : [];
-  }, [selectedTourism]);
+    if (!selectedCar) return [];
+    if (Array.isArray(selectedCar.images) && selectedCar.images.length > 0)
+      return selectedCar.images;
+    return selectedCar.imageUrl ? [selectedCar.imageUrl] : [];
+  }, [selectedCar]);
 
   const activeImage = imageUrls[activeImageIndex] || imageUrls[0] || null;
 
   const displayedPrice =
-    selectedTourism?.offerPrice ||
-    selectedTourism?.price ||
+    selectedCar?.offerPrice ||
+    selectedCar?.price ||
     "Price not available";
 
   const handleCopyLink = async () => {
@@ -178,7 +176,7 @@ function TourismDetailContent() {
   if (loading)
     return (
       <div className="flex flex-col min-h-screen items-center justify-center p-4">
-        <p className="text-lg">Loading tourism details...</p>
+        <p className="text-lg">Loading car details...</p>
       </div>
     );
 
@@ -189,11 +187,11 @@ function TourismDetailContent() {
       </div>
     );
 
-  if (!selectedTourism)
+  if (!selectedCar)
     return (
       <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
         <main className="flex-grow flex items-center justify-center">
-          <p className="text-lg">Tourism package not found.</p>
+          <p className="text-lg">Car not found.</p>
         </main>
         <Footer />
       </div>
@@ -216,10 +214,10 @@ function TourismDetailContent() {
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <Plane className="w-5 h-5 text-white" />
+                <Car className="w-5 h-5 text-white" />
               </div>
               <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                Tourism Details
+                Car Details
               </h1>
             </motion.div>
 
@@ -230,11 +228,11 @@ function TourismDetailContent() {
               className="flex items-center gap-3"
             >
               <Link
-                href="/tourism"
+                href="/sales"
                 className="hidden sm:flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
                 <Home className="w-4 h-4" />
-                Back to Tourism
+                Back to Sales
               </Link>
               <DarkModeToggle />
             </motion.div>
@@ -256,19 +254,19 @@ function TourismDetailContent() {
             transition={{ duration: 0.8, delay: 0.25 }}
           >
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-              {selectedTourism.propertyName || selectedTourism.name}
+              {selectedCar.propertyName || selectedCar.name}
             </h2>
             <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-600 dark:text-gray-300">
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-gray-400" />
                 <span className="text-sm sm:text-base">
-                  {selectedTourism.address || "No address"}
+                  {selectedCar.address || "No address"}
                 </span>
               </div>
               <div className="flex items-center gap-1">
-                {renderStars(selectedTourism.rating || 0)}
+                {renderStars(selectedCar.rating || 0)}
                 <span className="text-sm">
-                  ({selectedTourism.rating?.toFixed(1) || "N/A"})
+                  ({selectedCar.rating?.toFixed(1) || "N/A"})
                 </span>
               </div>
             </div>
@@ -284,14 +282,14 @@ function TourismDetailContent() {
                 {activeImage ? (
                   <img
                     src={activeImage}
-                    alt={selectedTourism.propertyName || selectedTourism.name || "Tourism Package"}
+                    alt={selectedCar.propertyName || selectedCar.name || "Car"}
                     className="w-full h-44 sm:h-64 object-cover"
                     loading="lazy"
                     decoding="async"
                   />
                 ) : (
                   <div className="w-full h-44 sm:h-64 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                    <Plane className="w-16 h-16 text-gray-400" />
+                    <Car className="w-16 h-16 text-gray-400" />
                   </div>
                 )}
 
@@ -322,7 +320,7 @@ function TourismDetailContent() {
                   </button>
                 </div>
 
-                {selectedTourism.guestFavorite && (
+                {selectedCar.guestFavorite && (
                   <div className="absolute top-3 left-3 text-xs bg-blue-600 text-white px-2 py-1 rounded-full shadow">
                     Top Pick
                   </div>
@@ -361,25 +359,25 @@ function TourismDetailContent() {
                 Overview
               </h3>
               <p className="mt-3 text-gray-700 dark:text-gray-300 leading-relaxed">
-                {selectedTourism.description || "No description available."}
+                {selectedCar.description || "No description available."}
               </p>
             </AnimatedCard>
 
             <AnimatedCard className="p-4" hoverEffect={false}>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Package Features
+                Car Features
               </h3>
               <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-gray-700 dark:text-gray-300 text-sm sm:text-base">
-                {(Array.isArray(selectedTourism.facilities) &&
-                selectedTourism.facilities.length > 0
-                  ? selectedTourism.facilities
+                {(Array.isArray(selectedCar.facilities) &&
+                selectedCar.facilities.length > 0
+                  ? selectedCar.facilities
                   : [
-                      "✔ Professional guide",
-                      "✔ Transportation included",
-                      "✔ Accommodation provided",
-                      "✔ Meals included",
-                      "✔ Travel insurance",
-                      "✔ 24/7 support",
+                      "✔ Well maintained",
+                      "✔ Clean interior",
+                      "✔ Air conditioning",
+                      "✔ Power steering",
+                      "✔ Verified owner",
+                      "✔ Test drive available",
                     ]
                 ).map((f, idx) => (
                   <li key={idx} className="flex items-start gap-2">
@@ -392,28 +390,32 @@ function TourismDetailContent() {
 
             <AnimatedCard className="p-4" hoverEffect={false}>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Tour Details
+                Vehicle Specifications
               </h3>
               <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700 dark:text-gray-300 text-sm">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  <span className="font-medium">Duration:</span>
-                  <span>{selectedTourism.duration || "N/A"}</span>
+                <div>
+                  <span className="font-medium">Make:</span>
+                  <span className="ml-2">{selectedCar.make || "N/A"}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4" />
-                  <span className="font-medium">Group Size:</span>
-                  <span>{selectedTourism.groupSize || "N/A"}</span>
+                <div>
+                  <span className="font-medium">Model:</span>
+                  <span className="ml-2">{selectedCar.model || "N/A"}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  <span className="font-medium">Destination:</span>
-                  <span>{selectedTourism.destination || "N/A"}</span>
+                <div>
+                  <span className="font-medium">Year:</span>
+                  <span className="ml-2">{selectedCar.year || "N/A"}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Plane className="w-4 h-4" />
-                  <span className="font-medium">Transport:</span>
-                  <span>{selectedTourism.transport || "N/A"}</span>
+                <div>
+                  <span className="font-medium">Mileage:</span>
+                  <span className="ml-2">{selectedCar.mileage || "N/A"}</span>
+                </div>
+                <div>
+                  <span className="font-medium">Fuel Type:</span>
+                  <span className="ml-2">{selectedCar.fuelType || "N/A"}</span>
+                </div>
+                <div>
+                  <span className="font-medium">Transmission:</span>
+                  <span className="ml-2">{selectedCar.transmission || "N/A"}</span>
                 </div>
               </div>
             </AnimatedCard>
@@ -432,25 +434,22 @@ function TourismDetailContent() {
                         ? displayedPrice
                         : `${displayedPrice} Br`}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      per person
-                    </div>
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {selectedTourism.serviceType ||
-                      selectedTourism.listingType ||
-                      "Tourism Package"}
+                    {selectedCar.serviceType ||
+                      selectedCar.listingType ||
+                      "For Sale"}
                   </div>
                 </div>
 
                 <div className="mt-4">
                   <CustomButton
-                    href={`/sections/tourism/reserveTour?id=${selectedTourism._id}`}
+                    href={`/sections/saleCar/reserveSale?id=${selectedCar._id}`}
                     variant="primary"
                     size="sm"
                     className="w-full"
                   >
-                    Book Now
+                    Contact Seller
                   </CustomButton>
                 </div>
               </AnimatedCard>
@@ -461,9 +460,9 @@ function TourismDetailContent() {
                 </h3>
                 <div className="mt-3 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                   <iframe
-                    title="Tourism Location"
+                    title="Car Location"
                     src={`https://www.google.com/maps?q=${encodeURIComponent(
-                      selectedTourism.address || "Ethiopia"
+                      selectedCar.address || "Ethiopia"
                     )}&output=embed`}
                     className="w-full h-48"
                     allowFullScreen
@@ -473,7 +472,7 @@ function TourismDetailContent() {
                 <div className="mt-3">
                   <CustomButton
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                      selectedTourism.address || "Ethiopia"
+                      selectedCar.address || "Ethiopia"
                     )}`}
                     variant="ghost"
                     size="sm"
@@ -486,28 +485,20 @@ function TourismDetailContent() {
 
               <AnimatedCard className="p-4" hoverEffect={false}>
                 <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                  What's Included
+                  Seller Information
                 </h3>
                 <div className="mt-3 space-y-2 text-gray-700 dark:text-gray-300 text-sm">
                   <div className="flex items-center gap-2">
+                    <span className="font-medium">Verified Seller</span>
                     <span className="text-green-500">✓</span>
-                    <span>Professional tour guide</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-green-500">✓</span>
-                    <span>All transportation</span>
+                    <span className="font-medium">Response Time:</span>
+                    <span>Usually within 1 hour</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-green-500">✓</span>
-                    <span>Accommodation</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-green-500">✓</span>
-                    <span>Meals as specified</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-green-500">✓</span>
-                    <span>Travel insurance</span>
+                    <span className="font-medium">Member Since:</span>
+                    <span>{new Date(selectedCar.createdAt).getFullYear()}</span>
                   </div>
                 </div>
               </AnimatedCard>
@@ -521,10 +512,10 @@ function TourismDetailContent() {
   );
 }
 
-export default function TourismPage() {
+export default function SaleCarPage() {
   return (
     <DarkModeProvider>
-      <TourismDetailContent />
+      <SaleCarDetailContent />
     </DarkModeProvider>
   );
 }
