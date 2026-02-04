@@ -8,7 +8,7 @@ import axios from "axios";
 function WeddingBookingContent() {
   const eventName = "Wedding Booking";
   const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:10000";
-
+ 
   const marriageTypes = {
     Modern: [
       { name: "Luxury Venue", price: 8000 },
