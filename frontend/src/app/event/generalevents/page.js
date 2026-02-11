@@ -1,9 +1,13 @@
 "use client";
-import { Calendar } from "lucide-react";
-import { useState, useEffect } from "react";
-import Image from "next/image";
 
-export default function GeneralEventsPage() {
+import { Calendar, Home, CheckCircle, XCircle, Star, StarHalf, Star as StarOutline } from "lucide-react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+
+function GeneralEventsContent() {
+  const eventName = "General Events";
+  const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
   const serviceOptions = [
     "Event Hall / Meeting Room",
     "Audio-Visual Setup",
@@ -36,8 +40,6 @@ export default function GeneralEventsPage() {
   const [amount, setAmount] = useState(0);
   const [status, setStatus] = useState({ text: "", type: "" });
   const [loading, setLoading] = useState(false);
-
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
   // Calculate total dynamically
   useEffect(() => {
@@ -112,7 +114,7 @@ export default function GeneralEventsPage() {
       payload.append("amount", amount);
 
       // Save booking
-      const res = await fetch(`${API_BASE}/general-events`, {
+      const res = await fetch(`${BASE_URL}/general-events`, {
         method: "POST",
         body: payload,
       });
@@ -124,7 +126,7 @@ export default function GeneralEventsPage() {
 
       // Handle Chapa payment
       if (formData.paymentMethod === "Chapa") {
-        const payRes = await fetch(`${API_BASE}/general-events/pay/chapa`, {
+        const payRes = await fetch(`${BASE_URL}/general-events/pay/chapa`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -174,150 +176,265 @@ export default function GeneralEventsPage() {
     }
   };
 
+  const renderStars = (rating) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      if (rating >= i)
+        stars.push(<Star key={i} className="h-5 w-5 text-yellow-400" />);
+      else if (rating >= i - 0.5)
+        stars.push(<StarHalf key={i} className="h-5 w-5 text-yellow-400" />);
+      else
+        stars.push(<StarOutline key={i} className="h-5 w-5 text-gray-400" />);
+    }
+    return stars;
+  };
+
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <header className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-16 text-center">
-        <Calendar className="w-12 h-12 mx-auto mb-4" />
-        <h1 className="text-4xl font-bold">General Events</h1>
-        <p className="mt-3 text-lg max-w-xl mx-auto px-4">
-          Organize conferences, workshops, and special gatherings with ease.
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
+      {/* Navigation */}
+      <nav className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                {eventName}
+              </h1>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Link
+                href="/"
+                className="hidden sm:flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >
+                <Home className="w-4 h-4" />
+                Home
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Header */}
+      <header className="relative overflow-hidden py-10 sm:py-12">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-purple-500/10 dark:from-blue-500/20 dark:via-indigo-500/20 dark:to-purple-500/20" />
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+              General Events & Conferences
+            </h2>
+            <p className="mt-2 text-gray-600 dark:text-gray-300">
+              Organize conferences, workshops, and special gatherings with ease
+            </p>
+            <div className="mt-4 flex justify-center gap-1">
+              {renderStars(4.6)}
+              <span className="text-sm text-gray-600 dark:text-gray-400 ml-2">
+                (4.6) • 980+ successful events
+              </span>
+            </div>
+          </div>
+        </div>
       </header>
 
-      <section className="bg-white py-12 px-4 max-w-3xl mx-auto shadow-lg rounded-lg mt-8">
-        <h2 className="text-2xl font-bold text-center mb-6">Book Your Event</h2>
+      {/* Main Content */}
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 pb-12">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8">
+          <h3 className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-white">
+            Book Your Event
+          </h3>
 
-        {status.text && (
-          <div
-            className={`mb-4 p-3 rounded-lg text-center font-medium ${
-              status.type === "success"
-                ? "bg-green-100 text-green-700 border border-green-300"
-                : "bg-red-100 text-red-700 border border-red-300"
-            }`}
-          >
-            {status.text}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            name="name"
-            placeholder="Full Name"
-            value={formData.name}
-            onChange={handleChange}
-            className="w-full border rounded px-4 py-2 text-black"
-          />
-          <input
-            type="text"
-            name="phone"
-            placeholder="Phone Number"
-            value={formData.phone}
-            onChange={handleChange}
-            className="w-full border rounded px-4 py-2 text-black"
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full border rounded px-4 py-2 text-black"
-          />
-          <input
-            type="date"
-            name="date"
-            value={formData.date}
-            onChange={handleChange}
-            className="w-full border rounded px-4 py-2 text-black"
-          />
-          <input
-            type="number"
-            name="guests"
-            placeholder="Number of Guests"
-            value={formData.guests}
-            onChange={handleChange}
-            className="w-full border rounded px-4 py-2 text-black"
-          />
-
-          <div>
-            <h3 className="font-semibold mb-2">Select Services</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {serviceOptions.map((service, i) => (
-                <label key={i} className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.services.includes(service)}
-                    onChange={() => handleServiceChange(service)}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-black">{service}</span>
-                </label>
-              ))}
+          {status.text && (
+            <div
+              className={`flex items-center gap-2 p-3 rounded-lg text-sm mb-4 ${
+                status.type === "success"
+                  ? "bg-green-100 text-green-700 border border-green-300"
+                  : "bg-red-100 text-red-700 border border-red-300"
+              }`}
+            >
+              {status.type === "success" ? (
+                <CheckCircle className="w-5 h-5" />
+              ) : (
+                <XCircle className="w-5 h-5" />
+              )}
+              {status.text}
             </div>
-          </div>
-
-          <textarea
-            name="specialRequests"
-            placeholder="Special Requests"
-            value={formData.specialRequests}
-            onChange={handleChange}
-            className="w-full border rounded px-4 py-2 text-black"
-          />
-
-          <div className="text-lg font-semibold text-gray-800">
-            Total Amount: <span className="text-yellow-600">{amount} ETB</span>
-          </div>
-
-          <div>
-            <label className="block mb-2 font-medium text-gray-700">
-              Payment Method
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {paymentMethods.map((pm) => (
-                <label
-                  key={pm.name}
-                  className={`border rounded-lg p-3 flex items-center gap-3 cursor-pointer ${
-                    formData.paymentMethod === pm.name
-                      ? "border-blue-500 ring-2 ring-blue-300"
-                      : ""
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value={pm.name}
-                    checked={formData.paymentMethod === pm.name}
-                    onChange={handleChange}
-                    className="hidden"
-                  />
-                  <Image src={pm.logo} alt={pm.name} width={40} height={40} />
-                  <span>{pm.name}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {(formData.paymentMethod === "Telebirr" ||
-            formData.paymentMethod === "CBE Birr") && (
-            <input
-              type="file"
-              name="paymentEvidence"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="w-full border rounded px-4 py-2"
-            />
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition w-full sm:w-auto"
-          >
-            {loading ? "Processing..." : "Submit Booking & Pay"}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Personal Information */}
+            <div className="space-y-4">
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Event Information
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Full Name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+                <input
+                  type="tel"
+                  name="phone"
+                  placeholder="Phone Number"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleChange}
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+              </div>
+              <input
+                type="number"
+                name="guests"
+                placeholder="Number of Guests"
+                value={formData.guests}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              />
+            </div>
+
+            {/* Services */}
+            <div>
+              <h4 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">
+                Select Services
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {serviceOptions.map((service, i) => (
+                  <label
+                    key={i}
+                    className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                      formData.services.includes(service)
+                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                        : "border-gray-300 dark:border-gray-600 hover:border-blue-300"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.services.includes(service)}
+                      onChange={() => handleServiceChange(service)}
+                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-gray-900 dark:text-white font-medium">
+                      {service}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Special Requests */}
+            <div>
+              <h4 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">
+                Special Requests
+              </h4>
+              <textarea
+                name="specialRequests"
+                placeholder="Tell us about your event requirements..."
+                value={formData.specialRequests}
+                onChange={handleChange}
+                rows={4}
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+              />
+            </div>
+
+            {/* Total Amount */}
+            <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                  💰 Total Amount
+                </span>
+                <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  {amount} ETB
+                </span>
+              </div>
+            </div>
+
+            {/* Payment Method */}
+            <div>
+              <h4 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">
+                Payment Method
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {paymentMethods.map((pm) => (
+                  <label
+                    key={pm.name}
+                    className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                      formData.paymentMethod === pm.name
+                        ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                        : "border-gray-300 dark:border-gray-600 hover:border-green-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value={pm.name}
+                      checked={formData.paymentMethod === pm.name}
+                      onChange={handleChange}
+                      className="hidden"
+                    />
+                    <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
+                      <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
+                        {pm.name.toUpperCase().slice(0, 3)}
+                      </span>
+                    </div>
+                    <span className="text-gray-900 dark:text-white font-medium">
+                      {pm.name}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Payment Evidence */}
+            {(formData.paymentMethod === "Telebirr" ||
+              formData.paymentMethod === "CBE Birr") && (
+              <div>
+                <h4 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">
+                  Upload Payment Receipt
+                </h4>
+                <input
+                  type="file"
+                  name="paymentEvidence"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl font-bold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              {loading ? "Processing..." : "Submit Booking & Pay"}
+            </button>
+          </form>
+        </div>
       </section>
     </div>
   );
+}
+
+export default function GeneralEventsPage() {
+  return <GeneralEventsContent />;
 }

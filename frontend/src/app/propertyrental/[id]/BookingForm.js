@@ -17,7 +17,6 @@ export default function BookingPage() {
     numberOfGuests: 1,
     specialRequests: "",
     paymentMethod: "",
-    paymentEvidence: null,
   });
   const [message, setMessage] = useState({ text: "", type: "" });
   const [loading, setLoading] = useState(false);
@@ -32,7 +31,7 @@ export default function BookingPage() {
   const backendUrl =
     process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:10000";
 
-  // ✅ Fetch property from backend API
+  // Fetch property from backend API
   useEffect(() => {
     const fetchProperty = async () => {
       try {
@@ -40,7 +39,6 @@ export default function BookingPage() {
         if (!res.ok) throw new Error("Failed to fetch property");
         const data = await res.json();
 
-        // Add full image URL
         if (data.img) {
           data.img = `${backendUrl}/uploads/${data.img}`;
         }
@@ -57,12 +55,8 @@ export default function BookingPage() {
   }, [id, backendUrl]);
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (files) {
-      setFormData((prev) => ({ ...prev, [name]: files[0] }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const calculateNights = (checkIn, checkOut) => {
@@ -80,15 +74,14 @@ export default function BookingPage() {
 
     const nights = calculateNights(formData.checkIn, formData.checkOut);
 
+    // Validate required fields (no file uploads required)
     if (
       !formData.fullName ||
       !formData.email ||
       !formData.phone ||
       !formData.checkIn ||
       !formData.checkOut ||
-      !formData.paymentMethod ||
-      (["Telebirr", "CBE Birr", "M-Pesa"].includes(formData.paymentMethod) &&
-        !formData.paymentEvidence)
+      !formData.paymentMethod
     ) {
       setMessage({
         text: "❌ Please fill in all required fields.",
@@ -101,68 +94,91 @@ export default function BookingPage() {
     setMessage({ text: "", type: "" });
 
     try {
-      const payload = new FormData();
-      payload.append("listingId", property._id);
-      payload.append("listingTitle", property.title);
-      payload.append("name", formData.fullName);
-      payload.append("email", formData.email);
-      payload.append("phone", formData.phone);
-      payload.append("checkIn", formData.checkIn);
-      payload.append("checkOut", formData.checkOut);
-      payload.append("nights", nights);
-      payload.append("amount", property.price || 0);
-      payload.append("paymentMethod", formData.paymentMethod);
-      payload.append(
-        "paymentStatus",
-        formData.paymentMethod === "Chapa" ? "pending" : "completed"
-      );
-      payload.append("specialRequests", formData.specialRequests || "");
-      if (["Telebirr", "CBE Birr", "M-Pesa"].includes(formData.paymentMethod)) {
-        payload.append("paymentEvidence", formData.paymentEvidence);
-      }
+      // Create booking (send JSON payload, no file upload)
+      const bookingPayload = {
+        listingId: property._id,
+        listingTitle: property.title,
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        checkIn: formData.checkIn,
+        checkOut: formData.checkOut,
+        nights,
+        amount: property.price || 0,
+        paymentMethod: formData.paymentMethod,
+        paymentStatus:
+          formData.paymentMethod === "Chapa" ? "pending" : "completed",
+        specialRequests: formData.specialRequests || "",
+        numberOfGuests: formData.numberOfGuests || 1,
+      };
 
-      const res = await fetch(`${backendUrl}/propertyrental`, {
+      const createRes = await fetch(`${backendUrl}/propertyrental`, {
         method: "POST",
-        body: payload,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bookingPayload),
       });
 
-      const data = await res.json();
+      const createData = await createRes.json();
 
-      if (!res.ok) {
-        setMessage({
-          text: `❌ ${data.error || "Failed to create booking"}`,
-          type: "error",
-        });
-        setLoading(false);
-        return;
+      if (!createRes.ok || !createData?.booking?._id) {
+        // Accept old shape as well (some backends return booking directly)
+        const bookingId = createData?.booking?._id || createData?._id;
+        if (!bookingId) {
+          throw new Error(createData.error || "Booking creation failed.");
+        }
       }
 
+      const bookingId = createData?.booking?._id || createData?._id;
+
+      // Initiate payment process (if backend supports checkout endpoint)
+      const method = formData.paymentMethod.toLowerCase();
       setMessage({
-        text: `✅ Reservation ${
-          formData.paymentMethod === "Chapa" ? "pending payment" : "completed"
-        } successfully!`,
+        text: `Initializing ${formData.paymentMethod} payment...`,
         type: "success",
       });
 
-      setFormData({
-        fullName: "",
-        email: "",
-        phone: "",
-        checkIn: "",
-        checkOut: "",
-        numberOfGuests: 1,
-        specialRequests: "",
-        paymentMethod: "",
-        paymentEvidence: null,
+      const paymentRes = await fetch(`${backendUrl}/bookings/pay/${method}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId,
+          amount: bookingPayload.amount,
+          currency: "ETB",
+          email: formData.email,
+          fullName: formData.fullName,
+          phone: formData.phone,
+        }),
       });
+
+      const paymentData = await paymentRes.json();
+
+      // If backend returns a checkout URL, redirect
+      if (paymentData?.checkout_url) {
+        setMessage({ text: "Redirecting to payment...", type: "success" });
+        setTimeout(() => {
+          window.location.href = paymentData.checkout_url;
+        }, 1200);
+        return;
+      }
+
+      // If payment endpoint not available or returns success, show success message
+      if (paymentRes.ok) {
+        setMessage({
+          text: "✅ Booking created. Follow the instructions sent to your email to complete payment (if required).",
+          type: "success",
+        });
+      } else {
+        throw new Error(paymentData?.message || "Failed to initiate payment.");
+      }
     } catch (err) {
       console.error(err);
       setMessage({
-        text: "❌ Server error. Please try again later.",
+        text: `❌ ${err.message || "Server error. Please try again later."}`,
         type: "error",
       });
     } finally {
       setLoading(false);
+      // keep form values to allow retry or clear if desired
     }
   };
 
@@ -174,7 +190,7 @@ export default function BookingPage() {
     );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 bg-white transition-colors duration-300 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-lg max-w-3xl w-full p-6 md:p-10">
         <h1 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2 text-center">
           Book: {property.title}
@@ -189,6 +205,7 @@ export default function BookingPage() {
             value={formData.fullName}
             onChange={handleChange}
             className="w-full px-4 py-2 rounded-lg border text-black"
+            required
           />
           <input
             type="email"
@@ -197,6 +214,7 @@ export default function BookingPage() {
             value={formData.email}
             onChange={handleChange}
             className="w-full px-4 py-2 rounded-lg border text-black"
+            required
           />
           <input
             type="tel"
@@ -205,6 +223,7 @@ export default function BookingPage() {
             value={formData.phone}
             onChange={handleChange}
             className="w-full px-4 py-2 rounded-lg border text-black"
+            required
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
@@ -213,6 +232,7 @@ export default function BookingPage() {
               value={formData.checkIn}
               onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg border text-black"
+              required
             />
             <input
               type="date"
@@ -220,28 +240,21 @@ export default function BookingPage() {
               value={formData.checkOut}
               onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg border text-black"
+              required
             />
           </div>
-          <textarea
-            name="specialRequests"
-            placeholder="Special Requests (optional)"
-            value={formData.specialRequests}
-            onChange={handleChange}
-            rows="3"
-            className="w-full px-4 py-2 rounded-lg border text-black"
-          />
 
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-700">
               Payment Method
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {paymentMethods.map((pm) => (
                 <label
                   key={pm.name}
                   className={`border rounded-lg p-3 flex items-center gap-3 cursor-pointer ${
                     formData.paymentMethod === pm.name
-                      ? "border-blue-500 ring-2 ring-blue-400"
+                      ? "border-blue-500 ring-2 ring-blue-200"
                       : ""
                   }`}
                 >
@@ -252,34 +265,27 @@ export default function BookingPage() {
                     checked={formData.paymentMethod === pm.name}
                     onChange={handleChange}
                     className="hidden"
+                    required
                   />
                   <img
                     src={pm.logo}
                     alt={pm.name}
                     className="w-10 h-10 object-contain"
                   />
-
                   <span>{pm.name}</span>
                 </label>
               ))}
             </div>
           </div>
 
-          {["Telebirr", "CBE Birr", "M-Pesa"].includes(
-            formData.paymentMethod
-          ) && (
-            <div className="mt-4">
-              <label className="block mb-2 text-sm font-medium text-gray-700">
-                Upload Payment Evidence
-              </label>
-              <input
-                type="file"
-                name="paymentEvidence"
-                onChange={handleChange}
-                accept="image/*,application/pdf"
-              />
-            </div>
-          )}
+          <textarea
+            name="specialRequests"
+            placeholder="Special Requests (optional)"
+            value={formData.specialRequests}
+            onChange={handleChange}
+            rows="3"
+            className="w-full px-4 py-2 rounded-lg border text-black"
+          />
 
           {message.text && (
             <div

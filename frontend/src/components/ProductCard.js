@@ -2,14 +2,12 @@
 
 import Link from "next/link";
 import {
-  Heart,
   Star,
   StarHalf,
   Star as StarOutline,
   MapPin,
 } from "lucide-react";
-import { useState, useEffect } from "react";
-import axios from "axios";
+import LikeButton from "./LikeButton";
 
 export default function ProductCard({
   _id,
@@ -20,51 +18,9 @@ export default function ProductCard({
   price,
   rating = 0,
   guestFavorite,
+  liked = false,
+  likes = 0,
 }) {
-  const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-  const [likes, setLikes] = useState(0);
-  const [liked, setLiked] = useState(false);
-
-  // ✅ Fetch initial likes from backend
-  useEffect(() => {
-    async function fetchLikes() {
-      try {
-        const res = await axios.get(`${BASE_URL}/productlike/${_id}`);
-        setLikes(res.data.likes || 0);
-      } catch (err) {
-        console.error("❌ Failed to fetch product likes:", err);
-      }
-    }
-    fetchLikes();
-  }, [_id, BASE_URL]);
-
-  // ✅ Handle like/unlike toggle
-  const handleLike = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    try {
-      const newLiked = !liked;
-
-      // Optimistic UI update
-      setLikes((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
-      setLiked(newLiked);
-
-      // Notify backend
-      const res = await axios.post(`${BASE_URL}/productlike/${_id}/like`, {
-        liked: newLiked,
-      });
-
-      // Sync with backend response
-      setLikes(res.data.likes);
-    } catch (err) {
-      console.error("❌ Failed to like product:", err);
-
-      // rollback if failed
-      setLiked((prev) => !prev);
-      setLikes((prev) => (liked ? Math.max(prev - 1, 0) : prev + 1));
-    }
-  };
 
   // ✅ Handle image
   const firstImage =
@@ -107,19 +63,14 @@ export default function ProductCard({
         )}
 
         {/* ❤️ Like Button */}
-        <button
-          onClick={handleLike}
-          className="absolute top-2 right-2 p-2 bg-white dark:bg-gray-900 rounded-full z-10 shadow-sm flex items-center gap-1"
-        >
-          <Heart
-            className={`h-5 w-5 transition-colors duration-200 ${
-              liked ? "text-red-500 fill-red-500" : "text-gray-500"
-            }`}
-          />
-          <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full">
-            {likes}
-          </span>
-        </button>
+        <LikeButton
+          itemId={_id}
+          itemType="product"
+          initialLiked={liked}
+          initialLikes={likes}
+          size="small"
+          className="absolute top-2 right-2 z-10"
+        />
 
         {/* Product Image */}
         <img

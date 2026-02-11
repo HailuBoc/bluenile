@@ -1,15 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Heart,
-  Star,
-  StarHalf,
-  Star as StarOutline,
-  MapPin,
-} from "lucide-react";
+import { Star, StarHalf, MapPin } from "lucide-react";
+import LikeButton from "./LikeButton";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import { useSession } from "next-auth/react"; // Added for authentication
 
 export default function HousesCard({
   _id,
@@ -19,72 +14,68 @@ export default function HousesCard({
   price,
   rating = 0,
   guestFavorite,
+  likes = 0,
+  liked = false,
 }) {
+  const { data: session } = useSession();
   const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-  const [likes, setLikes] = useState(0);
-  const [liked, setLiked] = useState(false);
+  const [imageSrc, setImageSrc] = useState("/placeholder-house.jpg");
+  const [imageError, setImageError] = useState(false);
 
-  // ✅ Fetch initial likes
+  // Process image URL
   useEffect(() => {
-    async function fetchLikes() {
-      try {
-        const res = await axios.get(`${BASE_URL}/houselike/${_id}`);
-        setLikes(res.data.likes || 0);
-        setLiked(res.data.userLiked || false);
-      } catch (err) {
-        console.error("❌ Failed to fetch house likes:", err);
+    if (imageUrl) {
+      const firstImage = Array.isArray(imageUrl) && imageUrl.length > 0 
+        ? imageUrl[0] 
+        : typeof imageUrl === "string" 
+        ? imageUrl 
+        : null;
+
+      if (firstImage) {
+        if (firstImage.startsWith("http")) {
+          setImageSrc(firstImage);
+        } else {
+          const formattedBaseUrl = BASE_URL.endsWith("/") ? BASE_URL.slice(0, -1) : BASE_URL;
+          const formattedImagePath = firstImage.startsWith("/") ? firstImage : `/${firstImage}`;
+          setImageSrc(`${formattedBaseUrl}${formattedImagePath}`);
+        }
       }
     }
-    fetchLikes();
-  }, [_id, BASE_URL]);
+  }, [imageUrl, BASE_URL]);
 
-  // ✅ Handle like toggle
-  const handleLike = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    try {
-      const newLiked = !liked;
-      setLikes((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
-      setLiked(newLiked);
-
-      const res = await axios.post(`${BASE_URL}/houselike/${_id}/like`, {
-        liked: newLiked,
-      });
-
-      setLikes(res.data.likes);
-      setLiked(res.data.userLiked ?? newLiked);
-    } catch (err) {
-      console.error("❌ Failed to like house:", err);
-      setLiked((prev) => !prev);
-      setLikes((prev) => (liked ? Math.max(prev - 1, 0) : prev + 1));
-    }
-  };
-
-  // ✅ Handle image
-  const firstImage =
-    Array.isArray(imageUrl) && imageUrl.length > 0
-      ? imageUrl[0]
-      : typeof imageUrl === "string"
-      ? imageUrl
-      : null;
-
-  const imageSrc = firstImage
-    ? firstImage.startsWith("http")
-      ? firstImage
-      : `${BASE_URL}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
-    : "/placeholder-house.jpg";
-
-  // ✅ Star renderer
-  const renderStars = (rating) => {
+  // Star renderer function
+  const renderStars = (ratingValue) => {
     const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      if (rating >= i)
-        stars.push(<Star key={i} className="h-4 w-4 text-yellow-400" />);
-      else if (rating >= i - 0.5)
-        stars.push(<StarHalf key={i} className="h-4 w-4 text-yellow-400" />);
-      else
-        stars.push(<StarOutline key={i} className="h-4 w-4 text-gray-400" />);
+    const fullStars = Math.floor(ratingValue);
+    const hasHalfStar = ratingValue % 1 >= 0.5;
+    
+    for (let i = 0; i < 5; i++) {
+      if (i < fullStars) {
+        stars.push(
+          <Star
+            key={i}
+            className="h-4 w-4 fill-yellow-400 text-yellow-400"
+            size={16}
+          />
+        );
+      } else if (i === fullStars && hasHalfStar) {
+        stars.push(
+          <StarHalf
+            key={i}
+            className="h-4 w-4 fill-yellow-400 text-yellow-400"
+            size={16}
+          />
+        );
+      } else {
+        stars.push(
+          <Star
+            key={i}
+            className="h-4 w-4 text-gray-300 dark:text-gray-600"
+            fill="none"
+            size={16}
+          />
+        );
+      }
     }
     return stars;
   };
@@ -92,58 +83,71 @@ export default function HousesCard({
   return (
     <Link
       href={`/sections/houses?id=${_id}`}
-      className="block transform scale-90 sm:scale-100"
+      className="block transform transition-transform hover:scale-[0.92] sm:hover:scale-[1.02] scale-90 sm:scale-100"
     >
-      <div className="relative bg-white dark:bg-gray-800 text-gray-800 dark:text-white rounded-xl shadow hover:shadow-lg transition-all overflow-hidden group cursor-pointer">
+      <div className="relative bg-white dark:bg-gray-800 text-gray-800 dark:text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer w-full">
         {guestFavorite && (
-          <div className="absolute top-2 left-2 text-xs bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-white px-2 py-0.5 rounded-full z-10 shadow-sm">
+          <div className="absolute top-2 left-2 text-xs font-semibold bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-100 px-2.5 py-1 rounded-full z-10 shadow-md">
             Top Pick
           </div>
         )}
 
-        {/* ❤️ Like Button */}
-        <button
-          onClick={handleLike}
-          className="absolute top-2 right-2 p-2 bg-white dark:bg-gray-900 rounded-full z-10 shadow-sm flex items-center gap-1"
-        >
-          <Heart
-            className={`h-5 w-5 transition-colors duration-200 ${
-              liked ? "text-red-500 fill-red-500" : "text-gray-500"
-            }`}
-          />
-          <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full">
-            {likes}
-          </span>
-        </button>
-
-        {/* 🏠 Image */}
-        <img
-          src={imageSrc}
-          alt={propertyName || "House"}
-          className="w-full h-32 sm:h-40 object-cover group-hover:scale-105 transition-transform"
+        <LikeButton
+          itemId={_id}
+          itemType="property"
+          initialLiked={liked}
+          initialLikes={likes}
+          className="absolute top-2 right-2 z-10"
         />
 
-        {/* 📋 Details */}
-        <div className="p-3 sm:p-4">
-          <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-gray-300">
-            <MapPin className="h-4 w-4 mr-1 text-gray-400" />
-            {address || "No address"}
+        {/* Image Container */}
+        <div className="relative w-full h-40 sm:h-48 overflow-hidden bg-gray-100 dark:bg-gray-700">
+          {!imageError ? (
+            <img
+              src={imageSrc}
+              alt={propertyName || "House"}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              onError={() => setImageError(true)}
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-gray-400 dark:text-gray-500">
+                <div className="text-center">
+                  <div className="text-lg">🏠</div>
+                  <div className="text-xs mt-1">No Image</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Details Container */}
+        <div className="p-4">
+          <div className="flex items-center text-sm text-gray-600 dark:text-gray-300 mb-1">
+            <MapPin className="h-4 w-4 mr-1.5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+            <span className="truncate">{address || "Address not available"}</span>
           </div>
 
-          <div className="font-semibold text-sm sm:text-base truncate mt-1">
-            {propertyName || "Unnamed House"}
-          </div>
+          <h3 className="font-bold text-lg truncate mb-2">
+            {propertyName || "Unnamed Property"}
+          </h3>
 
-          <div className="flex items-center mt-2 space-x-1">
-            {renderStars(rating)}
-            <span className="text-xs text-gray-500 dark:text-gray-300 ml-1">
-              ({rating.toFixed(1)})
-            </span>
+          <div className="flex items-center mb-3">
+            <div className="flex items-center">
+              {renderStars(rating)}
+              <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                {rating.toFixed(1)}
+              </span>
+            </div>
           </div>
 
           {price && (
-            <div className="mt-1 sm:mt-2 font-bold text-sm sm:text-base">
-              {price} Br
+            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+              <div className="font-bold text-xl text-gray-900 dark:text-white">
+                {typeof price === "number" ? `${price.toLocaleString()} Br` : `${price} Br`}
+              </div>
+              <span className="text-xs text-gray-500 dark:text-gray-400">per night</span>
             </div>
           )}
         </div>

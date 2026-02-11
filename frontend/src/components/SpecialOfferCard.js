@@ -39,26 +39,31 @@ export default function SpecialOfferCard({
   };
 
   return (
-    <Link href={`/sections/specialOffer?id=${_id}`} className="block">
-      <div className="relative bg-gradient-to-br from-yellow-50 to-white dark:from-gray-800 dark:to-gray-900 text-gray-800 dark:text-white rounded-2xl shadow-xl hover:shadow-2xl transition-all overflow-hidden border border-yellow-400">
+    <Link
+      href={`/sections/specialOffer?id=${_id}`}
+      className="block transform scale-90 sm:scale-100"
+    >
+      <div className="relative bg-gradient-to-br from-yellow-50 to-white dark:from-gray-800 dark:to-gray-900 text-gray-800 dark:text-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 ease-in-out overflow-hidden group cursor-pointer hover:-translate-y-1">
         {/* 🏆 Top badge */}
         <div className="absolute top-3 left-3 flex items-center gap-1 text-xs font-bold bg-yellow-300 text-yellow-900 px-2 py-1 rounded-full z-10 shadow">
           <Crown className="h-4 w-4" /> Top Rated
         </div>
 
+        {/* Image */}
         <img
           src={imageSrc}
           alt={propertyName || "Special Offer"}
-          className="w-full h-48 object-cover group-hover:scale-105 transition-transform ring-2 ring-yellow-400"
+          className="w-full h-40 sm:h-48 object-cover group-hover:scale-105 transition-transform duration-300 ease-in-out ring-1 ring-yellow-300"
         />
 
-        <div className="p-5">
-          <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+        {/* Content */}
+        <div className="p-4 sm:p-5">
+          <div className="flex items-center text-xs sm:text-sm text-gray-600 dark:text-gray-300">
             <MapPin className="h-4 w-4 mr-1 text-gray-400" />{" "}
             {address || "No address"}
           </div>
 
-          <div className="font-bold text-lg mt-2 text-yellow-800 dark:text-yellow-300 truncate">
+          <div className="font-bold text-base sm:text-lg mt-2 text-yellow-800 dark:text-yellow-300 truncate">
             {propertyName || "Unnamed Property"}
           </div>
 
@@ -70,7 +75,7 @@ export default function SpecialOfferCard({
           </div>
 
           {price && (
-            <div className="mt-3 font-extrabold text-xl text-yellow-700 dark:text-yellow-200">
+            <div className="mt-3 font-extrabold text-lg sm:text-xl text-yellow-700 dark:text-yellow-200">
               {price} Br
             </div>
           )}

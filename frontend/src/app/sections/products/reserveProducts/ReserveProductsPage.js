@@ -1,19 +1,49 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import Footer from "../../../../components/Footer";
-import { MapPin, Star, StarHalf, Star as StarOutline } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  Calendar,
+  Heart,
+  Home,
+  MapPin,
+  Sparkles,
+  Star,
+  StarHalf,
+  Star as StarOutline,
+  Wallet,
+} from "lucide-react";
+import Link from "next/link";
+import AnimatedCard from "../../../../components/AnimatedCard";
+import CustomButton from "../../../../components/CustomButton";
+import DarkModeToggle from "../../../../components/DarkModeToggle";
+import { DarkModeProvider } from "../../../../contexts/DarkModeContext";
+import axios from "axios";
 
 export default function ReservationPage() {
+  return (
+    <DarkModeProvider>
+      <ProductReservationContent />
+    </DarkModeProvider>
+  );
+}
+
+function ProductReservationContent() {
+  const { data: session } = useSession();
   const params = useSearchParams();
   const id = params.get("id");
+  const priceParam = params.get("price");
 
   const backendUrl =
     process.env.NEXT_PUBLIC_BACKEND_URL || "https://bluenile.onrender.com";
 
   const [product, setProduct] = useState(null);
   const [error, setError] = useState("");
+  const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
   const [guestInfo, setGuestInfo] = useState({
     name: "",
     email: "",
@@ -31,6 +61,13 @@ export default function ReservationPage() {
 
   const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const displayedPrice = useMemo(() => {
+    const p = priceParam || product?.offerPrice || product?.price;
+    return p ? `${p} birr` : "Price not available";
+  }, [priceParam, product?.offerPrice, product?.price]);
+
+  const minDate = useMemo(() => new Date().toISOString().split("T")[0], []);
 
   // Fetch product details
   useEffect(() => {
@@ -60,12 +97,63 @@ export default function ReservationPage() {
           data.location || data.address || data.city || "No location";
 
         setProduct({ ...data, imageUrl: imageSrc, location });
+
+        // Fetch like status if user is logged in
+        if (session?.user?.id) {
+          try {
+            const likeRes = await axios.get(
+              `${backendUrl}/productlike/${id}?userId=${session.user.id}`
+            );
+            setLiked(likeRes.data.userLiked || false);
+            setLikesCount(likeRes.data.likes || 0);
+          } catch (likeErr) {
+            console.error("❌ Error fetching like status:", likeErr);
+            setLiked(false);
+            setLikesCount(data.likes || 0);
+          }
+        } else {
+          setLiked(false);
+          setLikesCount(data.likes || 0);
+        }
       } catch (err) {
         setError(err.message);
       }
     }
     if (id) fetchProduct();
-  }, [id, backendUrl]);
+  }, [id, backendUrl, session?.user?.id]);
+
+  // Toggle like function
+  const handleToggleLike = async () => {
+    if (!product) return;
+    
+    // Check if user is authenticated
+    if (!session?.user?.id) {
+      // Redirect to login with return URL
+      const currentPath = window.location.pathname + window.location.search;
+      window.location.href = `/auth/login?callbackUrl=${encodeURIComponent(currentPath)}`;
+      return;
+    }
+    
+    try {
+      const newLiked = !liked;
+      setLiked(newLiked);
+      setLikesCount((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
+
+      const res = await axios.post(`${backendUrl}/productlike/${id}/like`, {
+        userId: session.user.id,
+      });
+
+      setLiked(res.data.userLiked ?? newLiked);
+      setLikesCount(
+        res.data.likes ?? (newLiked ? likesCount + 1 : likesCount - 1)
+      );
+    } catch (err) {
+      console.error("❌ Failed to toggle product like:", err);
+      // rollback
+      setLiked((prev) => !prev);
+      setLikesCount((prev) => (liked ? Math.max(prev - 1, 0) : prev + 1));
+    }
+  };
 
   const renderStars = (rating) => {
     const stars = [];
@@ -199,90 +287,204 @@ export default function ReservationPage() {
   }
 
   return (
-    <>
-      <main className="max-w-6xl mx-auto p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
+      <motion.nav
+        className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700"
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                Reserve Product
+              </h1>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Link
+                href="/"
+                className="hidden sm:flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >
+                <Home className="w-4 h-4" />
+                Home
+              </Link>
+              <DarkModeToggle />
+            </div>
+          </div>
+        </div>
+      </motion.nav>
+
+      <motion.header
+        className="relative overflow-hidden py-12 sm:py-16"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-emerald-500/10 dark:from-blue-500/20 dark:via-purple-500/20 dark:to-emerald-500/20" />
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            {product.propertyName || product.name}
+          </h2>
+          <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-gray-400" />
+              <span>{product.location}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {renderStars(product.rating || 0)}
+              <span className="text-sm">({product.rating?.toFixed(1) || "N/A"})</span>
+            </div>
+          </div>
+        </div>
+      </motion.header>
+
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 pb-12">
         {successMessage && (
           <div
-            className={`fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded shadow-lg z-50 ${
+            className={`fixed top-4 left-1/2 transform -translate-x-1/2 px-4 sm:px-6 py-2 sm:py-3 rounded-xl shadow-lg z-50 text-sm sm:text-base border ${
               successMessage.startsWith("✅")
-                ? "bg-green-600 text-white"
-                : "bg-red-600 text-white"
+                ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-200 border-green-200 dark:border-green-700"
+                : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-200 border-red-200 dark:border-red-700"
             }`}
           >
             {successMessage}
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-          {/* Left: Product Info */}
-          <section className="md:col-span-2 flex flex-col gap-6">
-            {product.imageUrl && (
-              <img
-                src={product.imageUrl}
-                alt={product.propertyName}
-                className="rounded-lg w-full h-80 object-cover shadow"
-              />
-            )}
-            <div>
-              <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">
-                {product.propertyName}
-              </h1>
-              <p className="flex items-center text-blue-600 dark:text-blue-400 text-sm mt-1">
-                <MapPin className="w-4 h-4 mr-1" />
-                {product.location}
-              </p>
-              <div className="flex items-center mt-2 space-x-1">
-                {renderStars(product.rating || 0)}
-                <span className="text-sm text-gray-500 dark:text-gray-300">
-                  ({product.rating?.toFixed(1) || "N/A"})
-                </span>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <section className="lg:col-span-7 space-y-5">
+            <AnimatedCard className="p-3 sm:p-4" hoverEffect={false}>
+              <div className="relative">
+                {product.imageUrl && (
+                  <img
+                    src={product.imageUrl}
+                    alt={product.propertyName || product.name}
+                    className="rounded-xl w-full h-44 sm:h-64 object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                )}
+
+                <button
+                  onClick={handleToggleLike}
+                  className="absolute top-3 right-3 bg-white/90 hover:bg-white p-1.5 rounded-full shadow flex items-center"
+                  aria-pressed={liked}
+                  aria-label={liked ? "Unlike" : "Like"}
+                  type="button"
+                >
+                  <Heart
+                    className={`w-4 h-4 ${
+                      liked ? "text-red-500 fill-red-500" : "text-gray-500"
+                    }`}
+                  />
+                  <span className="ml-1 text-xs font-semibold text-gray-700">
+                    {likesCount}
+                  </span>
+                </button>
               </div>
 
-              <h2 className="text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-2 sm:mb-3 text-gray-900 dark:text-white">
-                Stay Highlights
-              </h2>
-              <ul className="grid grid-cols-2 gap-2 text-gray-700 dark:text-gray-300 text-sm sm:text-base">
-                <li>✔ Free Wi-Fi</li>
-                <li>✔ Spacious Living Area</li>
-                <li>✔ Fully Equipped Kitchen</li>
-                <li>✔ Private Balcony / Terrace</li>
-                <li>✔ Air Conditioning</li>
+              <div className="mt-4">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  About this product
+                </h3>
+                <p className="mt-2 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {product.description || "No description available."}
+                </p>
+              </div>
+            </AnimatedCard>
+
+            <AnimatedCard className="p-5" hoverEffect={false}>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Product Highlights
+              </h3>
+              <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-gray-700 dark:text-gray-300 text-sm sm:text-base">
+                <li>✔ High quality</li>
+                <li>✔ Reliable service</li>
+                <li>✔ Fast delivery</li>
+                <li>✔ Secure payment</li>
+                <li>✔ Verified seller</li>
                 <li>✔ 24/7 Support</li>
               </ul>
+            </AnimatedCard>
 
-              <div className="mt-6">
-                <h2 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white">
-                  Location
-                </h2>
+            <AnimatedCard className="p-5" hoverEffect={false}>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Location
+              </h3>
+              <div className="mt-3 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                 <iframe
-                  title="Map"
+                  title="Product Location"
                   src={`https://www.google.com/maps?q=${encodeURIComponent(
                     product.location
                   )}&output=embed`}
-                  className="w-full h-48 rounded-lg shadow"
+                  className="w-full h-56"
                   allowFullScreen
                   loading="lazy"
                 />
-                <a
+              </div>
+              <div className="mt-3">
+                <CustomButton
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                     product.location
                   )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block mt-2 text-blue-600 dark:text-blue-400 hover:underline"
+                  variant="ghost"
+                  size="md"
+                  className="w-full"
                 >
-                  View Larger Map
-                </a>
+                  Open in Google Maps
+                </CustomButton>
               </div>
-            </div>
+            </AnimatedCard>
           </section>
 
-          {/* Right: Reservation Form */}
-          <aside className="bg-gray-100 dark:bg-gray-700 rounded-lg p-6 flex flex-col justify-between shadow-lg">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-                Your Reservation
-              </h2>
+          <aside className="lg:col-span-5">
+            <div className="lg:sticky lg:top-24 space-y-6">
+              <AnimatedCard className="p-5" hoverEffect={false}>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      Price
+                    </div>
+                    <div className="text-xl font-bold text-gray-900 dark:text-white">
+                      {displayedPrice}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                    <Calendar className="w-4 h-4 text-gray-400" />
+                    {checkIn}
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3">
+                  <div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Check-in
+                    </div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                      {checkIn}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Check-out
+                    </div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                      {checkOut}
+                    </div>
+                  </div>
+                </div>
+              </AnimatedCard>
+
+              <AnimatedCard className="p-5" hoverEffect={false}>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Your Reservation
+                </h3>
+                <form onSubmit={handleSubmit} className="mt-4 space-y-4">
 
               {/* Dates */}
               <div>
@@ -294,7 +496,7 @@ export default function ReservationPage() {
                   name="checkIn"
                   value={checkIn}
                   onChange={(e) => setCheckIn(e.target.value)}
-                  min={new Date().toISOString().split("T")[0]}
+                  min={minDate}
                   required
                   className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 />
@@ -408,11 +610,20 @@ export default function ReservationPage() {
               >
                 {loading ? "Processing..." : "Confirm Reservation"}
               </button>
-            </form>
+                </form>
+              </AnimatedCard>
+
+              <AnimatedCard className="p-5" hoverEffect={false}>
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                  <Wallet className="w-4 h-4 text-gray-400" />
+                  Secure checkout available
+                </div>
+              </AnimatedCard>
+            </div>
           </aside>
         </div>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }

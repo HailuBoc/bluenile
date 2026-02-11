@@ -85,6 +85,7 @@ export default function WeddingsReservationPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setStatus({ text: "❌ Please fill all required fields.", type: "error" });
@@ -95,25 +96,33 @@ export default function WeddingsReservationPage() {
     setStatus({ text: "", type: "" });
 
     try {
-      const payload = {
+      // 1️⃣ Create booking first
+      const bookingPayload = {
         ...formData,
         totalAmount,
       };
 
-      // Send JSON
-      const res = await fetch(`${API_BASE}/vip/weddings`, {
+      const bookingRes = await fetch(`${API_BASE}/vip/weddings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(bookingPayload),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Booking failed");
+      const bookingData = await bookingRes.json();
+      if (!bookingRes.ok || !bookingData?.booking?._id) {
+        throw new Error(bookingData.error || "Booking creation failed.");
+      }
 
-      const bookingId = data.booking._id;
+      const bookingId = bookingData.booking._id;
 
-      // Payment
-      const payRes = await fetch(`${API_BASE}/bookings/pay/chapa`, {
+      // 2️⃣ Initiate payment
+      const method = formData.paymentMethod.toLowerCase();
+      setStatus({
+        text: `Initializing ${formData.paymentMethod} payment...`,
+        type: "success",
+      });
+
+      const paymentRes = await fetch(`${API_BASE}/bookings/pay/${method}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -122,18 +131,29 @@ export default function WeddingsReservationPage() {
           currency: "ETB",
           email: formData.email,
           fullName: formData.name,
-          paymentMethod: formData.paymentMethod.toLowerCase(),
+          phone: formData.phone,
         }),
       });
 
-      const payData = await payRes.json();
-      if (payData?.checkout_url) {
-        window.location.href = payData.checkout_url;
+      const paymentData = await paymentRes.json();
+
+      // 3️⃣ Handle payment response
+      if (paymentData?.checkout_url) {
+        setStatus({ text: "Redirecting to payment...", type: "success" });
+        setTimeout(() => {
+          window.location.href = paymentData.checkout_url;
+        }, 1500);
         return;
+      }
+
+      // 4️⃣ Handle known backend errors
+      if (paymentData?.message) {
+        throw new Error(paymentData.message);
       } else {
-        throw new Error("❌ Failed to start payment");
+        throw new Error("❌ Failed to start payment. Please try again.");
       }
     } catch (err) {
+      console.error("Payment Error:", err.message);
       setStatus({ text: `❌ ${err.message}`, type: "error" });
     } finally {
       setLoading(false);
@@ -180,7 +200,7 @@ export default function WeddingsReservationPage() {
           >
             <option value="">Select Marriage Type</option>
             <option value="Religious">Religious</option>
-            <option value="Civil">Civil</option>
+            <option value="Civil">Modern</option>
             <option value="Traditional">Traditional</option>
           </select>
 

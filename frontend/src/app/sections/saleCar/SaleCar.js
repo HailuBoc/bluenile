@@ -11,9 +11,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Footer from "../../../components/Footer";
+import LikeButton from "../../../components/LikeButton";
+import { useSession } from "next-auth/react";
 import axios from "axios";
 
 export default function CarsPage() {
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
   const BASE_URL =
@@ -61,32 +64,42 @@ export default function CarsPage() {
 
     const fetchLikes = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/cars/${idParam}`);
+        const userId = session?.user?.id;
+        const query = userId ? `?userId=${userId}` : "";
+        const res = await axios.get(`${BASE_URL}/carsalelike/${idParam}${query}`);
         setLikes(res.data.likes || 0);
         setLiked(res.data.userLiked || false);
       } catch (err) {
-        console.error("❌ Failed to fetch car likes:", err);
+        console.error("❌ Failed to fetch car sale likes:", err);
       }
     };
 
     fetchLikes();
-  }, [idParam, BASE_URL]);
+  }, [idParam, BASE_URL, session]);
 
   // Handle like toggle
   const handleLike = async () => {
+    // Check if user is authenticated
+    if (!session?.user?.id) {
+      // Redirect to login with return URL
+      const currentPath = window.location.pathname + window.location.search;
+      window.location.href = `/auth/login?callbackUrl=${encodeURIComponent(currentPath)}`;
+      return;
+    }
+    
     try {
       const newLiked = !liked;
       setLiked(newLiked);
       setLikes((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
 
-      const res = await axios.post(`${BASE_URL}/cars/${idParam}/like`, {
-        liked: newLiked,
+      const res = await axios.post(`${BASE_URL}/carsalelike/${idParam}/like`, {
+        userId: session.user.id,
       });
 
       setLikes(res.data.likes);
       setLiked(res.data.userLiked);
     } catch (err) {
-      console.error("❌ Failed to like car:", err);
+      console.error("❌ Failed to like car sale:", err);
       setLiked((prev) => !prev);
       setLikes((prev) => (liked ? Math.max(prev - 1, 0) : prev + 1));
     }

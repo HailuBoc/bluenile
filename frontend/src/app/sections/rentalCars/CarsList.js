@@ -1,27 +1,39 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Star,
-  StarHalf,
-  Star as StarOutline,
   Heart,
+  Home,
+  Link as LinkIcon,
   MapPin,
+  Sparkles,
+  Star,
+  Star as StarOutline,
+  StarHalf,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import Link from "next/link";
+import AnimatedCard from "../../../components/AnimatedCard";
+import CustomButton from "../../../components/CustomButton";
+import DarkModeToggle from "../../../components/DarkModeToggle";
 import Footer from "../../../components/Footer";
+import { DarkModeProvider } from "../../../contexts/DarkModeContext";
+import { useSession } from "next-auth/react";
 import axios from "axios";
 
-export default function ProductsPage() {
+function CarDetailContent() {
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
+  const priceParam = searchParams.get("price");
   const BASE_URL =
     process.env.NEXT_PUBLIC_BACKEND_URL || "https://bluenile.onrender.com";
 
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [likes, setLikes] = useState(0);
   const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -39,20 +51,48 @@ export default function ProductsPage() {
         const res = await axios.get(`${BASE_URL}/admin/properties/${idParam}`);
         const product = res.data;
 
-        let firstImage =
-          Array.isArray(product.imageUrl) && product.imageUrl.length > 0
-            ? product.imageUrl[0]
-            : typeof product.imageUrl === "string"
-            ? product.imageUrl
-            : null;
+        const rawImages = Array.isArray(product.imageUrl)
+          ? product.imageUrl
+          : typeof product.imageUrl === "string" && product.imageUrl
+          ? [product.imageUrl]
+          : [];
 
-        const imageSrc = firstImage
-          ? firstImage.startsWith("http")
-            ? firstImage
-            : `${BASE_URL}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
-          : null;
+        const images = rawImages
+          .filter(Boolean)
+          .map((img) =>
+            img.startsWith("http")
+              ? img
+              : `${BASE_URL}${img.startsWith("/") ? "" : "/"}${img}`
+          );
 
-        setSelectedProduct({ ...product, imageUrl: imageSrc });
+        const imageSrc = images[0] || null;
+
+        setSelectedProduct({
+          ...product,
+          imageUrl: imageSrc,
+          images,
+          name: product.carName || product.propertyName || "Car",
+          location: product.location || product.address || product.city || "No location",
+        });
+        setActiveImageIndex(0);
+
+        if (session?.user?.id) {
+          try {
+            const likeRes = await axios.get(
+              `${BASE_URL}/carslike/${idParam}?userId=${session.user.id}`
+            );
+            setLiked(likeRes.data.userLiked || false);
+            setLikesCount(likeRes.data.likes || 0);
+          } catch (likeErr) {
+            console.error("❌ Error fetching like status:", likeErr);
+            setLiked(false);
+            setLikesCount(product.likes || 0);
+          }
+        } else {
+          setLiked(false);
+          setLikesCount(product.likes || 0);
+        }
+
         setError(null);
       } catch (err) {
         console.error("❌ Error fetching product:", err);
@@ -64,45 +104,64 @@ export default function ProductsPage() {
     };
 
     fetchProduct();
-  }, [idParam, BASE_URL]);
-
-  // Fetch likes
-  useEffect(() => {
-    if (!idParam) return;
-
-    const fetchLikes = async () => {
-      try {
-        const res = await axios.get(`${BASE_URL}/productlike/${idParam}`);
-        setLikes(res.data.likes || 0);
-        setLiked(res.data.userLiked || false);
-      } catch (err) {
-        console.error("❌ Failed to fetch product likes:", err);
-      }
-    };
-
-    fetchLikes();
-  }, [idParam, BASE_URL]);
+  }, [idParam, BASE_URL, session?.user?.id]);
 
   // Handle like toggle
   const handleLike = async () => {
+    // Check if user is authenticated
+    if (!session?.user?.id) {
+      // Redirect to login with return URL
+      const currentPath = window.location.pathname + window.location.search;
+      window.location.href = `/auth/login?callbackUrl=${encodeURIComponent(currentPath)}`;
+      return;
+    }
+    
     try {
       const newLiked = !liked;
 
       setLiked(newLiked);
-      setLikes((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
+      setLikesCount((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
 
-      const res = await axios.post(`${BASE_URL}/productlike/${idParam}/like`, {
-        liked: newLiked,
+      const res = await axios.post(`${BASE_URL}/carslike/${idParam}/like`, {
+        userId: session.user.id,
       });
 
-      setLikes(res.data.likes);
-      setLiked(res.data.userLiked);
+      setLiked(res.data.userLiked ?? newLiked);
+      setLikesCount(
+        res.data.likes ?? (newLiked ? likesCount + 1 : likesCount - 1)
+      );
     } catch (err) {
-      console.error("❌ Failed to like product:", err);
+      console.error("❌ Failed to like car:", err);
       setLiked((prev) => !prev);
-      setLikes((prev) => (liked ? Math.max(prev - 1, 0) : prev + 1));
+      setLikesCount((prev) => (liked ? Math.max(prev - 1, 0) : prev + 1));
     }
   };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+    } catch (err) {
+      console.error("❌ Failed to copy link:", err);
+    }
+  };
+
+  const imageUrls = useMemo(() => {
+    if (!selectedProduct) return [];
+    if (
+      Array.isArray(selectedProduct.images) &&
+      selectedProduct.images.length > 0
+    )
+      return selectedProduct.images;
+    return selectedProduct.imageUrl ? [selectedProduct.imageUrl] : [];
+  }, [selectedProduct]);
+
+  const activeImage = imageUrls[activeImageIndex] || imageUrls[0] || null;
+
+  const displayedPrice =
+    priceParam ||
+    selectedProduct?.offerPrice ||
+    selectedProduct?.price ||
+    "Price not available";
 
   // Render stars
   const renderStars = (rating) => {
@@ -144,101 +203,275 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-      <main className="flex-grow p-6 max-w-7xl mx-auto w-full">
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Left side - Image */}
-          <div className="md:w-1/2 relative rounded-xl overflow-hidden shadow-lg">
-            {selectedProduct.imageUrl && (
-              <img
-                src={selectedProduct.imageUrl}
-                alt={selectedProduct.propertyName || "Property"}
-                className="w-full h-full object-cover rounded-xl"
-                style={{ minHeight: "400px" }}
-              />
-            )}
-            <button
-              onClick={handleLike}
-              className="absolute top-4 right-4 bg-white dark:bg-gray-800 p-2 rounded-full shadow flex items-center gap-1"
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <motion.nav
+        className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50"
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between py-3">
+            <motion.div
+              className="flex items-center gap-3"
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <Heart
-                className={`w-6 h-6 ${
-                  liked ? "text-red-500 fill-red-500" : "text-gray-500"
-                }`}
-              />
-              <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full">
-                {likes}
-              </span>
-            </button>
-            {selectedProduct.guestFavorite && (
-              <div className="absolute top-4 left-4 text-sm bg-rose-200 dark:bg-rose-800 text-rose-700 dark:text-white px-3 py-1 rounded-full shadow">
-                Guest Favorite
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-white" />
               </div>
-            )}
-          </div>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                Car Details
+              </h1>
+            </motion.div>
 
-          {/* Right side - Details */}
-          <div className="md:w-1/2 flex flex-col justify-start">
-            <h1 className="text-3xl font-bold mb-2">
-              {selectedProduct.propertyName}
-            </h1>
-
-            {/* Location */}
-            <div className="flex items-center text-gray-600 dark:text-gray-300 mb-2">
-              <MapPin className="h-5 w-5 mr-1 text-gray-400" />
-              <span>{selectedProduct.address || "No address"}</span>
-            </div>
-
-            {/* Rating */}
-            <div className="flex items-center mb-2 space-x-1">
-              {renderStars(selectedProduct.rating || 0)}
-              <span className="text-sm text-gray-500 dark:text-gray-300">
-                ({selectedProduct.rating?.toFixed(1) || "N/A"})
-              </span>
-            </div>
-
-            {/* Price */}
-            <div className="text-xl font-semibold mb-4">
-              {selectedProduct.price
-                ? `${selectedProduct.price} Br`
-                : "Price not available"}
-            </div>
-
-            {/* Description */}
-            {selectedProduct.description && (
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
-                {selectedProduct.description}
-              </p>
-            )}
-
-            {/* Highlights */}
-            {/* Highlights (always visible) */}
-            <div>
-              <h2 className="text-lg sm:text-xl font-semibold mt-6 mb-2 sm:mb-3 text-gray-900 dark:text-white">
-                Car Rental Highlights
-              </h2>
-              <ul className="grid grid-cols-2 gap-2 text-gray-700 dark:text-gray-300 text-sm sm:text-base">
-                <li>✔ Unlimited Mileage</li>
-                <li>✔ Comprehensive Insurance</li>
-                <li>✔ Roadside Assistance</li>
-                <li>✔ Flexible Booking Options</li>
-                <li>✔ Free Cancellation</li>
-                <li>✔ Latest Car Models</li>
-              </ul>
-            </div>
-
-            <Link
-              href={`/sections/rentalCars/reserveRental?id=${selectedProduct._id}`}
+            <motion.div
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex items-center gap-3"
             >
-              <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200 mt-6">
-                Rent Now
-              </button>
-            </Link>
+              <Link
+                href="/"
+                className="hidden sm:flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >
+                <Home className="w-4 h-4" />
+                Home
+              </Link>
+              <DarkModeToggle />
+            </motion.div>
           </div>
         </div>
-      </main>
+      </motion.nav>
+
+      <motion.header
+        className="relative overflow-hidden py-10 sm:py-12"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-emerald-500/10 dark:from-blue-500/20 dark:via-purple-500/20 dark:to-emerald-500/20" />
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6">
+          <motion.div
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.25 }}
+          >
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+              {selectedProduct.name}
+            </h2>
+            <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-600 dark:text-gray-300">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-gray-400" />
+                <span className="text-sm sm:text-base">
+                  {selectedProduct.location}
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                {renderStars(selectedProduct.rating || 0)}
+                <span className="text-sm">({selectedProduct.rating?.toFixed(1) || "N/A"})</span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </motion.header>
+
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 pb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <div className="lg:col-span-7 space-y-5">
+            <AnimatedCard className="p-3 sm:p-4" hoverEffect={false}>
+              <div className="relative rounded-xl overflow-hidden">
+                {activeImage ? (
+                  <img
+                    src={activeImage}
+                    alt={selectedProduct.name}
+                    className="w-full h-44 sm:h-64 object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <div className="w-full h-44 sm:h-64 bg-gray-100 dark:bg-gray-800" />
+                )}
+
+                <div className="absolute top-3 right-3 flex items-center gap-2">
+                  <button
+                    onClick={handleCopyLink}
+                    className="bg-white/90 hover:bg-white text-gray-800 p-1.5 rounded-full shadow"
+                    aria-label="Copy link"
+                    type="button"
+                  >
+                    <LinkIcon className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={handleLike}
+                    className="bg-white/90 hover:bg-white p-1.5 rounded-full shadow flex items-center"
+                    aria-pressed={liked}
+                    aria-label={liked ? "Unlike" : "Like"}
+                    type="button"
+                  >
+                    <Heart
+                      className={`w-4 h-4 ${
+                        liked ? "text-red-500 fill-red-500" : "text-gray-500"
+                      }`}
+                    />
+                    <span className="ml-1 text-xs font-semibold text-gray-700">
+                      {likesCount}
+                    </span>
+                  </button>
+                </div>
+
+                {selectedProduct.guestFavorite && (
+                  <div className="absolute top-3 left-3 text-xs bg-blue-600 text-white px-2 py-1 rounded-full shadow">
+                    Top Pick
+                  </div>
+                )}
+              </div>
+
+              {imageUrls.length > 1 && (
+                <div className="mt-4 grid grid-cols-5 sm:grid-cols-6 gap-2">
+                  {imageUrls.slice(0, 6).map((src, idx) => (
+                    <button
+                      key={src}
+                      type="button"
+                      onClick={() => setActiveImageIndex(idx)}
+                      className={`rounded-lg overflow-hidden border transition ${
+                        idx === activeImageIndex
+                          ? "border-blue-500"
+                          : "border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                      }`}
+                      aria-label={`View image ${idx + 1}`}
+                    >
+                      <img
+                        src={src}
+                        alt=""
+                        className="w-full h-9 object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </AnimatedCard>
+
+            <AnimatedCard className="p-4" hoverEffect={false}>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Overview
+              </h3>
+              <p className="mt-3 text-gray-700 dark:text-gray-300 leading-relaxed">
+                {selectedProduct.description || "No description available."}
+              </p>
+            </AnimatedCard>
+
+            <AnimatedCard className="p-4" hoverEffect={false}>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Car Rental Highlights
+              </h3>
+              <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-gray-700 dark:text-gray-300 text-sm sm:text-base">
+                <li className="flex items-start gap-2">
+                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-blue-600 dark:bg-blue-400 flex-shrink-0" />
+                  <span>Unlimited Mileage</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-blue-600 dark:bg-blue-400 flex-shrink-0" />
+                  <span>Comprehensive Insurance</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-blue-600 dark:bg-blue-400 flex-shrink-0" />
+                  <span>Roadside Assistance</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-blue-600 dark:bg-blue-400 flex-shrink-0" />
+                  <span>Flexible Booking Options</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-blue-600 dark:bg-blue-400 flex-shrink-0" />
+                  <span>Free Cancellation</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-blue-600 dark:bg-blue-400 flex-shrink-0" />
+                  <span>Latest Car Models</span>
+                </li>
+              </ul>
+            </AnimatedCard>
+          </div>
+
+          <div className="lg:col-span-5">
+            <div className="lg:sticky lg:top-24 space-y-5">
+              <AnimatedCard className="p-4" hoverEffect={false}>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      Price
+                    </div>
+                    <div className="text-xl font-bold text-gray-900 dark:text-white">
+                      {typeof displayedPrice === "string"
+                        ? displayedPrice
+                        : `${displayedPrice} Br`}
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    {selectedProduct.serviceType || selectedProduct.listingType || ""}
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <CustomButton
+                    href={`/sections/rentalCars/reserveRental?id=${selectedProduct._id}&price=${encodeURIComponent(
+                      String(displayedPrice)
+                    )}`}
+                    variant="primary"
+                    size="sm"
+                    className="w-full"
+                  >
+                    Rent Now
+                  </CustomButton>
+                </div>
+              </AnimatedCard>
+
+              <AnimatedCard className="p-4" hoverEffect={false}>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                  Location
+                </h3>
+                <div className="mt-3 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                  <iframe
+                    title="Car Location"
+                    src={`https://www.google.com/maps?q=${encodeURIComponent(
+                      selectedProduct.location || "Ethiopia"
+                    )}&output=embed`}
+                    className="w-full h-48"
+                    allowFullScreen
+                    loading="lazy"
+                  />
+                </div>
+                <div className="mt-3">
+                  <CustomButton
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      selectedProduct.location || "Ethiopia"
+                    )}`}
+                    variant="ghost"
+                    size="sm"
+                    className="w-full"
+                  >
+                    Open in Google Maps
+                  </CustomButton>
+                </div>
+              </AnimatedCard>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <Footer />
     </div>
+  );
+}
+
+export default function CarDetailPage() {
+  return (
+    <DarkModeProvider>
+      <CarDetailContent />
+    </DarkModeProvider>
   );
 }

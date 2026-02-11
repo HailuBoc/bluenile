@@ -13,20 +13,35 @@ const authOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        // Call your backend login API
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(credentials),
+        try {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(credentials),
+            }
+          );
+
+          if (!res.ok) {
+            console.error("Login failed:", res.statusText);
+            return null;
           }
-        );
 
-        if (!res.ok) return null;
+          const data = await res.json();
+          const user = data.user || data;
 
-        const user = await res.json();
-        return user; // must return {id, name, email, role,...} or null
+          return {
+            id: user._id || user.id,
+            name: user.fullName,
+            email: user.email,
+            role: user.role,
+            createdAt: user.createdAt,
+          };
+        } catch (error) {
+          console.error("Authorize error:", error);
+          return null;
+        }
       },
     }),
     GoogleProvider({
@@ -44,10 +59,14 @@ const authOptions = {
   ],
 
   pages: {
-    signIn: "/login", // redirect here for credentials/social login
+    signIn: "/login",
   },
 
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // ✅ 30 days in seconds
+    updateAge: 24 * 60 * 60, // ✅ Optional: refresh session every 24 hours
+  },
 
   callbacks: {
     async jwt({ token, user }) {
@@ -63,6 +82,6 @@ const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 };
 
-// ✅ Important: only export the handler as GET and POST
+// Export handler for App Router
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
