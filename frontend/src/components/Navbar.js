@@ -201,11 +201,12 @@ export default function Navbar() {
 
             {/* Desktop Links */}
             <div className="hidden sm:flex items-center gap-6 text-sm">
-              <Link href="/listProperty">
-                <button className="text-white/90 hover:text-white hover:underline transition-all duration-300 relative group">
-                  List your property
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-400 group-hover:w-full transition-all duration-300"></span>
-                </button>
+              <Link 
+                href="/listProperty"
+                className="text-white/90 hover:text-white hover:underline transition-all duration-300 relative group px-4 py-2 rounded-lg hover:bg-white/10 backdrop-blur-sm hover:scale-105 transform active:scale-95"
+              >
+                List your property
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-400 group-hover:w-full transition-all duration-300"></span>
               </Link>
               <a
                 href="/auth/login"
@@ -213,11 +214,9 @@ export default function Navbar() {
               >
                 Sign in
               </a>
-              <Link href="/aboutus">
-                <button className="text-white/90 hover:text-white hover:underline transition-all duration-300 relative group">
-                  About us
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-400 group-hover:w-full transition-all duration-300"></span>
-                </button>
+              <Link href="/aboutus" className="text-white/90 hover:text-white hover:underline transition-all duration-300 relative group px-4 py-2 rounded-lg hover:bg-white/10 backdrop-blur-sm hover:scale-105 transform active:scale-95">
+                About us
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-400 group-hover:w-full transition-all duration-300"></span>
               </Link>
             </div>
           </div>

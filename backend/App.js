@@ -6,8 +6,7 @@ import path from "path";
 import compression from "compression";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-    
- 
+     
 // Routes
 import transportRoutes from "./routes/transportRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -89,7 +88,7 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use('/api/', limiter);
+app.use('/api/', limiter); 
 
 // CORS with performance optimization
 app.use(cors({
