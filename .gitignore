@@ -1,0 +1,41 @@
+# Root .gitignore for Blue Nile Booking App
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+**/node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Backend specific
+backend/tmp/
+backend/uploads/
+
+# Frontend specific
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/*.tsbuildinfo
+
+# Testing
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
