@@ -308,3 +308,35 @@ export const deleteProperty = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
+
+// Verify booking (approve/reject)
+export const verifyBooking = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { verified } = req.body;
+
+    const booking = await Booking.findByIdAndUpdate(
+      id,
+      {
+        verified,
+        verifiedAt: verified ? new Date() : null,
+        status: verified ? "verified" : "rejected",
+      },
+      { new: true },
+    );
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    res.json({
+      message: `Booking ${verified ? "approved" : "rejected"} successfully`,
+      booking,
+    });
+  } catch (err) {
+    console.error("Error verifying booking:", err);
+    res
+      .status(500)
+      .json({ message: "Error updating booking", error: err.message });
+  }
+};

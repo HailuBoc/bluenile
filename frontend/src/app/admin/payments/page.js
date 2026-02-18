@@ -61,8 +61,15 @@ export default function AdminPaymentsPage() {
   }, [authorized]);
 
   if (!authorized)
-    return <p className="text-center mt-10">Checking admin access...</p>;
-  if (loading) return <p className="text-center mt-10">Loading payments...</p>;
+    return (
+      <p className="text-center mt-10 text-gray-700">
+        Checking admin access...
+      </p>
+    );
+  if (loading)
+    return (
+      <p className="text-center mt-10 text-gray-700">Loading payments...</p>
+    );
 
   return (
     <div className="min-h-screen p-6 bg-gray-100">
@@ -81,11 +88,15 @@ export default function AdminPaymentsPage() {
           <tbody>
             {payments.map((p) => (
               <tr key={p._id} className="border-b hover:bg-gray-100">
-                <td className="p-3">{p.fullName}</td>
-                <td className="p-3">{p.propertyTitle}</td>
-                <td className="p-3">{p.totalAmount || p.propertyPrice} ETB</td>
-                <td className="p-3">{p.paymentMethod}</td>
-                <td className="p-3 text-green-600 font-semibold">Completed</td>
+                <td className="p-3 text-gray-900 font-medium">{p.fullName}</td>
+                <td className="p-3 text-gray-700">{p.propertyTitle}</td>
+                <td className="p-3 text-gray-900 font-semibold">
+                  {p.totalAmount || p.propertyPrice} ETB
+                </td>
+                <td className="p-3 text-gray-700">{p.paymentMethod}</td>
+                <td className="p-3 text-green-600 font-semibold bg-green-50 rounded">
+                  Completed
+                </td>
               </tr>
             ))}
             {payments.length === 0 && (

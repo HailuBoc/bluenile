@@ -72,7 +72,7 @@ export default function AdminUsersPage() {
         (u) =>
           (u.fullName &&
             u.fullName.toLowerCase().includes(search.toLowerCase())) ||
-          (u.email && u.email.toLowerCase().includes(search.toLowerCase()))
+          (u.email && u.email.toLowerCase().includes(search.toLowerCase())),
       );
     }
     setFiltered(temp);
@@ -115,7 +115,7 @@ export default function AdminUsersPage() {
           placeholder="Search by name or email"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="px-4 py-2 border rounded w-full"
+          className="px-4 py-2 border border-gray-300 rounded w-full text-gray-900 placeholder-gray-500"
         />
       </div>
 
@@ -128,28 +128,34 @@ export default function AdminUsersPage() {
                 (header) => (
                   <th
                     key={header}
-                    className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
                   >
                     {header}
                   </th>
-                )
+                ),
               )}
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filtered.map((u) => (
-              <tr key={u._id}>
-                <td className="px-4 py-2">{u.fullName}</td>
-                <td className="px-4 py-2">{u.email}</td>
-                <td className="px-4 py-2">{u.phone || "-"}</td>
+              <tr key={u._id} className="hover:bg-gray-50">
+                <td className="px-4 py-2 text-gray-900 font-medium">
+                  {u.fullName}
+                </td>
+                <td className="px-4 py-2 text-gray-700">{u.email}</td>
+                <td className="px-4 py-2 text-gray-700">{u.phone || "-"}</td>
                 <td className="px-4 py-2">
                   {u.role === "admin" ? (
-                    <span className="text-blue-600 font-semibold">Admin</span>
+                    <span className="text-blue-700 font-semibold bg-blue-50 px-2 py-1 rounded">
+                      Admin
+                    </span>
                   ) : (
-                    <span className="text-gray-700">User</span>
+                    <span className="text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                      User
+                    </span>
                   )}
                 </td>
-                <td className="px-4 py-2">
+                <td className="px-4 py-2 text-gray-700">
                   {u.createdAt
                     ? new Date(u.createdAt).toLocaleDateString()
                     : "-"}
@@ -157,7 +163,7 @@ export default function AdminUsersPage() {
                 <td className="px-4 py-2">
                   <button
                     onClick={() => handleDelete(u._id)}
-                    className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                    className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 font-medium"
                   >
                     Delete
                   </button>

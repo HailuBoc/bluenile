@@ -150,7 +150,7 @@ export default function AdminPropertiesPage() {
     const { name, value, type, checked, files } = e.target;
     if (type === "checkbox") {
       setFacilities(
-        checked ? [...facilities, name] : facilities.filter((f) => f !== name)
+        checked ? [...facilities, name] : facilities.filter((f) => f !== name),
       );
     } else if (type === "file") {
       const file = files[0];
@@ -212,7 +212,7 @@ export default function AdminPropertiesPage() {
               "Content-Type": "multipart/form-data",
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         setProperties((prev) =>
@@ -228,8 +228,8 @@ export default function AdminPropertiesPage() {
                       : `${baseUrl}${res.data.property.imageUrl}`
                     : null,
                 }
-              : p
-          )
+              : p,
+          ),
         );
 
         setSuccessMessage("✅ Property updated!");
@@ -268,7 +268,7 @@ export default function AdminPropertiesPage() {
     (p) =>
       p.propertyName?.toLowerCase().includes(search.toLowerCase()) ||
       p.serviceType?.toLowerCase().includes(search.toLowerCase()) ||
-      p.listingType?.toLowerCase().includes(search.toLowerCase())
+      p.listingType?.toLowerCase().includes(search.toLowerCase()),
   );
 
   if (!authorized)
@@ -278,7 +278,7 @@ export default function AdminPropertiesPage() {
       </p>
     );
   if (loading)
-    return <p className="text-center mt-10 text-white">Loading...</p>;
+    return <p className="text-center mt-10 text-gray-700">Loading...</p>;
 
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col items-center p-6">
@@ -426,15 +426,15 @@ export default function AdminPropertiesPage() {
             {serviceType === "tourism"
               ? "Tourism Features"
               : serviceType === "car"
-              ? "Car Features"
-              : "Facilities"}
+                ? "Car Features"
+                : "Facilities"}
           </h3>
           <div className="grid grid-cols-2 gap-3">
             {(serviceType === "tourism"
               ? tourismFeatures
               : serviceType === "car"
-              ? carFeatures
-              : facilityOptions
+                ? carFeatures
+                : facilityOptions
             ).map((f, i) => (
               <label key={i} className="flex items-center space-x-2">
                 <input
