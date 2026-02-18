@@ -68,7 +68,7 @@ export default function AdminPropertyRentalPage() {
           (p.title && p.title.toLowerCase().includes(search.toLowerCase())) ||
           (p.location &&
             p.location.toLowerCase().includes(search.toLowerCase())) ||
-          (p.type && p.type.toLowerCase().includes(search.toLowerCase()))
+          (p.type && p.type.toLowerCase().includes(search.toLowerCase())),
       );
     }
     setFiltered(temp);
@@ -95,7 +95,7 @@ export default function AdminPropertyRentalPage() {
       await axios.put(
         `${baseUrl}/propertyrental/${id}/${action}`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       fetchProperties();
     } catch (err) {
@@ -115,7 +115,7 @@ export default function AdminPropertyRentalPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-3xl font-bold text-center mb-6">
+      <h1 className="text-3xl font-bold text-center mb-6 text-gray-900">
         Manage Property Rentals
       </h1>
 
@@ -126,7 +126,7 @@ export default function AdminPropertyRentalPage() {
           placeholder="Search by title, type, or location"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="px-4 py-2 border rounded w-full"
+          className="px-4 py-2 border border-gray-300 rounded w-full text-gray-900 placeholder-gray-500"
         />
       </div>
 
@@ -146,7 +146,7 @@ export default function AdminPropertyRentalPage() {
               ].map((header) => (
                 <th
                   key={header}
-                  className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
                 >
                   {header}
                 </th>
@@ -155,20 +155,26 @@ export default function AdminPropertyRentalPage() {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filtered.map((p) => (
-              <tr key={p._id}>
-                <td className="px-4 py-2 font-semibold">{p.title}</td>
-                <td className="px-4 py-2">{p.type}</td>
-                <td className="px-4 py-2">{p.location}</td>
-                <td className="px-4 py-2">{p.price}</td>
+              <tr key={p._id} className="hover:bg-gray-50">
+                <td className="px-4 py-2 font-semibold text-gray-900">
+                  {p.title}
+                </td>
+                <td className="px-4 py-2 text-gray-700">{p.type}</td>
+                <td className="px-4 py-2 text-gray-700">{p.location}</td>
+                <td className="px-4 py-2 text-gray-900 font-semibold">
+                  {p.price}
+                </td>
                 <td className="px-4 py-2">
                   {p.status === "approved" ? (
-                    <span className="text-green-600 font-semibold">
+                    <span className="text-green-600 font-semibold bg-green-50 px-2 py-1 rounded">
                       Approved
                     </span>
                   ) : p.status === "rejected" ? (
-                    <span className="text-red-600 font-semibold">Rejected</span>
+                    <span className="text-red-600 font-semibold bg-red-50 px-2 py-1 rounded">
+                      Rejected
+                    </span>
                   ) : (
-                    <span className="text-yellow-600 font-semibold">
+                    <span className="text-yellow-600 font-semibold bg-yellow-50 px-2 py-1 rounded">
                       Pending
                     </span>
                   )}
@@ -181,7 +187,7 @@ export default function AdminPropertyRentalPage() {
                       className="h-16 w-24 object-cover rounded"
                     />
                   ) : (
-                    "-"
+                    <span className="text-gray-400">-</span>
                   )}
                 </td>
                 <td className="px-4 py-2 flex gap-2 flex-wrap">

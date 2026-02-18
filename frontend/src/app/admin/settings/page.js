@@ -100,7 +100,9 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-xl p-6">
-        <h1 className="text-2xl font-bold mb-6 text-center">Admin Settings</h1>
+        <h1 className="text-2xl font-bold mb-6 text-center text-gray-900">
+          Admin Settings
+        </h1>
 
         {message && (
           <p
@@ -122,7 +124,7 @@ export default function SettingsPage() {
               name="basePrice"
               value={settings.basePrice}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+              className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 outline-none"
             />
           </div>
 
@@ -133,7 +135,7 @@ export default function SettingsPage() {
               name="vipFee"
               value={settings.vipFee}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+              className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 outline-none"
             />
           </div>
 
@@ -144,7 +146,7 @@ export default function SettingsPage() {
               name="chapaKey"
               value={settings.chapaKey}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+              className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 outline-none"
             />
           </div>
 
@@ -155,7 +157,7 @@ export default function SettingsPage() {
               name="telebirrKey"
               value={settings.telebirrKey}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+              className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 outline-none"
             />
           </div>
 
@@ -166,7 +168,7 @@ export default function SettingsPage() {
               name="cbeKey"
               value={settings.cbeKey}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+              className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 outline-none"
             />
           </div>
 

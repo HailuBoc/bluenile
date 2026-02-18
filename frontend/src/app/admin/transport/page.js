@@ -84,7 +84,7 @@ export default function AdminTransportPage() {
           headers: { "Content-Type": "multipart/form-data" },
         });
         setTransports((prev) =>
-          prev.map((t) => (t._id === editingId ? res.data : t))
+          prev.map((t) => (t._id === editingId ? res.data : t)),
         );
         setEditingId(null);
       } else {
@@ -99,7 +99,7 @@ export default function AdminTransportPage() {
     } catch (err) {
       console.error(
         "❌ Failed to submit transport",
-        err.response?.data || err.message
+        err.response?.data || err.message,
       );
       alert(err.response?.data?.message || "Something went wrong!");
     }
@@ -143,7 +143,7 @@ export default function AdminTransportPage() {
     } catch (err) {
       console.error(
         "❌ Failed to delete transport",
-        err.response?.data || err.message
+        err.response?.data || err.message,
       );
       alert(err.response?.data?.message || "Delete failed!");
     }
@@ -161,7 +161,9 @@ export default function AdminTransportPage() {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-bold mb-6">Admin - Manage Transport</h1>
+      <h1 className="text-2xl font-bold mb-6 text-gray-900">
+        Admin - Manage Transport
+      </h1>
 
       <form
         onSubmit={handleSubmit}
@@ -173,14 +175,14 @@ export default function AdminTransportPage() {
           placeholder="Vehicle Name"
           value={form.vehicleName}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded text-gray-900 placeholder-gray-500"
           required
         />
         <select
           name="vehicleType"
           value={form.vehicleType}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded text-gray-900"
           required
         >
           <option value="">Select Vehicle Type</option>
@@ -195,7 +197,7 @@ export default function AdminTransportPage() {
           placeholder="Description"
           value={form.description}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded text-gray-900 placeholder-gray-500"
           required
         />
         <input
@@ -204,14 +206,14 @@ export default function AdminTransportPage() {
           placeholder="Price (e.g., 1000 birr/day)"
           value={form.price}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded text-gray-900 placeholder-gray-500"
           required
         />
         <input
           type="file"
           name="img"
           onChange={handleFileChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded text-gray-900"
         />
         <button
           type="submit"
@@ -222,14 +224,16 @@ export default function AdminTransportPage() {
       </form>
 
       <div>
-        <h2 className="text-lg font-semibold mb-4">Existing Transports</h2>
+        <h2 className="text-lg font-semibold mb-4 text-gray-900">
+          Existing Transports
+        </h2>
         <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {transports.map((t) => (
             <li key={t._id} className="border p-4 bg-white rounded shadow">
-              <p className="font-bold">{t.vehicleName}</p>
-              <p>Type: {t.vehicleType}</p>
-              <p>Description: {t.description}</p>
-              <p>Price: {t.price}</p>
+              <p className="font-bold text-gray-900">{t.vehicleName}</p>
+              <p className="text-gray-700">Type: {t.vehicleType}</p>
+              <p className="text-gray-700">Description: {t.description}</p>
+              <p className="text-gray-900 font-semibold">Price: {t.price}</p>
               {t.img && (
                 <img
                   src={`http://localhost:10000/uploads/${t.img}`}
@@ -237,7 +241,7 @@ export default function AdminTransportPage() {
                   className="w-full h-32 object-cover mt-2"
                 />
               )}
-              <p className="mt-2 font-semibold">
+              <p className="mt-2 font-semibold text-gray-800">
                 Status: {t.status || "pending"}
               </p>
               <div className="flex gap-2 mt-2 flex-wrap">

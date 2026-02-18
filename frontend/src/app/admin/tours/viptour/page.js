@@ -97,7 +97,7 @@ export default function AdminVipTours() {
           headers: { "Content-Type": "multipart/form-data" },
         });
         setTours((prev) =>
-          prev.map((t) => (t._id === editingId ? res.data : t))
+          prev.map((t) => (t._id === editingId ? res.data : t)),
         );
         setEditingId(null);
       } else {
@@ -113,7 +113,7 @@ export default function AdminVipTours() {
     } catch (err) {
       console.error(
         "❌ Failed to submit VIP tour",
-        err.response?.data || err.message
+        err.response?.data || err.message,
       );
       setMessage({
         type: "error",
@@ -141,7 +141,7 @@ export default function AdminVipTours() {
     } catch (err) {
       console.error(
         "❌ Failed to delete VIP tour",
-        err.response?.data || err.message
+        err.response?.data || err.message,
       );
       setMessage({ type: "error", text: "Delete failed!" });
     }
@@ -159,7 +159,9 @@ export default function AdminVipTours() {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-bold mb-6">Admin - Manage VIP Tours</h1>
+      <h1 className="text-2xl font-bold mb-6 text-gray-900">
+        Admin - Manage VIP Tours
+      </h1>
 
       {message && (
         <div
@@ -183,7 +185,7 @@ export default function AdminVipTours() {
           placeholder="Tour Name"
           value={form.name}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded text-gray-900 placeholder-gray-500 border-gray-300"
           required
         />
         <input
@@ -191,7 +193,7 @@ export default function AdminVipTours() {
           name="date"
           value={form.date}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded text-gray-900 border-gray-300"
           required
         />
 
@@ -200,7 +202,7 @@ export default function AdminVipTours() {
           placeholder="Description"
           value={form.description}
           onChange={handleChange}
-          className="border p-2 rounded md:col-span-2"
+          className="border p-2 rounded md:col-span-2 text-gray-900 placeholder-gray-500 border-gray-300"
           required
         />
 
@@ -209,14 +211,14 @@ export default function AdminVipTours() {
           placeholder="Highlights (comma separated)"
           value={form.highlights.join(", ")}
           onChange={handleHighlightsChange}
-          className="border p-2 rounded md:col-span-2"
+          className="border p-2 rounded md:col-span-2 text-gray-900 placeholder-gray-500 border-gray-300"
         />
 
         <input
           type="file"
           name="image"
           onChange={handleFileChange}
-          className="border p-2 rounded md:col-span-2"
+          className="border p-2 rounded md:col-span-2 text-gray-900 border-gray-300"
         />
 
         <button
@@ -228,17 +230,21 @@ export default function AdminVipTours() {
       </form>
 
       <div>
-        <h2 className="text-lg font-semibold mb-4">Existing VIP Tours</h2>
+        <h2 className="text-lg font-semibold mb-4 text-gray-900">
+          Existing VIP Tours
+        </h2>
         {tours.length === 0 ? (
           <p className="text-gray-500">No VIP tours yet.</p>
         ) : (
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {tours.map((t) => (
               <li key={t._id} className="border p-4 bg-white rounded shadow">
-                <p className="font-bold">{t.name}</p>
-                <p>{t.description}</p>
-                <p>Date: {t.date}</p>
-                <p>Highlights: {t.highlights?.join(", ")}</p>
+                <p className="font-bold text-gray-900">{t.name}</p>
+                <p className="text-gray-700">{t.description}</p>
+                <p className="text-gray-900 font-semibold">Date: {t.date}</p>
+                <p className="text-gray-700">
+                  Highlights: {t.highlights?.join(", ")}
+                </p>
                 {t.image && (
                   <img
                     src={`http://localhost:10000/uploads/${t.image}`}

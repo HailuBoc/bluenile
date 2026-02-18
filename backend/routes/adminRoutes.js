@@ -6,7 +6,7 @@ import {
   getPropertyById,
   createProperty,
   updatePropertyStatus,
-  updateProperty, // <-- new controller
+  updateProperty,
   deleteProperty,
   loginAdmin,
   verifyToken,
@@ -18,6 +18,7 @@ import {
   updateSettings,
   getAllBookingsForAdmin,
   getApprovedProperties,
+  verifyBooking,
 } from "../controllers/adminController.js";
 import { adminAuth } from "../middleware/authMiddleware.js";
 
@@ -47,6 +48,7 @@ router.get("/verify-token", adminAuth, verifyToken);
 // Bookings
 router.get("/bookings", getAllBookings);
 router.delete("/bookings/:id", deleteBooking);
+router.post("/verify/:id", adminAuth, verifyBooking);
 
 // Users
 router.get("/users", getAllUsers);

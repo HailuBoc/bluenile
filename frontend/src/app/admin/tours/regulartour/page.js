@@ -131,7 +131,9 @@ export default function AdminTours() {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-bold mb-6">Admin - Manage Regular Tours</h1>
+      <h1 className="text-2xl font-bold mb-6 text-gray-900">
+        Admin - Manage Regular Tours
+      </h1>
 
       {message && (
         <div
@@ -153,7 +155,7 @@ export default function AdminTours() {
           name="category"
           value={form.category}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded text-gray-900 border-gray-300"
           required
         >
           <option value="">Select Category</option>
@@ -169,7 +171,7 @@ export default function AdminTours() {
           name="icon"
           value={form.icon}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded text-gray-900 border-gray-300"
           required
         >
           <option value="">Select Icon</option>
@@ -185,7 +187,7 @@ export default function AdminTours() {
           placeholder="Destinations (comma separated)"
           value={form.destinations.join(", ")}
           onChange={handleDestinationsChange}
-          className="border p-2 rounded md:col-span-2"
+          className="border p-2 rounded md:col-span-2 text-gray-900 placeholder-gray-500 border-gray-300"
         />
 
         <button
@@ -197,7 +199,9 @@ export default function AdminTours() {
       </form>
 
       <div>
-        <h2 className="text-lg font-semibold mb-4">Existing Tours</h2>
+        <h2 className="text-lg font-semibold mb-4 text-gray-900">
+          Existing Tours
+        </h2>
         <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {tours.map((t) => {
             const IconComponent = iconMap[t.icon] || Map;
@@ -205,9 +209,11 @@ export default function AdminTours() {
               <li key={t._id} className="border p-4 bg-white rounded shadow">
                 <div className="flex items-center gap-2 mb-2">
                   <IconComponent className="w-6 h-6 text-yellow-600" />
-                  <span className="font-bold">{t.category}</span>
+                  <span className="font-bold text-gray-900">{t.category}</span>
                 </div>
-                <p>Destinations: {t.destinations?.join(", ")}</p>
+                <p className="text-gray-700">
+                  Destinations: {t.destinations?.join(", ")}
+                </p>
                 <div className="flex gap-2 mt-2 flex-wrap">
                   <button
                     onClick={() => handleEdit(t)}

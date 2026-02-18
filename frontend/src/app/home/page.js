@@ -16,6 +16,7 @@ import CarsCard from "../../components/CarsCard";
 import CarSalecard from "../../components/CarSalecard";
 import TourismCard from "../../components/TourismCard";
 import SpecialOfferCard from "../../components/SpecialOfferCard";
+import StatsSection from "../../components/StatsSection";
 /* =========================
    Navbar component
    ========================= */
@@ -375,7 +376,7 @@ function Navbar() {
               const queryValue = queryInput?.value.trim() || "";
               if (queryValue) {
                 window.location.href = `/products?q=${encodeURIComponent(
-                  queryValue
+                  queryValue,
                 )}`;
               }
             }}
@@ -398,7 +399,7 @@ function Navbar() {
               key={service.label}
               onClick={() => {
                 const queryInput = document.getElementById(
-                  "mobile-search-input"
+                  "mobile-search-input",
                 );
                 const queryValue = queryInput?.value.trim() || "";
                 const url = queryValue
@@ -506,28 +507,34 @@ function ProductsSection() {
         propertiesWithLikes = await Promise.all(
           data.map(async (item) => {
             try {
-              const likeRes = await axios.get(`${baseUrl}/houselike/${item._id}?userId=${session.user.id}`);
+              const likeRes = await axios.get(
+                `${baseUrl}/houselike/${item._id}?userId=${session.user.id}`,
+              );
               return {
                 ...item,
                 liked: likeRes.data.userLiked || false,
-                likes: likeRes.data.likes || 0
+                likes: likeRes.data.likes || 0,
               };
             } catch (likeErr) {
-              console.error("❌ Error fetching like status for property:", item._id, likeErr);
+              console.error(
+                "❌ Error fetching like status for property:",
+                item._id,
+                likeErr,
+              );
               return {
                 ...item,
                 liked: false,
-                likes: item.likes || 0
+                likes: item.likes || 0,
               };
             }
-          })
+          }),
         );
       } else {
         // If not logged in, just use existing likes data
-        propertiesWithLikes = data.map(item => ({
+        propertiesWithLikes = data.map((item) => ({
           ...item,
           liked: false,
-          likes: item.likes || 0
+          likes: item.likes || 0,
         }));
       }
 
@@ -536,8 +543,8 @@ function ProductsSection() {
           Array.isArray(item.imageUrl) && item.imageUrl.length > 0
             ? item.imageUrl[0]
             : typeof item.imageUrl === "string"
-            ? item.imageUrl
-            : null;
+              ? item.imageUrl
+              : null;
 
         const imageSrc = firstImage
           ? firstImage.startsWith("http")
@@ -569,8 +576,8 @@ function ProductsSection() {
             Array.isArray(item.imageUrl) && item.imageUrl.length > 0
               ? item.imageUrl[0]
               : typeof item.imageUrl === "string"
-              ? item.imageUrl
-              : null;
+                ? item.imageUrl
+                : null;
 
           const imageSrc = firstImage
             ? firstImage.startsWith("http")
@@ -608,35 +615,35 @@ function ProductsSection() {
   const popularStays = properties.filter(
     (p) =>
       ["apartment", "villa", "guesthouse"].includes(
-        (p.serviceType || "").toLowerCase()
-      ) && p.status === "approved"
+        (p.serviceType || "").toLowerCase(),
+      ) && p.status === "approved",
   );
 
   const carsForRent = properties.filter(
     (p) =>
       (p.serviceType || "").toLowerCase() === "car" &&
       p.listingType === "rent" &&
-      p.status === "approved"
+      p.status === "approved",
   );
 
   const tourismSites = properties.filter(
     (p) =>
       (p.serviceType || "").toLowerCase() === "tourism" &&
-      p.status === "approved"
+      p.status === "approved",
   );
 
   const housesForSale = properties.filter(
     (p) =>
       (p.serviceType || "").toLowerCase() === "house" &&
       p.listingType === "sale" &&
-      p.status === "approved"
+      p.status === "approved",
   );
 
   const carsForSale = properties.filter(
     (p) =>
       (p.serviceType || "").toLowerCase() === "car" &&
       p.listingType === "sale" &&
-      p.status === "approved"
+      p.status === "approved",
   );
 
   const renderHorizontalScroll = (items, CardComponent) => (
@@ -966,6 +973,7 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-white">
       <Navbar />
+      <StatsSection />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         {/* Profile info near top of main content */}
 

@@ -62,10 +62,10 @@ export default function AdminSpecialOffers() {
           fd,
           {
             headers: { "Content-Type": "multipart/form-data" },
-          }
+          },
         );
         setOffers((prev) =>
-          prev.map((o) => (o._id === editingId ? res.data : o))
+          prev.map((o) => (o._id === editingId ? res.data : o)),
         );
         setEditingId(null);
       } else {
@@ -174,7 +174,7 @@ export default function AdminSpecialOffers() {
           placeholder="Property Name"
           value={form.propertyName}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded text-gray-900 placeholder-gray-500 border-gray-300"
           required
         />
         <input
@@ -183,7 +183,7 @@ export default function AdminSpecialOffers() {
           placeholder="Address"
           value={form.address}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded text-gray-900 placeholder-gray-500 border-gray-300"
         />
         <input
           type="number"
@@ -191,7 +191,7 @@ export default function AdminSpecialOffers() {
           placeholder="Price (Br)"
           value={form.price}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded text-gray-900 placeholder-gray-500 border-gray-300"
         />
         <input
           type="number"
@@ -200,13 +200,13 @@ export default function AdminSpecialOffers() {
           step="0.1"
           value={form.rating}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded text-gray-900 placeholder-gray-500 border-gray-300"
         />
         <input
           type="file"
           name="image"
           onChange={handleFileChange}
-          className="border p-2 rounded md:col-span-2"
+          className="border p-2 rounded md:col-span-2 text-gray-900 border-gray-300"
         />
         <button
           type="submit"
@@ -218,7 +218,9 @@ export default function AdminSpecialOffers() {
 
       {/* List of offers */}
       <div>
-        <h2 className="text-lg font-semibold mb-4">Existing Special Offers</h2>
+        <h2 className="text-lg font-semibold mb-4 text-gray-900">
+          Existing Special Offers
+        </h2>
         {offers.length === 0 ? (
           <p className="text-gray-500">No special offers yet.</p>
         ) : (
@@ -228,11 +230,13 @@ export default function AdminSpecialOffers() {
                 key={o._id}
                 className="border p-4 bg-white rounded shadow relative"
               >
-                <p className="font-bold">{o.propertyName}</p>
-                <p>{o.address}</p>
-                <p>Price: {o.price} Br</p>
-                <p>Rating: {o.rating}</p>
-                <p>Status: {o.status}</p>
+                <p className="font-bold text-gray-900">{o.propertyName}</p>
+                <p className="text-gray-700">{o.address}</p>
+                <p className="text-gray-900 font-semibold">
+                  Price: {o.price} Br
+                </p>
+                <p className="text-gray-700">Rating: {o.rating}</p>
+                <p className="text-gray-700">Status: {o.status}</p>
                 {o.imageUrl && (
                   <img
                     src={

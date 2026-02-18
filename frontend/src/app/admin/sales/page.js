@@ -110,7 +110,7 @@ export default function AdminSalesPage() {
           },
         });
         setSales((prev) =>
-          prev.map((s) => (s._id === editingId ? res.data : s))
+          prev.map((s) => (s._id === editingId ? res.data : s)),
         );
         setEditingId(null);
         setSuccessMessage("Sale updated successfully!");
@@ -137,7 +137,7 @@ export default function AdminSalesPage() {
     } catch (err) {
       console.error(
         "❌ Failed to submit sale",
-        err.response?.data || err.message
+        err.response?.data || err.message,
       );
       setErrorMessage(err.response?.data?.message || "Something went wrong!");
       setTimeout(() => setErrorMessage(""), 3000);
@@ -199,16 +199,21 @@ export default function AdminSalesPage() {
       </p>
     );
 
-  if (loading) return <p className="text-center mt-10">Loading...</p>;
+  if (loading)
+    return <p className="text-center mt-10 text-gray-700">Loading...</p>;
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-bold mb-6">Admin - Manage Sales</h1>
+      <h1 className="text-2xl font-bold mb-6 text-gray-900">
+        Admin - Manage Sales
+      </h1>
 
       {successMessage && (
-        <p className="text-green-600 mb-4">{successMessage}</p>
+        <p className="text-green-600 mb-4 font-medium">{successMessage}</p>
       )}
-      {errorMessage && <p className="text-red-600 mb-4">{errorMessage}</p>}
+      {errorMessage && (
+        <p className="text-red-600 mb-4 font-medium">{errorMessage}</p>
+      )}
 
       {/* Form */}
       <form
@@ -221,7 +226,7 @@ export default function AdminSalesPage() {
           placeholder="Title"
           value={form.title}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded text-gray-900 placeholder-gray-500 border-gray-300"
           required
         />
 
@@ -229,7 +234,7 @@ export default function AdminSalesPage() {
           name="category"
           value={form.category}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded text-gray-900 border-gray-300"
           required
         >
           <option value="">Select Category</option>
@@ -245,7 +250,7 @@ export default function AdminSalesPage() {
           placeholder="Price (e.g., 100,000 birr)"
           value={form.price}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded text-gray-900 placeholder-gray-500 border-gray-300"
           required
         />
 
@@ -255,7 +260,7 @@ export default function AdminSalesPage() {
           placeholder="Location"
           value={form.location}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded text-gray-900 placeholder-gray-500 border-gray-300"
           required
         />
 
@@ -264,7 +269,7 @@ export default function AdminSalesPage() {
           placeholder="Description"
           value={form.description}
           onChange={handleChange}
-          className="border p-2 rounded col-span-1 md:col-span-2"
+          className="border p-2 rounded col-span-1 md:col-span-2 text-gray-900 placeholder-gray-500 border-gray-300"
           required
         />
 
@@ -272,7 +277,7 @@ export default function AdminSalesPage() {
           type="file"
           name="img"
           onChange={handleFileChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded text-gray-900 border-gray-300"
         />
 
         <button
@@ -285,15 +290,17 @@ export default function AdminSalesPage() {
 
       {/* Sales List */}
       <div>
-        <h2 className="text-lg font-semibold mb-4">Existing Sales</h2>
+        <h2 className="text-lg font-semibold mb-4 text-gray-900">
+          Existing Sales
+        </h2>
         <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {sales.map((s) => (
             <li key={s._id} className="border p-4 bg-white rounded shadow">
-              <p className="font-bold">{s.title}</p>
-              <p>Category: {s.category}</p>
-              <p>Price: {s.price}</p>
-              <p>Location: {s.location}</p>
-              <p>Description: {s.description}</p>
+              <p className="font-bold text-gray-900">{s.title}</p>
+              <p className="text-gray-700">Category: {s.category}</p>
+              <p className="text-gray-900 font-semibold">Price: {s.price}</p>
+              <p className="text-gray-700">Location: {s.location}</p>
+              <p className="text-gray-700">Description: {s.description}</p>
               {s.img && (
                 <img
                   src={
@@ -306,7 +313,7 @@ export default function AdminSalesPage() {
                 />
               )}
 
-              <p className="mt-2 font-semibold">
+              <p className="mt-2 font-semibold text-gray-800">
                 Status: {s.status || "pending"}
               </p>
 

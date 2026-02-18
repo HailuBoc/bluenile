@@ -6,7 +6,7 @@ import path from "path";
 import compression from "compression";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-     
+
 // Routes
 import transportRoutes from "./routes/transportRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -46,6 +46,9 @@ import vipGraduationRoutes from "./routes/vipGraduationRoutes.js";
 import vipGeneralEventRoutes from "./routes/vipGeneralEventRoutes.js";
 import vipWeddingRoutes from "./routes/vipWeddingRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
+import statsRoutes from "./routes/statsRoutes.js";
+
+import seedAdmin from "./utils/seedAdmin.js";
 
 dotenv.config();
 const PORT = process.env.PORT || 10001;
@@ -57,62 +60,75 @@ const app = express();
 // --------------------
 
 // Compression middleware for gzip
-app.use(compression({
-  filter: (req, res) => {
-    if (req.headers['x-no-compression']) {
-      return false;
-    }
-    return compression.filter(req, res);
-  },
-  threshold: 1024,
-}));
+app.use(
+  compression({
+    filter: (req, res) => {
+      if (req.headers["x-no-compression"]) {
+        return false;
+      }
+      return compression.filter(req, res);
+    },
+    threshold: 1024,
+  }),
+);
 
 // Security headers
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
+      },
     },
-  },
-}));
+  }),
+);
 
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
   message: {
-    error: "Too many requests from this IP, please try again later."
+    error: "Too many requests from this IP, please try again later.",
   },
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use('/api/', limiter); 
+app.use("/api/", limiter);
 
 // CORS with performance optimization
-app.use(cors({
-  origin: process.env.FRONTEND_URL || "*",
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "*",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 // Body parsing with size limits
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Serve uploads statically with caching headers
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads"), {
-  maxAge: '1y',
-  etag: true,
-  lastModified: true,
-  setHeaders: (res, path) => {
-    if (path.endsWith('.jpg') || path.endsWith('.png') || path.endsWith('.jpeg')) {
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    }
-  },
-}));
+app.use(
+  "/uploads",
+  express.static(path.join(process.cwd(), "uploads"), {
+    maxAge: "1y",
+    etag: true,
+    lastModified: true,
+    setHeaders: (res, path) => {
+      if (
+        path.endsWith(".jpg") ||
+        path.endsWith(".png") ||
+        path.endsWith(".jpeg")
+      ) {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      }
+    },
+  }),
+);
 
 // Routes
 app.use("/test", testEmailRoutes);
@@ -154,6 +170,7 @@ app.use("/vip/birthday", vipBirthdayRoutes);
 app.use("/vip/graduation", vipGraduationRoutes);
 app.use("/vip/generalevents", vipGeneralEventRoutes);
 app.use("/vip/weddings", vipWeddingRoutes);
+app.use("/api/stats", statsRoutes);
 app.use("/api/contact", contactRoutes);
 
 console.log("Mounted route: /specialreservations");
@@ -175,28 +192,29 @@ const connectWithRetry = async (retries = 5, delay = 5000) => {
       serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
     });
-    
+
     console.log("Database connected successfully");
-    
+
+    // Seed admin if not exists
+    await seedAdmin();
+
     // Enable performance monitoring in development
-    if (process.env.NODE_ENV === 'development') {
-      mongoose.set('debug', true);
+    if (process.env.NODE_ENV === "development") {
+      mongoose.set("debug", true);
     }
-    
+
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
-      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
     });
   } catch (err) {
     console.error(`DB connection error: ${err.message}`);
     if (retries > 0) {
-      console.log(
-        `Retrying in ${delay / 1000}s... (${retries} retries left)`
-      );
+      console.log(`Retrying in ${delay / 1000}s... (${retries} retries left)`);
       setTimeout(() => connectWithRetry(retries - 1, delay), delay);
     } else {
       console.error(
-        "Failed to connect to MongoDB after multiple attempts. Exiting."
+        "Failed to connect to MongoDB after multiple attempts. Exiting.",
       );
       process.exit(1);
     }
@@ -204,14 +222,14 @@ const connectWithRetry = async (retries = 5, delay = 5000) => {
 };
 
 // Graceful shutdown handling
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM received, shutting down gracefully');
+process.on("SIGTERM", async () => {
+  console.log("SIGTERM received, shutting down gracefully");
   await mongoose.connection.close();
   process.exit(0);
 });
 
-process.on('SIGINT', async () => {
-  console.log('SIGINT received, shutting down gracefully');
+process.on("SIGINT", async () => {
+  console.log("SIGINT received, shutting down gracefully");
   await mongoose.connection.close();
   process.exit(0);
 });
