@@ -38,14 +38,23 @@ export default function CarsPage() {
           Array.isArray(res.data.imageUrl) && res.data.imageUrl.length > 0
             ? res.data.imageUrl[0]
             : typeof res.data.imageUrl === "string"
-            ? res.data.imageUrl
-            : null;
+              ? res.data.imageUrl
+              : null;
 
-        const imageSrc = firstImage
-          ? firstImage.startsWith("http")
+        const getImageSrc = () => {
+          if (!firstImage) return null;
+          if (firstImage.startsWith("http")) return firstImage;
+          // Safe URL construction - prevent double slashes
+          const formattedBaseUrl = BASE_URL.endsWith("/")
+            ? BASE_URL.slice(0, -1)
+            : BASE_URL;
+          const formattedImagePath = firstImage.startsWith("/")
             ? firstImage
-            : `${BASE_URL}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
-          : null;
+            : `/${firstImage}`;
+          return `${formattedBaseUrl}${formattedImagePath}`;
+        };
+
+        const imageSrc = getImageSrc();
 
         setSelectedCar({ ...res.data, imageUrl: imageSrc });
         setError(null);
@@ -66,7 +75,9 @@ export default function CarsPage() {
       try {
         const userId = session?.user?.id;
         const query = userId ? `?userId=${userId}` : "";
-        const res = await axios.get(`${BASE_URL}/carsalelike/${idParam}${query}`);
+        const res = await axios.get(
+          `${BASE_URL}/carsalelike/${idParam}${query}`,
+        );
         setLikes(res.data.likes || 0);
         setLiked(res.data.userLiked || false);
       } catch (err) {
@@ -86,7 +97,7 @@ export default function CarsPage() {
       window.location.href = `/auth/login?callbackUrl=${encodeURIComponent(currentPath)}`;
       return;
     }
-    
+
     try {
       const newLiked = !liked;
       setLiked(newLiked);

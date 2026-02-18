@@ -19,11 +19,22 @@ export default function SpecialOfferCard({
 }) {
   const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
-  const imageSrc = imageUrl
-    ? imageUrl.startsWith("http")
+  // ✅ Handle image with safe URL construction
+  const getImageSrc = () => {
+    if (!imageUrl) return "/placeholder-product.jpg";
+    if (imageUrl.startsWith("http")) return imageUrl;
+
+    // Safe URL construction - prevent double slashes
+    const formattedBaseUrl = BASE_URL.endsWith("/")
+      ? BASE_URL.slice(0, -1)
+      : BASE_URL;
+    const formattedImagePath = imageUrl.startsWith("/")
       ? imageUrl
-      : `${BASE_URL}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`
-    : "/placeholder-product.jpg";
+      : `/${imageUrl}`;
+    return `${formattedBaseUrl}${formattedImagePath}`;
+  };
+
+  const imageSrc = getImageSrc();
 
   const renderStars = (rating) => {
     const stars = [];

@@ -54,16 +54,18 @@ function CarDetailContent() {
         const rawImages = Array.isArray(product.imageUrl)
           ? product.imageUrl
           : typeof product.imageUrl === "string" && product.imageUrl
-          ? [product.imageUrl]
-          : [];
+            ? [product.imageUrl]
+            : [];
 
-        const images = rawImages
-          .filter(Boolean)
-          .map((img) =>
-            img.startsWith("http")
-              ? img
-              : `${BASE_URL}${img.startsWith("/") ? "" : "/"}${img}`
-          );
+        const images = rawImages.filter(Boolean).map((img) => {
+          if (img.startsWith("http")) return img;
+          // Safe URL construction - prevent double slashes
+          const formattedBaseUrl = BASE_URL.endsWith("/")
+            ? BASE_URL.slice(0, -1)
+            : BASE_URL;
+          const formattedImagePath = img.startsWith("/") ? img : `/${img}`;
+          return `${formattedBaseUrl}${formattedImagePath}`;
+        });
 
         const imageSrc = images[0] || null;
 
@@ -72,14 +74,18 @@ function CarDetailContent() {
           imageUrl: imageSrc,
           images,
           name: product.carName || product.propertyName || "Car",
-          location: product.location || product.address || product.city || "No location",
+          location:
+            product.location ||
+            product.address ||
+            product.city ||
+            "No location",
         });
         setActiveImageIndex(0);
 
         if (session?.user?.id) {
           try {
             const likeRes = await axios.get(
-              `${BASE_URL}/carslike/${idParam}?userId=${session.user.id}`
+              `${BASE_URL}/carslike/${idParam}?userId=${session.user.id}`,
             );
             setLiked(likeRes.data.userLiked || false);
             setLikesCount(likeRes.data.likes || 0);
@@ -115,7 +121,7 @@ function CarDetailContent() {
       window.location.href = `/auth/login?callbackUrl=${encodeURIComponent(currentPath)}`;
       return;
     }
-    
+
     try {
       const newLiked = !liked;
 
@@ -128,7 +134,7 @@ function CarDetailContent() {
 
       setLiked(res.data.userLiked ?? newLiked);
       setLikesCount(
-        res.data.likes ?? (newLiked ? likesCount + 1 : likesCount - 1)
+        res.data.likes ?? (newLiked ? likesCount + 1 : likesCount - 1),
       );
     } catch (err) {
       console.error("❌ Failed to like car:", err);
@@ -270,7 +276,9 @@ function CarDetailContent() {
               </div>
               <div className="flex items-center gap-1">
                 {renderStars(selectedProduct.rating || 0)}
-                <span className="text-sm">({selectedProduct.rating?.toFixed(1) || "N/A"})</span>
+                <span className="text-sm">
+                  ({selectedProduct.rating?.toFixed(1) || "N/A"})
+                </span>
               </div>
             </div>
           </motion.div>
@@ -412,14 +420,16 @@ function CarDetailContent() {
                     </div>
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {selectedProduct.serviceType || selectedProduct.listingType || ""}
+                    {selectedProduct.serviceType ||
+                      selectedProduct.listingType ||
+                      ""}
                   </div>
                 </div>
 
                 <div className="mt-4">
                   <CustomButton
                     href={`/sections/rentalCars/reserveRental?id=${selectedProduct._id}&price=${encodeURIComponent(
-                      String(displayedPrice)
+                      String(displayedPrice),
                     )}`}
                     variant="primary"
                     size="sm"
@@ -438,7 +448,7 @@ function CarDetailContent() {
                   <iframe
                     title="Car Location"
                     src={`https://www.google.com/maps?q=${encodeURIComponent(
-                      selectedProduct.location || "Ethiopia"
+                      selectedProduct.location || "Ethiopia",
                     )}&output=embed`}
                     className="w-full h-48"
                     allowFullScreen
@@ -448,7 +458,7 @@ function CarDetailContent() {
                 <div className="mt-3">
                   <CustomButton
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                      selectedProduct.location || "Ethiopia"
+                      selectedProduct.location || "Ethiopia",
                     )}`}
                     variant="ghost"
                     size="sm"
