@@ -54,16 +54,18 @@ function ProductDetailContent() {
         const rawImages = Array.isArray(product.imageUrl)
           ? product.imageUrl
           : typeof product.imageUrl === "string"
-          ? [product.imageUrl]
-          : [];
+            ? [product.imageUrl]
+            : [];
 
-        const images = rawImages
-          .filter(Boolean)
-          .map((img) =>
-            img.startsWith("http")
-              ? img
-              : `${BASE_URL}${img.startsWith("/") ? "" : "/"}${img}`
-          );
+        const images = rawImages.filter(Boolean).map((img) => {
+          if (img.startsWith("http")) return img;
+          // Safe URL construction - prevent double slashes
+          const formattedBaseUrl = BASE_URL.endsWith("/")
+            ? BASE_URL.slice(0, -1)
+            : BASE_URL;
+          const formattedImagePath = img.startsWith("/") ? img : `/${img}`;
+          return `${formattedBaseUrl}${formattedImagePath}`;
+        });
 
         const imageSrc = images[0] || null;
 
@@ -94,7 +96,9 @@ function ProductDetailContent() {
       try {
         const userId = session?.user?.id;
         const query = userId ? `?userId=${userId}` : "";
-        const res = await axios.get(`${BASE_URL}/productlike/${idParam}${query}`);
+        const res = await axios.get(
+          `${BASE_URL}/productlike/${idParam}${query}`,
+        );
         setLikesCount(res.data.likes || 0);
         setLiked(res.data.userLiked || false);
       } catch (err) {
@@ -108,7 +112,7 @@ function ProductDetailContent() {
   // Toggle like function
   const handleToggleLike = async () => {
     if (!selectedProduct) return;
-    
+
     // Check if user is authenticated
     if (!session?.user?.id) {
       // Redirect to login with return URL
@@ -116,7 +120,7 @@ function ProductDetailContent() {
       window.location.href = `/auth/login?callbackUrl=${encodeURIComponent(currentPath)}`;
       return;
     }
-    
+
     try {
       const newLiked = !liked;
       setLiked(newLiked);
@@ -128,7 +132,7 @@ function ProductDetailContent() {
 
       setLiked(res.data.userLiked ?? newLiked);
       setLikesCount(
-        res.data.likes ?? (newLiked ? likesCount + 1 : likesCount - 1)
+        res.data.likes ?? (newLiked ? likesCount + 1 : likesCount - 1),
       );
     } catch (err) {
       console.error("❌ Failed to toggle product like:", err);
@@ -138,23 +142,26 @@ function ProductDetailContent() {
     }
   };
 
-
   // Render stars
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
-        if (rating >= i)
-            stars.push(<Star key={i} className="h-5 w-5 text-yellow-400" />);
-        else if (rating >= i - 0.5)
-            stars.push(<StarHalf key={i} className="h-5 w-5 text-yellow-400" />);
-        else stars.push(<StarOutline key={i} className="h-5 w-5 text-gray-400" />);
+      if (rating >= i)
+        stars.push(<Star key={i} className="h-5 w-5 text-yellow-400" />);
+      else if (rating >= i - 0.5)
+        stars.push(<StarHalf key={i} className="h-5 w-5 text-yellow-400" />);
+      else
+        stars.push(<StarOutline key={i} className="h-5 w-5 text-gray-400" />);
     }
     return stars;
   };
 
   const imageUrls = useMemo(() => {
     if (!selectedProduct) return [];
-    if (Array.isArray(selectedProduct.images) && selectedProduct.images.length > 0)
+    if (
+      Array.isArray(selectedProduct.images) &&
+      selectedProduct.images.length > 0
+    )
       return selectedProduct.images;
     return selectedProduct.imageUrl ? [selectedProduct.imageUrl] : [];
   }, [selectedProduct]);
@@ -284,7 +291,11 @@ function ProductDetailContent() {
                 {activeImage ? (
                   <img
                     src={activeImage}
-                    alt={selectedProduct.propertyName || selectedProduct.name || "Product"}
+                    alt={
+                      selectedProduct.propertyName ||
+                      selectedProduct.name ||
+                      "Product"
+                    }
                     className="w-full h-44 sm:h-64 object-cover"
                     loading="lazy"
                     decoding="async"
@@ -413,7 +424,7 @@ function ProductDetailContent() {
                 <div className="mt-4">
                   <CustomButton
                     href={`/sections/products/reserveProducts?id=${selectedProduct._id}&price=${encodeURIComponent(
-                      String(displayedPrice)
+                      String(displayedPrice),
                     )}`}
                     variant="primary"
                     size="sm"
@@ -432,7 +443,7 @@ function ProductDetailContent() {
                   <iframe
                     title="Product Location"
                     src={`https://www.google.com/maps?q=${encodeURIComponent(
-                      selectedProduct.address || "Ethiopia"
+                      selectedProduct.address || "Ethiopia",
                     )}&output=embed`}
                     className="w-full h-48"
                     allowFullScreen
@@ -442,7 +453,7 @@ function ProductDetailContent() {
                 <div className="mt-3">
                   <CustomButton
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                      selectedProduct.address || "Ethiopia"
+                      selectedProduct.address || "Ethiopia",
                     )}`}
                     variant="ghost"
                     size="sm"

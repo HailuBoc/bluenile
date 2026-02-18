@@ -50,24 +50,28 @@ function HouseDetailContent() {
         const rawImages = Array.isArray(data.imageUrl)
           ? data.imageUrl
           : typeof data.imageUrl === "string" && data.imageUrl
-          ? [data.imageUrl]
-          : [];
+            ? [data.imageUrl]
+            : [];
 
-        const images = rawImages
-          .filter(Boolean)
-          .map((img) =>
-            img.startsWith("http")
-              ? img
-              : `${BASE_URL}${img.startsWith("/") ? "" : "/"}${img}`
-          );
+        const images = rawImages.filter(Boolean).map((img) => {
+          if (img.startsWith("http")) return img;
+          // Safe URL construction - prevent double slashes
+          const formattedBaseUrl = BASE_URL.endsWith("/")
+            ? BASE_URL.slice(0, -1)
+            : BASE_URL;
+          const formattedImagePath = img.startsWith("/") ? img : `/${img}`;
+          return `${formattedBaseUrl}${formattedImagePath}`;
+        });
 
         setHouse({ ...data, imageUrl: images[0] || null, images });
         setActiveImageIndex(0);
-        
+
         // Fetch like status if user is logged in
         if (session?.user?.id) {
           try {
-            const likeRes = await axios.get(`${BASE_URL}/houselike/${idParam}?userId=${session.user.id}`);
+            const likeRes = await axios.get(
+              `${BASE_URL}/houselike/${idParam}?userId=${session.user.id}`,
+            );
             setLiked(likeRes.data.userLiked || false);
             setLikesCount(likeRes.data.likes || 0);
           } catch (likeErr) {
@@ -79,7 +83,7 @@ function HouseDetailContent() {
           setLiked(false);
           setLikesCount(data.likes || 0);
         }
-        
+
         setError(null);
       } catch (err) {
         console.error("❌ Error fetching house:", err);
@@ -96,7 +100,7 @@ function HouseDetailContent() {
   // Toggle like (POST only, no GET)
   const handleToggleLike = async () => {
     if (!house) return;
-    
+
     // Check if user is authenticated
     if (!session?.user?.id) {
       // Redirect to login with return URL
@@ -104,7 +108,7 @@ function HouseDetailContent() {
       window.location.href = `/auth/login?callbackUrl=${encodeURIComponent(currentPath)}`;
       return;
     }
-    
+
     try {
       const newLiked = !liked;
       setLiked(newLiked);
@@ -116,7 +120,7 @@ function HouseDetailContent() {
 
       setLiked(res.data.userLiked ?? newLiked);
       setLikesCount(
-        res.data.likes ?? (newLiked ? likesCount + 1 : likesCount - 1)
+        res.data.likes ?? (newLiked ? likesCount + 1 : likesCount - 1),
       );
     } catch (err) {
       console.error("❌ Failed to toggle house like:", err);
@@ -147,7 +151,8 @@ function HouseDetailContent() {
 
   const imageUrls = useMemo(() => {
     if (!house) return [];
-    if (Array.isArray(house.images) && house.images.length > 0) return house.images;
+    if (Array.isArray(house.images) && house.images.length > 0)
+      return house.images;
     return house.imageUrl ? [house.imageUrl] : [];
   }, [house]);
 
@@ -166,7 +171,9 @@ function HouseDetailContent() {
   if (loading)
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <p className="text-lg text-gray-700 dark:text-gray-200">Loading house...</p>
+        <p className="text-lg text-gray-700 dark:text-gray-200">
+          Loading house...
+        </p>
       </div>
     );
 
@@ -181,7 +188,9 @@ function HouseDetailContent() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
         <main className="flex items-center justify-center min-h-[70vh] px-4">
-          <p className="text-lg text-gray-700 dark:text-gray-200">House not found.</p>
+          <p className="text-lg text-gray-700 dark:text-gray-200">
+            House not found.
+          </p>
         </main>
         <Footer />
       </div>
@@ -255,7 +264,9 @@ function HouseDetailContent() {
               </div>
               <div className="flex items-center gap-1">
                 {renderStars(house.rating || 0)}
-                <span className="text-sm">({house.rating?.toFixed(1) || "N/A"})</span>
+                <span className="text-sm">
+                  ({house.rating?.toFixed(1) || "N/A"})
+                </span>
               </div>
             </div>
           </motion.div>
@@ -413,7 +424,7 @@ function HouseDetailContent() {
                   <iframe
                     title="House Location"
                     src={`https://www.google.com/maps?q=${encodeURIComponent(
-                      house.address || "Ethiopia"
+                      house.address || "Ethiopia",
                     )}&output=embed`}
                     className="w-full h-48"
                     allowFullScreen
@@ -423,7 +434,7 @@ function HouseDetailContent() {
                 <div className="mt-3">
                   <CustomButton
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                      house.address || "Ethiopia"
+                      house.address || "Ethiopia",
                     )}`}
                     variant="ghost"
                     size="sm"

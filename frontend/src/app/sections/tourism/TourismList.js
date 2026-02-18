@@ -56,16 +56,18 @@ function TourismDetailContent() {
         const rawImages = Array.isArray(tourism.imageUrl)
           ? tourism.imageUrl
           : typeof tourism.imageUrl === "string"
-          ? [tourism.imageUrl]
-          : [];
+            ? [tourism.imageUrl]
+            : [];
 
-        const images = rawImages
-          .filter(Boolean)
-          .map((img) =>
-            img.startsWith("http")
-              ? img
-              : `${BASE_URL}${img.startsWith("/") ? "" : "/"}${img}`
-          );
+        const images = rawImages.filter(Boolean).map((img) => {
+          if (img.startsWith("http")) return img;
+          // Safe URL construction - prevent double slashes
+          const formattedBaseUrl = BASE_URL.endsWith("/")
+            ? BASE_URL.slice(0, -1)
+            : BASE_URL;
+          const formattedImagePath = img.startsWith("/") ? img : `/${img}`;
+          return `${formattedBaseUrl}${formattedImagePath}`;
+        });
 
         const imageSrc = images[0] || null;
 
@@ -96,7 +98,9 @@ function TourismDetailContent() {
       try {
         const userId = session?.user?.id;
         const query = userId ? `?userId=${userId}` : "";
-        const res = await axios.get(`${BASE_URL}/tourismlike/${idParam}${query}`);
+        const res = await axios.get(
+          `${BASE_URL}/tourismlike/${idParam}${query}`,
+        );
         setLikesCount(res.data.likes || 0);
         setLiked(res.data.userLiked || false);
       } catch (err) {
@@ -110,7 +114,7 @@ function TourismDetailContent() {
   // Toggle like function
   const handleToggleLike = async () => {
     if (!selectedTourism) return;
-    
+
     // Check if user is authenticated
     if (!session?.user?.id) {
       // Redirect to login with return URL
@@ -118,7 +122,7 @@ function TourismDetailContent() {
       window.location.href = `/auth/login?callbackUrl=${encodeURIComponent(currentPath)}`;
       return;
     }
-    
+
     try {
       const newLiked = !liked;
       setLiked(newLiked);
@@ -130,7 +134,7 @@ function TourismDetailContent() {
 
       setLiked(res.data.userLiked ?? newLiked);
       setLikesCount(
-        res.data.likes ?? (newLiked ? likesCount + 1 : likesCount - 1)
+        res.data.likes ?? (newLiked ? likesCount + 1 : likesCount - 1),
       );
     } catch (err) {
       console.error("❌ Failed to toggle tourism like:", err);
@@ -144,18 +148,22 @@ function TourismDetailContent() {
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
-        if (rating >= i)
-            stars.push(<Star key={i} className="h-5 w-5 text-yellow-400" />);
-        else if (rating >= i - 0.5)
-            stars.push(<StarHalf key={i} className="h-5 w-5 text-yellow-400" />);
-        else stars.push(<StarOutline key={i} className="h-5 w-5 text-gray-400" />);
+      if (rating >= i)
+        stars.push(<Star key={i} className="h-5 w-5 text-yellow-400" />);
+      else if (rating >= i - 0.5)
+        stars.push(<StarHalf key={i} className="h-5 w-5 text-yellow-400" />);
+      else
+        stars.push(<StarOutline key={i} className="h-5 w-5 text-gray-400" />);
     }
     return stars;
   };
 
   const imageUrls = useMemo(() => {
     if (!selectedTourism) return [];
-    if (Array.isArray(selectedTourism.images) && selectedTourism.images.length > 0)
+    if (
+      Array.isArray(selectedTourism.images) &&
+      selectedTourism.images.length > 0
+    )
       return selectedTourism.images;
     return selectedTourism.imageUrl ? [selectedTourism.imageUrl] : [];
   }, [selectedTourism]);
@@ -284,7 +292,11 @@ function TourismDetailContent() {
                 {activeImage ? (
                   <img
                     src={activeImage}
-                    alt={selectedTourism.propertyName || selectedTourism.name || "Tourism Package"}
+                    alt={
+                      selectedTourism.propertyName ||
+                      selectedTourism.name ||
+                      "Tourism Package"
+                    }
                     className="w-full h-44 sm:h-64 object-cover"
                     loading="lazy"
                     decoding="async"
@@ -463,7 +475,7 @@ function TourismDetailContent() {
                   <iframe
                     title="Tourism Location"
                     src={`https://www.google.com/maps?q=${encodeURIComponent(
-                      selectedTourism.address || "Ethiopia"
+                      selectedTourism.address || "Ethiopia",
                     )}&output=embed`}
                     className="w-full h-48"
                     allowFullScreen
@@ -473,7 +485,7 @@ function TourismDetailContent() {
                 <div className="mt-3">
                   <CustomButton
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                      selectedTourism.address || "Ethiopia"
+                      selectedTourism.address || "Ethiopia",
                     )}`}
                     variant="ghost"
                     size="sm"

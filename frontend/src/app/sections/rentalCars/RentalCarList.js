@@ -58,16 +58,18 @@ function RentalCarDetailContent() {
         const rawImages = Array.isArray(car.imageUrl)
           ? car.imageUrl
           : typeof car.imageUrl === "string"
-          ? [car.imageUrl]
-          : [];
+            ? [car.imageUrl]
+            : [];
 
-        const images = rawImages
-          .filter(Boolean)
-          .map((img) =>
-            img.startsWith("http")
-              ? img
-              : `${BASE_URL}${img.startsWith("/") ? "" : "/"}${img}`
-          );
+        const images = rawImages.filter(Boolean).map((img) => {
+          if (img.startsWith("http")) return img;
+          // Safe URL construction - prevent double slashes
+          const formattedBaseUrl = BASE_URL.endsWith("/")
+            ? BASE_URL.slice(0, -1)
+            : BASE_URL;
+          const formattedImagePath = img.startsWith("/") ? img : `/${img}`;
+          return `${formattedBaseUrl}${formattedImagePath}`;
+        });
 
         const imageSrc = images[0] || null;
 
@@ -98,7 +100,9 @@ function RentalCarDetailContent() {
       try {
         const userId = session?.user?.id;
         const query = userId ? `?userId=${userId}` : "";
-        const res = await axios.get(`${BASE_URL}/rentalcarlike/${idParam}${query}`);
+        const res = await axios.get(
+          `${BASE_URL}/rentalcarlike/${idParam}${query}`,
+        );
         setLikesCount(res.data.likes || 0);
         setLiked(res.data.userLiked || false);
       } catch (err) {
@@ -112,7 +116,7 @@ function RentalCarDetailContent() {
   // Toggle like function
   const handleToggleLike = async () => {
     if (!selectedCar) return;
-    
+
     // Check if user is authenticated
     if (!session?.user?.id) {
       // Redirect to login with return URL
@@ -120,19 +124,22 @@ function RentalCarDetailContent() {
       window.location.href = `/auth/login?callbackUrl=${encodeURIComponent(currentPath)}`;
       return;
     }
-    
+
     try {
       const newLiked = !liked;
       setLiked(newLiked);
       setLikesCount((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
 
-      const res = await axios.post(`${BASE_URL}/rentalcarlike/${idParam}/like`, {
-        userId: session.user.id,
-      });
+      const res = await axios.post(
+        `${BASE_URL}/rentalcarlike/${idParam}/like`,
+        {
+          userId: session.user.id,
+        },
+      );
 
       setLiked(res.data.userLiked ?? newLiked);
       setLikesCount(
-        res.data.likes ?? (newLiked ? likesCount + 1 : likesCount - 1)
+        res.data.likes ?? (newLiked ? likesCount + 1 : likesCount - 1),
       );
     } catch (err) {
       console.error("❌ Failed to toggle rental car like:", err);
@@ -146,11 +153,12 @@ function RentalCarDetailContent() {
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
-        if (rating >= i)
-            stars.push(<Star key={i} className="h-5 w-5 text-yellow-400" />);
-        else if (rating >= i - 0.5)
-            stars.push(<StarHalf key={i} className="h-5 w-5 text-yellow-400" />);
-        else stars.push(<StarOutline key={i} className="h-5 w-5 text-gray-400" />);
+      if (rating >= i)
+        stars.push(<Star key={i} className="h-5 w-5 text-yellow-400" />);
+      else if (rating >= i - 0.5)
+        stars.push(<StarHalf key={i} className="h-5 w-5 text-yellow-400" />);
+      else
+        stars.push(<StarOutline key={i} className="h-5 w-5 text-gray-400" />);
     }
     return stars;
   };
@@ -165,9 +173,7 @@ function RentalCarDetailContent() {
   const activeImage = imageUrls[activeImageIndex] || imageUrls[0] || null;
 
   const displayedPrice =
-    selectedCar?.offerPrice ||
-    selectedCar?.price ||
-    "Price not available";
+    selectedCar?.offerPrice || selectedCar?.price || "Price not available";
 
   const handleCopyLink = async () => {
     try {
@@ -286,7 +292,11 @@ function RentalCarDetailContent() {
                 {activeImage ? (
                   <img
                     src={activeImage}
-                    alt={selectedCar.propertyName || selectedCar.name || "Rental Car"}
+                    alt={
+                      selectedCar.propertyName ||
+                      selectedCar.name ||
+                      "Rental Car"
+                    }
                     className="w-full h-44 sm:h-64 object-cover"
                     loading="lazy"
                     decoding="async"
@@ -503,7 +513,7 @@ function RentalCarDetailContent() {
                   <iframe
                     title="Car Location"
                     src={`https://www.google.com/maps?q=${encodeURIComponent(
-                      selectedCar.address || "Ethiopia"
+                      selectedCar.address || "Ethiopia",
                     )}&output=embed`}
                     className="w-full h-48"
                     allowFullScreen
@@ -513,7 +523,7 @@ function RentalCarDetailContent() {
                 <div className="mt-3">
                   <CustomButton
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                      selectedCar.address || "Ethiopia"
+                      selectedCar.address || "Ethiopia",
                     )}`}
                     variant="ghost"
                     size="sm"

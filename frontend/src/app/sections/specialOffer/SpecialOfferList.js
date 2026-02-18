@@ -20,7 +20,8 @@ function SpecialOfferDetailContent() {
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
   const priceParam = searchParams.get("price");
-  const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:10000";
+  const BASE_URL =
+    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:10000";
 
   // State hooks - ALWAYS CALLED
   const [offer, setOffer] = useState(null);
@@ -33,12 +34,14 @@ function SpecialOfferDetailContent() {
   // Memoized values - ALWAYS CALLED
   const imageUrls = useMemo(() => {
     if (!offer) return [];
-    if (Array.isArray(offer.images) && offer.images.length > 0) return offer.images;
+    if (Array.isArray(offer.images) && offer.images.length > 0)
+      return offer.images;
     return offer.imageUrl ? [offer.imageUrl] : [];
   }, [offer]);
 
   const activeImage = imageUrls[activeImageIndex] || imageUrls[0] || null;
-  const displayedPrice = priceParam || offer?.offerPrice || offer?.price || "Price not available";
+  const displayedPrice =
+    priceParam || offer?.offerPrice || offer?.price || "Price not available";
 
   // Effects - ALWAYS CALLED
   useEffect(() => {
@@ -47,22 +50,26 @@ function SpecialOfferDetailContent() {
     const fetchOffer = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${BASE_URL}/api/special-offers/${idParam}`);
+        const res = await axios.get(
+          `${BASE_URL}/api/special-offers/${idParam}`,
+        );
         const data = res.data;
 
         const rawImages = Array.isArray(data.imageUrl)
           ? data.imageUrl
           : typeof data.imageUrl === "string" && data.imageUrl
-          ? [data.imageUrl]
-          : [];
+            ? [data.imageUrl]
+            : [];
 
-        const images = rawImages
-          .filter(Boolean)
-          .map((img) =>
-            img.startsWith("http")
-              ? img
-              : `${BASE_URL}${img.startsWith("/") ? "" : "/"}${img}`
-          );
+        const images = rawImages.filter(Boolean).map((img) => {
+          if (img.startsWith("http")) return img;
+          // Safe URL construction - prevent double slashes
+          const formattedBaseUrl = BASE_URL.endsWith("/")
+            ? BASE_URL.slice(0, -1)
+            : BASE_URL;
+          const formattedImagePath = img.startsWith("/") ? img : `/${img}`;
+          return `${formattedBaseUrl}${formattedImagePath}`;
+        });
 
         const imageSrc = images[0] || null;
 
@@ -90,7 +97,7 @@ function SpecialOfferDetailContent() {
   // Event handlers - ALWAYS DEFINED
   const handleToggleLike = async () => {
     if (!offer) return;
-    
+
     try {
       const newLiked = !liked;
       setLiked(newLiked);
@@ -130,7 +137,9 @@ function SpecialOfferDetailContent() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <p className="text-lg text-gray-700 dark:text-gray-200">Loading special offer...</p>
+        <p className="text-lg text-gray-700 dark:text-gray-200">
+          Loading special offer...
+        </p>
       </div>
     );
   }
@@ -147,7 +156,9 @@ function SpecialOfferDetailContent() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
         <main className="flex items-center justify-center min-h-[70vh] px-4">
-          <p className="text-lg text-gray-700 dark:text-gray-200">Special offer not found.</p>
+          <p className="text-lg text-gray-700 dark:text-gray-200">
+            Special offer not found.
+          </p>
         </main>
       </div>
     );
@@ -191,9 +202,7 @@ function SpecialOfferDetailContent() {
             <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-600 dark:text-gray-300">
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-gray-400" />
-                <span className="text-sm sm:text-base">
-                  {offer.location}
-                </span>
+                <span className="text-sm sm:text-base">{offer.location}</span>
               </div>
               <div className="flex items-center gap-1">
                 {renderStars(offer.rating || 0)}
@@ -386,7 +395,7 @@ function SpecialOfferDetailContent() {
                   <iframe
                     title="Offer Location"
                     src={`https://www.google.com/maps?q=${encodeURIComponent(
-                      offer.location || "Ethiopia"
+                      offer.location || "Ethiopia",
                     )}&output=embed`}
                     className="w-full h-48"
                     allowFullScreen
@@ -396,7 +405,7 @@ function SpecialOfferDetailContent() {
                 <div className="mt-3">
                   <Link
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                      offer.location || "Ethiopia"
+                      offer.location || "Ethiopia",
                     )}`}
                     className="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 rounded-lg text-center block hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                   >

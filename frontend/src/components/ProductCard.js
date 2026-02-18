@@ -18,7 +18,7 @@ export default function ProductCard({
 }) {
   const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
-  // ✅ Handle image
+  // ✅ Handle image with safe URL construction
   const firstImage =
     Array.isArray(imageUrl) && imageUrl.length > 0
       ? imageUrl[0]
@@ -26,11 +26,21 @@ export default function ProductCard({
         ? imageUrl
         : null;
 
-  const imageSrc = firstImage
-    ? firstImage.startsWith("http")
+  const getImageSrc = () => {
+    if (!firstImage) return img || "/placeholder-product.jpg";
+    if (firstImage.startsWith("http")) return firstImage;
+
+    // Safe URL construction - prevent double slashes
+    const formattedBaseUrl = BASE_URL.endsWith("/")
+      ? BASE_URL.slice(0, -1)
+      : BASE_URL;
+    const formattedImagePath = firstImage.startsWith("/")
       ? firstImage
-      : `${BASE_URL}${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
-    : img || "/placeholder-product.jpg";
+      : `/${firstImage}`;
+    return `${formattedBaseUrl}${formattedImagePath}`;
+  };
+
+  const imageSrc = getImageSrc();
 
   // ✅ Star renderer
   const renderStars = (rating) => {
