@@ -1,12 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Star,
-  StarHalf,
-  Star as StarOutline,
-  MapPin,
-} from "lucide-react";
+import { Star, StarHalf, Star as StarOutline, MapPin } from "lucide-react";
 import LikeButton from "./LikeButton";
 
 export default function ProductCard({
@@ -21,14 +16,15 @@ export default function ProductCard({
   liked = false,
   likes = 0,
 }) {
+  const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
   // ✅ Handle image
   const firstImage =
     Array.isArray(imageUrl) && imageUrl.length > 0
       ? imageUrl[0]
       : typeof imageUrl === "string"
-      ? imageUrl
-      : null;
+        ? imageUrl
+        : null;
 
   const imageSrc = firstImage
     ? firstImage.startsWith("http")

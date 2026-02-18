@@ -36,7 +36,7 @@ export default function AdminLogin() {
       console.error(err);
       setError(
         err.response?.data?.message ||
-          "❌ Login failed. Check your credentials."
+          "❌ Login failed. Check your credentials.",
       );
     }
   };
@@ -44,7 +44,9 @@ export default function AdminLogin() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
       <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">Admin Login</h1>
+        <h1 className="text-2xl text-gray-900 font-bold mb-6 text-center">
+          Admin Login
+        </h1>
 
         {error && (
           <p className="text-red-500 mb-4 font-medium text-center">{error}</p>
@@ -52,23 +54,27 @@ export default function AdminLogin() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block mb-1 font-medium">Email</label>
+            <label className="block mb-1 text-gray-800 font-medium">
+              Email
+            </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full text-gray-600 border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
 
           <div>
-            <label className="block mb-1 font-medium">Password</label>
+            <label className="block mb-1 text-gray-800 font-medium">
+              Password
+            </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full text-gray-600 border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
