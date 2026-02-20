@@ -9,6 +9,7 @@ import { useSession } from "next-auth/react"; // Added for authentication
 export default function HousesCard({
   _id,
   propertyName,
+  title,
   address,
   imageUrl,
   price,
@@ -22,21 +23,29 @@ export default function HousesCard({
   const [imageSrc, setImageSrc] = useState("/placeholder-house.jpg");
   const [imageError, setImageError] = useState(false);
 
+  // Use title as fallback for propertyName (for static cards compatibility)
+  const displayName = propertyName || title || "Unnamed Property";
+
   // Process image URL
   useEffect(() => {
     if (imageUrl) {
-      const firstImage = Array.isArray(imageUrl) && imageUrl.length > 0 
-        ? imageUrl[0] 
-        : typeof imageUrl === "string" 
-        ? imageUrl 
-        : null;
+      const firstImage =
+        Array.isArray(imageUrl) && imageUrl.length > 0
+          ? imageUrl[0]
+          : typeof imageUrl === "string"
+            ? imageUrl
+            : null;
 
       if (firstImage) {
         if (firstImage.startsWith("http")) {
           setImageSrc(firstImage);
         } else {
-          const formattedBaseUrl = BASE_URL.endsWith("/") ? BASE_URL.slice(0, -1) : BASE_URL;
-          const formattedImagePath = firstImage.startsWith("/") ? firstImage : `/${firstImage}`;
+          const formattedBaseUrl = BASE_URL.endsWith("/")
+            ? BASE_URL.slice(0, -1)
+            : BASE_URL;
+          const formattedImagePath = firstImage.startsWith("/")
+            ? firstImage
+            : `/${firstImage}`;
           setImageSrc(`${formattedBaseUrl}${formattedImagePath}`);
         }
       }
@@ -48,7 +57,7 @@ export default function HousesCard({
     const stars = [];
     const fullStars = Math.floor(ratingValue);
     const hasHalfStar = ratingValue % 1 >= 0.5;
-    
+
     for (let i = 0; i < 5; i++) {
       if (i < fullStars) {
         stars.push(
@@ -56,7 +65,7 @@ export default function HousesCard({
             key={i}
             className="h-4 w-4 fill-yellow-400 text-yellow-400"
             size={16}
-          />
+          />,
         );
       } else if (i === fullStars && hasHalfStar) {
         stars.push(
@@ -64,7 +73,7 @@ export default function HousesCard({
             key={i}
             className="h-4 w-4 fill-yellow-400 text-yellow-400"
             size={16}
-          />
+          />,
         );
       } else {
         stars.push(
@@ -73,7 +82,7 @@ export default function HousesCard({
             className="h-4 w-4 text-gray-300 dark:text-gray-600"
             fill="none"
             size={16}
-          />
+          />,
         );
       }
     }
@@ -105,7 +114,7 @@ export default function HousesCard({
           {!imageError ? (
             <img
               src={imageSrc}
-              alt={propertyName || "House"}
+              alt={displayName}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
               onError={() => setImageError(true)}
               loading="lazy"
@@ -126,12 +135,12 @@ export default function HousesCard({
         <div className="p-4">
           <div className="flex items-center text-sm text-gray-600 dark:text-gray-300 mb-1">
             <MapPin className="h-4 w-4 mr-1.5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-            <span className="truncate">{address || "Address not available"}</span>
+            <span className="truncate">
+              {address || "Address not available"}
+            </span>
           </div>
 
-          <h3 className="font-bold text-lg truncate mb-2">
-            {propertyName || "Unnamed Property"}
-          </h3>
+          <h3 className="font-bold text-lg truncate mb-2">{displayName}</h3>
 
           <div className="flex items-center mb-3">
             <div className="flex items-center">
@@ -145,9 +154,13 @@ export default function HousesCard({
           {price && (
             <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
               <div className="font-bold text-xl text-gray-900 dark:text-white">
-                {typeof price === "number" ? `${price.toLocaleString()} Br` : `${price} Br`}
+                {typeof price === "number"
+                  ? `${price.toLocaleString()} Br`
+                  : `${price} Br`}
               </div>
-              <span className="text-xs text-gray-500 dark:text-gray-400">per night</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                per night
+              </span>
             </div>
           )}
         </div>
