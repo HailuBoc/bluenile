@@ -83,6 +83,8 @@ export default function AdminLayout({ children }) {
   }
 
   const navItems = [
+    { label: "Dashboard", href: "/admin" },
+    { label: "Static Cards", href: "/admin/static-cards" },
     { label: "Properties" },
     { label: "Property Rentals", href: "/admin/propertyrental" },
     { label: "Transport", href: "/admin/transport" },

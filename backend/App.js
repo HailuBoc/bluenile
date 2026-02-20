@@ -47,6 +47,7 @@ import vipGeneralEventRoutes from "./routes/vipGeneralEventRoutes.js";
 import vipWeddingRoutes from "./routes/vipWeddingRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import statsRoutes from "./routes/statsRoutes.js";
+import staticCardRoutes from "./routes/staticCardRoutes.js";
 
 import seedAdmin from "./utils/seedAdmin.js";
 
@@ -172,8 +173,9 @@ app.use("/vip/generalevents", vipGeneralEventRoutes);
 app.use("/vip/weddings", vipWeddingRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/static-cards", staticCardRoutes);
 
-console.log("Mounted route: /specialreservations");
+console.log("Mounted route: /api/static-cards");
 
 // Global error handler (JSON)
 app.use((req, res, next) => {
