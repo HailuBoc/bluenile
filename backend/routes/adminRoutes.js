@@ -8,6 +8,8 @@ import {
   updatePropertyStatus,
   updateProperty,
   deleteProperty,
+  bulkUpdatePropertyStatus,
+  bulkDeleteProperties,
   loginAdmin,
   verifyToken,
   getAllBookings,
@@ -40,6 +42,10 @@ router.patch("/properties/:id/status", updatePropertyStatus);
 router.patch("/properties/:id", upload.single("image"), updateProperty); // <-- edit/update
 router.delete("/properties/:id", deleteProperty);
 router.get("/approved", getApprovedProperties);
+
+// Bulk operations
+router.patch("/properties/bulk-status", bulkUpdatePropertyStatus);
+router.delete("/properties/bulk-delete", bulkDeleteProperties);
 
 // Admin login & verify
 router.post("/login", loginAdmin);

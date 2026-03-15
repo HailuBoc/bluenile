@@ -13,6 +13,9 @@ export default function AdminPropertiesPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [search, setSearch] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [selectedProperties, setSelectedProperties] = useState(new Set());
+  const [selectAll, setSelectAll] = useState(false);
+  const [bulkConfirm, setBulkConfirm] = useState({ show: false, action: null, count: 0 });
 
   const [listingType, setListingType] = useState("");
   const [serviceType, setServiceType] = useState("");
@@ -101,6 +104,88 @@ export default function AdminPropertiesPage() {
   useEffect(() => {
     if (authorized) fetchProperties();
   }, [authorized]);
+
+  // Handle individual checkbox selection
+  const handlePropertySelect = (propertyId) => {
+    const newSelected = new Set(selectedProperties);
+    if (newSelected.has(propertyId)) {
+      newSelected.delete(propertyId);
+    } else {
+      newSelected.add(propertyId);
+    }
+    setSelectedProperties(newSelected);
+    setSelectAll(newSelected.size === filteredProperties.length && filteredProperties.length > 0);
+  };
+
+  // Handle select all checkbox
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedProperties(new Set());
+      setSelectAll(false);
+    } else {
+      const allIds = new Set(filteredProperties.map(p => p._id));
+      setSelectedProperties(allIds);
+      setSelectAll(true);
+    }
+  };
+
+  // Bulk status change
+  const handleBulkStatusChange = async (status) => {
+    if (selectedProperties.size === 0) {
+      setErrorMessage("❌ Please select at least one property.");
+      setTimeout(() => setErrorMessage(""), 3000);
+      return;
+    }
+
+    if (status === 'delete') {
+      setBulkConfirm({ show: true, action: 'delete', count: selectedProperties.size });
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      // Process each property individually since bulk endpoint may not exist
+      const promises = Array.from(selectedProperties).map(id => 
+        axios.patch(`${baseUrl}/admin/properties/${id}/status`, { status }, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      );
+      
+      await Promise.all(promises);
+      setSuccessMessage(`✅ ${selectedProperties.size} properties ${status}!`);
+      setSelectedProperties(new Set());
+      setSelectAll(false);
+      fetchProperties();
+      setTimeout(() => setSuccessMessage(""), 4000);
+    } catch (err) {
+      setErrorMessage("❌ " + (err.response?.data?.error || err.message));
+      setTimeout(() => setErrorMessage(""), 4000);
+    }
+  };
+
+  // Bulk delete
+  const handleBulkDelete = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      // Process each deletion individually since bulk endpoint may not exist
+      const promises = Array.from(selectedProperties).map(id => 
+        axios.delete(`${baseUrl}/admin/properties/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      );
+      
+      await Promise.all(promises);
+      setSuccessMessage(`✅ ${bulkConfirm.count} properties deleted!`);
+      setBulkConfirm({ show: false, action: null, count: 0 });
+      setSelectedProperties(new Set());
+      setSelectAll(false);
+      fetchProperties();
+      setTimeout(() => setSuccessMessage(""), 4000);
+    } catch (err) {
+      setErrorMessage("❌ " + (err.response?.data?.error || err.message));
+      setTimeout(() => setErrorMessage(""), 4000);
+    }
+  };
 
   // Approve/Reject/Delete
   const handleStatusChange = async (id, status) => {
@@ -458,6 +543,46 @@ export default function AdminPropertiesPage() {
         </button>
       </form>
 
+      {/* Bulk Actions */}
+      {selectedProperties.size > 0 && (
+        <div className="w-full max-w-6xl mb-4 p-4 bg-gray-800 rounded-lg">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <span className="text-white font-medium">
+              {selectedProperties.size} property{selectedProperties.size !== 1 ? 's' : ''} selected
+            </span>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => handleBulkStatusChange("approved")}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium transition-colors"
+              >
+                Approve Selected
+              </button>
+              <button
+                onClick={() => handleBulkStatusChange("rejected")}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium transition-colors"
+              >
+                Reject Selected
+              </button>
+              <button
+                onClick={() => handleBulkStatusChange('delete')}
+                className="px-4 py-2 bg-red-700 text-white rounded hover:bg-red-800 text-sm font-medium transition-colors"
+              >
+                Delete Selected
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedProperties(new Set());
+                  setSelectAll(false);
+                }}
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm font-medium transition-colors"
+              >
+                Clear Selection
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Search */}
       <div className="w-full max-w-6xl mb-4">
         <input
@@ -473,6 +598,14 @@ export default function AdminPropertiesPage() {
       <table className="w-full max-w-6xl text-left text-white border border-gray-700">
         <thead>
           <tr className="bg-gray-800">
+            <th className="p-3 border-b">
+              <input
+                type="checkbox"
+                checked={selectAll}
+                onChange={handleSelectAll}
+                className="w-4 h-4 accent-blue-600"
+              />
+            </th>
             <th className="p-3 border-b">#</th>
             <th className="p-3 border-b">Image</th>
             <th className="p-3 border-b">Property Name</th>
@@ -486,7 +619,15 @@ export default function AdminPropertiesPage() {
         </thead>
         <tbody>
           {filteredProperties.map((p, i) => (
-            <tr key={p._id} className="border-b border-gray-700">
+            <tr key={p._id} className="border-b border-gray-700 hover:bg-gray-800/50 transition-colors">
+              <td className="p-3">
+                <input
+                  type="checkbox"
+                  checked={selectedProperties.has(p._id)}
+                  onChange={() => handlePropertySelect(p._id)}
+                  className="w-4 h-4 accent-blue-600"
+                />
+              </td>
               <td className="p-3">{i + 1}</td>
               <td className="p-3">
                 {p.imageUrl ? (
@@ -505,68 +646,106 @@ export default function AdminPropertiesPage() {
               <td className="p-3">{p.price}</td>
               {/* ✅ Rating is permanent now */}
               <td className="p-3">{p.rating?.toFixed(1)}</td>
-              <td className="p-3">{p.status}</td>
-              <td className="p-3 space-x-2">
-                {p.status === "pending" && (
-                  <>
-                    <button
-                      onClick={() => handleStatusChange(p._id, "approved")}
-                      className="px-3 py-1 bg-green-600 rounded hover:bg-green-700"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleStatusChange(p._id, "rejected")}
-                      className="px-3 py-1 bg-red-600 rounded hover:bg-red-700"
-                    >
-                      Reject
-                    </button>
-                  </>
-                )}
-                <button
-                  onClick={() => handleEdit(p)}
-                  className="px-3 py-1 bg-blue-600 rounded hover:bg-blue-700"
-                >
-                  Edit
-                </button>
-                {deleteConfirmId === p._id ? (
-                  <>
-                    <span className="text-yellow-400 mr-2">
-                      Confirm delete?
-                    </span>
-                    <button
-                      onClick={() => handleDelete(p._id)}
-                      className="px-3 py-1 bg-red-600 rounded hover:bg-red-700"
-                    >
-                      Yes
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirmId(null)}
-                      className="px-3 py-1 bg-gray-600 rounded hover:bg-gray-700"
-                    >
-                      No
-                    </button>
-                  </>
-                ) : (
+              <td className="p-3">
+                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                  p.status === 'approved' ? 'bg-green-600 text-white' :
+                  p.status === 'rejected' ? 'bg-red-600 text-white' :
+                  'bg-yellow-600 text-white'
+                }`}>
+                  {p.status}
+                </span>
+              </td>
+              <td className="p-3">
+                <div className="flex flex-wrap gap-1 max-w-xs">
+                  {p.status === "pending" && (
+                    <>
+                      <button
+                        onClick={() => handleStatusChange(p._id, "approved")}
+                        className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium transition-colors"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleStatusChange(p._id, "rejected")}
+                        className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs font-medium transition-colors"
+                      >
+                        Reject
+                      </button>
+                    </>
+                  )}
                   <button
-                    onClick={() => setDeleteConfirmId(p._id)}
-                    className="px-3 py-1 bg-red-600 rounded hover:bg-red-700"
+                    onClick={() => handleEdit(p)}
+                    className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs font-medium transition-colors"
                   >
-                    Delete
+                    Edit
                   </button>
-                )}
+                  {deleteConfirmId === p._id ? (
+                    <>
+                      <span className="text-yellow-400 text-xs mr-1 self-center">
+                        Confirm?
+                      </span>
+                      <button
+                        onClick={() => handleDelete(p._id)}
+                        className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs font-medium transition-colors"
+                      >
+                        Yes
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirmId(null)}
+                        className="px-2 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 text-xs font-medium transition-colors"
+                      >
+                        No
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => setDeleteConfirmId(p._id)}
+                      className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs font-medium transition-colors"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
               </td>
             </tr>
           ))}
           {filteredProperties.length === 0 && (
             <tr>
-              <td colSpan="9" className="p-3 text-center text-gray-400">
+              <td colSpan="10" className="p-3 text-center text-gray-400">
                 No properties found.
               </td>
             </tr>
           )}
         </tbody>
       </table>
+
+      {/* Bulk Delete Confirmation Modal */}
+      {bulkConfirm.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-white mb-4">
+              Confirm Bulk Delete
+            </h3>
+            <p className="text-gray-300 mb-6">
+              Are you sure you want to delete {bulkConfirm.count} selected properties? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setBulkConfirm({ show: false, action: null, count: 0 })}
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-medium transition-colors"
+              >
+                Delete {bulkConfirm.count} Properties
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -566,34 +566,90 @@ function ProductsSection() {
 
   const fetchSpecialOffers = async () => {
     try {
-      const res = await axios.get(`${baseUrl}/api/special-offers`);
-      const data = Array.isArray(res.data) ? res.data : [];
+      const res = await axios.get(`${baseUrl}/admin/properties`);
+      const data = Array.isArray(res.data)
+        ? res.data
+        : res.data?.properties || [];
 
-      const formattedData = data
-        .filter((offer) => offer.status === "approved")
-        .map((item) => {
-          let firstImage =
-            Array.isArray(item.imageUrl) && item.imageUrl.length > 0
-              ? item.imageUrl[0]
-              : typeof item.imageUrl === "string"
-                ? item.imageUrl
-                : null;
+      // Filter only approved properties and get 3 latest ones
+      const approvedProperties = data.filter((property) =>
+        property.status === "approved"
+      );
 
-          const imageSrc = firstImage
-            ? firstImage.startsWith("http")
-              ? firstImage
-              : `${baseUrl}${
-                  firstImage.startsWith("/") ? "" : "/"
-                }${firstImage}`
-            : null;
-
-          return { ...item, imageUrl: imageSrc };
+      // Sort by createdAt or updatedAt to get latest, then take top 3
+      let latestProperties = approvedProperties
+        .sort((a, b) => {
+          const dateA = new Date(a.updatedAt || a.createdAt || 0);
+          const dateB = new Date(b.updatedAt || b.createdAt || 0);
+          return dateB - dateA; // Latest first
         })
-        .sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        .slice(0, 3); // Only take 3 latest
+
+      // Fetch like data for each property if user is logged in
+      let propertiesWithLikes = latestProperties;
+      if (session?.user?.id) {
+        propertiesWithLikes = await Promise.all(
+          latestProperties.map(async (item) => {
+            try {
+              const likeRes = await axios.get(
+                `${baseUrl}/houselike/${item._id}?userId=${session.user.id}`,
+              );
+              return {
+                ...item,
+                liked: likeRes.data.userLiked || false,
+                likes: likeRes.data.likes || 0,
+              };
+            } catch (likeErr) {
+              console.error(
+                "❌ Error fetching like status for property:",
+                item._id,
+                likeErr,
+              );
+              return {
+                ...item,
+                liked: false,
+                likes: item.likes || 0,
+              };
+            }
+          }),
+        );
+      } else {
+        // If not logged in, just use existing likes data
+        propertiesWithLikes = latestProperties.map((item) => ({
+          ...item,
+          liked: false,
+          likes: item.likes || 0,
+        }));
+      }
+
+      const formattedData = propertiesWithLikes.map((item) => {
+        let firstImage =
+          Array.isArray(item.imageUrl) && item.imageUrl.length > 0
+            ? item.imageUrl[0]
+            : typeof item.imageUrl === "string"
+              ? item.imageUrl
+              : null;
+
+        const imageSrc = firstImage
+          ? firstImage.startsWith("http")
+            ? firstImage
+            : `${baseUrl}${
+                firstImage.startsWith("/") ? "" : "/"
+              }${firstImage}`
+          : null;
+
+        return {
+          ...item,
+          imageUrl: imageSrc,
+          propertyName: item.propertyName || "Special Offer",
+          address: item.address || "No address",
+        };
+      });
 
       setSpecialOffers(formattedData);
     } catch (err) {
       console.error("❌ Error fetching special offers:", err);
+      setSpecialOffers([]);
     }
   };
 

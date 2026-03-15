@@ -170,7 +170,7 @@ export const createProperty = async (req, res) => {
       fuelType,
       landSize,
       rentTerm,
-      rating, // ✅ from frontend
+      rating, // 
       autoApprove,
     } = req.body;
 
@@ -306,6 +306,62 @@ export const deleteProperty = async (req, res) => {
   } catch (err) {
     console.error("Error deleting property:", err);
     res.status(500).json({ error: "Server error" });
+  }
+};
+
+// Bulk status change
+export const bulkUpdatePropertyStatus = async (req, res) => {
+  try {
+    const { propertyIds, status } = req.body;
+    
+    if (!propertyIds || !Array.isArray(propertyIds) || propertyIds.length === 0) {
+      return res.status(400).json({ error: "No property IDs provided" });
+    }
+    
+    if (!["approved", "rejected"].includes(status)) {
+      return res.status(400).json({ error: "Invalid status value" });
+    }
+    
+    // Update all properties individually
+    const updatePromises = propertyIds.map(id => 
+      Property.findByIdAndUpdate(id, { status })
+    );
+    
+    await Promise.all(updatePromises);
+    
+    res.json({ 
+      message: `${propertyIds.length} properties ${status} successfully`,
+      updatedCount: propertyIds.length 
+    });
+  } catch (err) {
+    console.error("Error bulk updating property status:", err);
+    res.status(500).json({ error: "Server error", details: err.message });
+  }
+};
+
+// Bulk delete
+export const bulkDeleteProperties = async (req, res) => {
+  try {
+    const { propertyIds } = req.body;
+    
+    if (!propertyIds || !Array.isArray(propertyIds) || propertyIds.length === 0) {
+      return res.status(400).json({ error: "No property IDs provided" });
+    }
+    
+    // Delete all properties individually
+    const deletePromises = propertyIds.map(id => 
+      Property.findByIdAndDelete(id)
+    );
+    
+    await Promise.all(deletePromises);
+    
+    res.json({ 
+      message: `${propertyIds.length} properties deleted successfully`,
+      deletedCount: propertyIds.length 
+    });
+  } catch (err) {
+    console.error("Error bulk deleting properties:", err);
+    res.status(500).json({ error: "Server error", details: err.message });
   }
 };
 

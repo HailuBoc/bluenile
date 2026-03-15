@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Heart } from "lucide-react";
-import { useRouter } from "next/navigation";
 import axios from "axios";
 
 const LikeButton = ({ 
@@ -16,7 +15,6 @@ const LikeButton = ({
   size = "default" // "small", "default", "large"
 }) => {
   const { data: session, status } = useSession();
-  const router = useRouter();
   const [liked, setLiked] = useState(initialLiked);
   const [likesCount, setLikesCount] = useState(initialLikes);
   const [loading, setLoading] = useState(false);
@@ -49,14 +47,15 @@ const LikeButton = ({
     setLikesCount(initialLikes);
   }, [initialLiked, initialLikes]);
 
-  const handleLikeClick = async () => {
+  const handleLikeClick = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     // Check if user is authenticated
     if (status === "loading") return; // Still loading session
     
     if (!session) {
-      // Redirect to login with return URL
-      const currentPath = window.location.pathname + window.location.search;
-      router.push(`/auth/login?callbackUrl=${encodeURIComponent(currentPath)}`);
+      // Do nothing - just stay on page
       return;
     }
 
