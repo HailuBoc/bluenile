@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { getSession } from "next-auth/react";
 import axios from "axios";
 import ProductCard from "./ProductCard";
 import HousesCard from "./HousesCard";
@@ -113,18 +114,71 @@ export default function ProductsSection() {
   // ✅ Fetch special offers with error handling
   const fetchSpecialOffers = useCallback(async () => {
     try {
-      const res = await axios.get(`${baseUrl}/api/special-offers`, {
+      const res = await axios.get(`${baseUrl}/admin/properties`, {
         timeout: 10000,
       });
-      const data = Array.isArray(res.data) ? res.data : [];
+      const data = Array.isArray(res.data)
+        ? res.data
+        : res.data?.properties || [];
 
-      const formattedData = data
-        .filter((offer) => offer.status === "approved")
-        .map((item) => ({
+      // Filter only approved properties and get 3 latest ones
+      const approvedProperties = data.filter((property) => 
+        property.status === "approved"
+      );
+      
+      // Sort by createdAt or updatedAt to get latest, then take top 3
+      let latestProperties = approvedProperties
+        .sort((a, b) => {
+          const dateA = new Date(a.updatedAt || a.createdAt || 0);
+          const dateB = new Date(b.updatedAt || b.createdAt || 0);
+          return dateB - dateA; // Latest first
+        })
+        .slice(0, 3); // Only take 3 latest
+
+      // Fetch like data for each property if user is logged in
+      const session = await getSession();
+      let propertiesWithLikes = latestProperties;
+      if (session?.user?.id) {
+        propertiesWithLikes = await Promise.all(
+          latestProperties.map(async (item) => {
+            try {
+              const likeRes = await axios.get(
+                `${baseUrl}/houselike/${item._id}?userId=${session.user.id}`,
+              );
+              return {
+                ...item,
+                liked: likeRes.data.userLiked || false,
+                likes: likeRes.data.likes || 0,
+              };
+            } catch (likeErr) {
+              console.error(
+                "❌ Error fetching like status for property:",
+                item._id,
+                likeErr,
+              );
+              return {
+                ...item,
+                liked: false,
+                likes: item.likes || 0,
+              };
+            }
+          }),
+        );
+      } else {
+        // If not logged in, just use existing likes data
+        propertiesWithLikes = latestProperties.map((item) => ({
           ...item,
-          imageUrl: processImageUrl(item),
-        }))
-        .sort((a, b) => (b.rating || 0) - (a.rating || 0));
+          liked: false,
+          likes: item.likes || 0,
+        }));
+      }
+
+      const formattedData = propertiesWithLikes.map((item) => ({
+        ...item,
+        imageUrl: processImageUrl(item),
+        propertyName: item.propertyName || "Special Offer",
+        address: item.address || "No address"
+      }));
 
       setSpecialOffers(formattedData);
       return formattedData;
@@ -370,7 +424,7 @@ export default function ProductsSection() {
           </div>
 
           <div className="flex gap-3 xs:gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth hide-scrollbar py-2 px-1">
-            {mergedData.specialOffers.slice(0, 6).map((offer) => (
+            {mergedData.specialOffers.slice(0, 3).map((offer) => (
               <div
                 key={offer._id}
                 className="snap-start flex-shrink-0 w-64 xs:w-72 sm:w-80 md:w-96"
@@ -392,7 +446,7 @@ export default function ProductsSection() {
             <div className="w-32 h-1 bg-gradient-to-r from-yellow-400 to-orange-500 mx-auto rounded-full"></div>
           </div>
           <div className="grid lg:grid-cols-3 gap-8">
-            {mergedData.specialOffers.slice(0, 6).map((offer) => (
+            {mergedData.specialOffers.slice(0, 3).map((offer) => (
               <SpecialOfferCard key={offer._id} {...offer} />
             ))}
           </div>
