@@ -198,7 +198,7 @@ const connectWithRetry = async (retries = 5, delay = 5000) => {
     console.log("Database connected successfully");
 
     // Seed admin if not exists
-    await seedAdmin();
+     
 
     // Enable performance monitoring in development
     if (process.env.NODE_ENV === "development") {

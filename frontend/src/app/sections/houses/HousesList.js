@@ -240,60 +240,74 @@ function HouseDetailContent() {
       </motion.nav>
 
       <motion.header
-        className="relative overflow-hidden py-10 sm:py-12"
+        className="relative overflow-hidden py-8 sm:py-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-emerald-500/10 dark:from-blue-500/20 dark:via-purple-500/20 dark:to-emerald-500/20" />
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
           <motion.div
+            className="space-y-4"
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.25 }}
           >
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-              {house.propertyName}
-            </h2>
-            <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-600 dark:text-gray-300">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-gray-400" />
-                <span className="text-sm sm:text-base">
-                  {house.address || "No address"}
-                </span>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex-1">
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white leading-tight">
+                  {house.propertyName}
+                </h1>
+                <div className="mt-3 flex flex-wrap items-center gap-4 text-gray-600 dark:text-gray-300">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-gray-400" />
+                    <span className="text-base">
+                      {house.address || "No address"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {renderStars(house.rating || 0)}
+                    <span className="text-sm ml-1">
+                      ({house.rating?.toFixed(1) || "N/A"})
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                {renderStars(house.rating || 0)}
-                <span className="text-sm">
-                  ({house.rating?.toFixed(1) || "N/A"})
-                </span>
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    Price
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {house.price ? `${house.price} Br` : "N/A"}
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
         </div>
       </motion.header>
 
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 pb-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-          <div className="lg:col-span-7 space-y-5">
-            <AnimatedCard className="p-3 sm:p-4" hoverEffect={false}>
-              <div className="relative rounded-xl overflow-hidden">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-8 space-y-6">
+            <AnimatedCard className="overflow-hidden" hoverEffect={false}>
+              <div className="relative">
                 {activeImage ? (
                   <img
                     src={activeImage}
                     alt={house.propertyName || "House"}
-                    className="w-full h-44 sm:h-64 object-cover"
+                    className="w-full h-64 sm:h-96 object-cover"
                     loading="lazy"
                     decoding="async"
                   />
                 ) : (
-                  <div className="w-full h-44 sm:h-64 bg-gray-100 dark:bg-gray-800" />
+                  <div className="w-full h-64 sm:h-96 bg-gray-100 dark:bg-gray-800" />
                 )}
 
-                <div className="absolute top-3 right-3 flex items-center gap-2">
+                <div className="absolute top-4 right-4 flex items-center gap-2">
                   <button
                     onClick={handleCopyLink}
-                    className="bg-white/90 hover:bg-white text-gray-800 p-1.5 rounded-full shadow"
+                    className="bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg"
                     aria-label="Copy link"
                     type="button"
                   >
@@ -301,7 +315,7 @@ function HouseDetailContent() {
                   </button>
                   <button
                     onClick={handleToggleLike}
-                    className="bg-white/90 hover:bg-white p-1.5 rounded-full shadow flex items-center"
+                    className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg flex items-center"
                     aria-pressed={liked}
                     aria-label={liked ? "Unlike" : "Like"}
                     type="button"
@@ -318,35 +332,37 @@ function HouseDetailContent() {
                 </div>
 
                 {house.guestFavorite && (
-                  <div className="absolute top-3 left-3 text-xs bg-blue-600 text-white px-2 py-1 rounded-full shadow">
+                  <div className="absolute top-4 left-4 text-sm bg-blue-600 text-white px-3 py-1 rounded-full shadow-lg">
                     Top Pick
                   </div>
                 )}
               </div>
 
               {imageUrls.length > 1 && (
-                <div className="mt-4 grid grid-cols-5 sm:grid-cols-6 gap-2">
-                  {imageUrls.slice(0, 6).map((src, idx) => (
-                    <button
-                      key={src}
-                      type="button"
-                      onClick={() => setActiveImageIndex(idx)}
-                      className={`rounded-lg overflow-hidden border transition ${
-                        idx === activeImageIndex
-                          ? "border-blue-500"
-                          : "border-transparent hover:border-gray-200 dark:hover:border-gray-700"
-                      }`}
-                      aria-label={`View image ${idx + 1}`}
-                    >
-                      <img
-                        src={src}
-                        alt=""
-                        className="w-full h-9 object-cover"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </button>
-                  ))}
+                <div className="p-4 bg-gray-50 dark:bg-gray-800">
+                  <div className="grid grid-cols-6 sm:grid-cols-8 gap-2">
+                    {imageUrls.slice(0, 8).map((src, idx) => (
+                      <button
+                        key={src}
+                        type="button"
+                        onClick={() => setActiveImageIndex(idx)}
+                        className={`rounded-lg overflow-hidden border transition ${
+                          idx === activeImageIndex
+                            ? "border-blue-500 ring-2 ring-blue-200"
+                            : "border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                        }`}
+                        aria-label={`View image ${idx + 1}`}
+                      >
+                        <img
+                          src={src}
+                          alt=""
+                          className="w-full h-12 object-cover"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </AnimatedCard>
@@ -385,48 +401,47 @@ function HouseDetailContent() {
             </AnimatedCard>
           </div>
 
-          <div className="lg:col-span-5">
-            <div className="lg:sticky lg:top-24 space-y-5">
-              <AnimatedCard className="p-4" hoverEffect={false}>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      Price
-                    </div>
-                    <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {displayedPrice}
-                    </div>
+          <div className="lg:col-span-4">
+            <div className="lg:sticky lg:top-24 space-y-6">
+              <AnimatedCard className="p-6" hoverEffect={false}>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Booking Details
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      Service Type
+                    </span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      {house.serviceType || house.listingType || "N/A"}
+                    </span>
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {house.serviceType || house.listingType || ""}
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <CustomButton
+                      href={`/sections/houses/reserveHouse?id=${house._id}&price=${
+                        priceParam || house.offerPrice
+                      }`}
+                      variant="primary"
+                      size="lg"
+                      className="w-full"
+                    >
+                      Reserve Now
+                    </CustomButton>
                   </div>
-                </div>
-
-                <div className="mt-4">
-                  <CustomButton
-                    href={`/sections/houses/reserveHouse?id=${house._id}&price=${
-                      priceParam || house.offerPrice
-                    }`}
-                    variant="primary"
-                    size="sm"
-                    className="w-full"
-                  >
-                    Reserve Now
-                  </CustomButton>
                 </div>
               </AnimatedCard>
 
-              <AnimatedCard className="p-4" hoverEffect={false}>
-                <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+              <AnimatedCard className="p-6" hoverEffect={false}>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                   Location
                 </h3>
-                <div className="mt-3 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                   <iframe
                     title="House Location"
                     src={`https://www.google.com/maps?q=${encodeURIComponent(
                       house.address || "Ethiopia",
                     )}&output=embed`}
-                    className="w-full h-48"
+                    className="w-full h-64"
                     allowFullScreen
                     loading="lazy"
                   />
