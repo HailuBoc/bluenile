@@ -462,7 +462,7 @@ function HouseDetailContent() {
             </div>
           </div>
         </div>
-      </section>
+      </main>
 
       <Footer />
     </div>
